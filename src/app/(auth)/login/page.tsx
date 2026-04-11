@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, ArrowRight, User, Store, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -189,31 +189,6 @@ export default function LoginPage() {
           </Link>
         </p>
 
-        {/* Demo mode */}
-        <div className="mt-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex-1 h-px" style={{ background: 'var(--nafa-gray-200)' }} />
-            <span className="text-xs font-medium px-2" style={{ color: 'var(--nafa-gray-400)' }}>Comptes de démo</span>
-            <div className="flex-1 h-px" style={{ background: 'var(--nafa-gray-200)' }} />
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { label: 'Client', icon: User, href: '/home' },
-              { label: 'Vendeur', icon: Store, href: '/vendor/dashboard' },
-              { label: 'Admin', icon: ShieldCheck, href: '/admin/dashboard' },
-            ].map(({ label, icon: Icon, href }) => (
-              <Link
-                key={label}
-                href={href}
-                className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border text-xs font-medium"
-                style={{ borderColor: 'var(--nafa-gray-200)', background: 'white', color: 'var(--nafa-gray-700)' }}
-              >
-                <Icon size={18} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
-                {label}
-              </Link>
-            ))}
-          </div>
-        </div>
       </motion.div>
     </div>
   );
