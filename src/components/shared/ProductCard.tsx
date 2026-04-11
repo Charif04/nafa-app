@@ -32,6 +32,7 @@ export function ProductCard({ product, index = 0, className }: ProductCardProps)
       image: product.images[0] ?? '',
       quantity: 1,
       vendorId: product.vendorId,
+      vendorName: product.vendorName,
       stock: product.stock,
     });
     setTimeout(() => setAdding(false), 600);

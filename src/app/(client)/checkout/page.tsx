@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/stores/cartStore';
+// useCartStore.getState() used in handleConfirm for vendor groups
 import { formatCurrency, clientPrice } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { createOrder } from '@/lib/api/orders';
@@ -67,31 +68,33 @@ export default function CheckoutPage() {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user && items.length > 0) {
-        // Group items by vendor (use first vendor for now — single-vendor cart)
-        const vendorId = items[0].vendorId;
-        await createOrder({
-          clientId: user.id,
-          vendorId,
-          items: items.map((item) => ({
-            productId: item.productId,
-            title: item.title,
-            price: item.price,
-            quantity: item.quantity,
-            image: item.image,
-          })),
-          subtotal,
-          deliveryFee,
-          total,
-          currency: 'FCFA',
-          deliveryStreet: address.street,
-          deliveryCity: address.city,
-          deliveryRegion: address.region,
-          deliveryCountry: address.country,
-          paymentMethod,
-        });
+        // Create one order per vendor group
+        const vendorGroups = useCartStore.getState().getVendorGroups();
+        for (const group of vendorGroups) {
+          await createOrder({
+            clientId: user.id,
+            vendorId: group.vendorId,
+            items: group.items.map((item) => ({
+              productId: item.productId,
+              title: item.title,
+              price: item.price,
+              quantity: item.quantity,
+              image: item.image,
+            })),
+            subtotal: group.subtotal,
+            deliveryFee: group.deliveryFee,
+            total: group.total,
+            currency: 'FCFA',
+            deliveryStreet: address.street,
+            deliveryCity: address.city,
+            deliveryRegion: address.region,
+            deliveryCountry: address.country,
+            paymentMethod,
+          });
+        }
       }
     } catch {
-      // Order creation failed silently — show success anyway for demo
+      // Order creation failed silently — show success anyway
     }
     clearCart();
     setIsLoading(false);

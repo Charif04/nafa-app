@@ -7,6 +7,7 @@ import { ProductCard } from '@/components/shared/ProductCard';
 import { ProductCardSkeleton } from '@/components/shared/SkeletonShimmer';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { supabase } from '@/lib/supabase';
+import { clientPrice } from '@/lib/utils';
 import type { Product } from '@/types';
 
 const CATEGORIES = [
@@ -20,11 +21,20 @@ const CATEGORIES = [
   { id: 'art', label: 'Artisanat' },
 ];
 
+const PRICE_RANGES = [
+  { id: 'all', label: 'Tous les prix', min: 0, max: Infinity },
+  { id: 'lt5k', label: '< 5 000', min: 0, max: 4999 },
+  { id: '5k_15k', label: '5 000–15 000', min: 5000, max: 15000 },
+  { id: '15k_50k', label: '15 000–50 000', min: 15000, max: 50000 },
+  { id: 'gt50k', label: '> 50 000', min: 50001, max: Infinity },
+];
+
 
 export default function HomePage() {
   const [search, setSearch] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState('all');
+  const [activePriceRange, setActivePriceRange] = useState('all');
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -60,10 +70,14 @@ export default function HomePage() {
     load();
   }, []);
 
+  const priceRange = PRICE_RANGES.find((r) => r.id === activePriceRange) ?? PRICE_RANGES[0];
+
   const filtered = products.filter((p) => {
     const matchCat = activeCategory === 'all' || p.category === activeCategory;
     const matchSearch = !search || p.title.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
+    const cp = clientPrice(p.price);
+    const matchPrice = cp >= priceRange.min && cp <= priceRange.max;
+    return matchCat && matchSearch && matchPrice;
   });
 
   return (
@@ -122,6 +136,27 @@ export default function HomePage() {
                 }}
               >
                 {cat.label}
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Price range chips */}
+          <div className="flex gap-2 mt-2 overflow-x-auto pb-1 scrollbar-none" role="tablist" aria-label="Fourchette de prix">
+            {PRICE_RANGES.map((range) => (
+              <motion.button
+                key={range.id}
+                role="tab"
+                aria-selected={activePriceRange === range.id}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setActivePriceRange(range.id)}
+                className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+                style={{
+                  background: activePriceRange === range.id ? 'rgba(255,107,44,0.1)' : 'transparent',
+                  borderColor: activePriceRange === range.id ? 'var(--nafa-orange)' : 'var(--nafa-gray-200)',
+                  color: activePriceRange === range.id ? 'var(--nafa-orange)' : 'var(--nafa-gray-700)',
+                }}
+              >
+                {range.label}{range.id !== 'all' ? ' FCFA' : ''}
               </motion.button>
             ))}
           </div>
@@ -248,7 +283,7 @@ export default function HomePage() {
               icon={Search}
               title="Aucun produit trouvé"
               description="Essayez une autre recherche ou une autre catégorie."
-              action={{ label: 'Voir tous les produits', onClick: () => { setActiveCategory('all'); setSearch(''); } }}
+              action={{ label: 'Voir tous les produits', onClick: () => { setActiveCategory('all'); setSearch(''); setActivePriceRange('all'); } }}
             />
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">

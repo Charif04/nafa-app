@@ -1,176 +1,171 @@
 'use client';
-
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, MessageSquare } from 'lucide-react';
+import { ChevronLeft, MessageSquare, Package } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { RatingStars } from '@/components/shared/RatingStars';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { Skeleton } from '@/components/shared/SkeletonShimmer';
 import { formatRelativeTime } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/stores/authStore';
 
-interface MockReview {
+interface ReviewRow {
   id: string;
-  productId: string;
-  productName: string;
-  productImage: string;
+  orderId: string;
   vendorName: string;
+  firstItemTitle: string;
+  firstItemImage: string | null;
   rating: number;
-  text: string;
+  comment: string | null;
   createdAt: string;
 }
-
-const MOCK_REVIEWS: MockReview[] = [
-  {
-    id: 'r1',
-    productId: 'p1',
-    productName: 'Boubou brodé homme',
-    productImage: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=200&h=200&fit=crop',
-    vendorName: 'Boutique Aminata',
-    rating: 5,
-    text: 'Très belle qualité, les broderies sont magnifiques. Livraison rapide et emballage soigné.',
-    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-  },
-  {
-    id: 'r2',
-    productId: 'p2',
-    productName: 'Sac en cuir artisanal',
-    productImage: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=200&h=200&fit=crop',
-    vendorName: 'Mode Dakar',
-    rating: 4,
-    text: 'Beau sac, cuir de bonne qualité. La couleur correspond bien aux photos.',
-    createdAt: new Date(Date.now() - 86400000 * 8).toISOString(),
-  },
-  {
-    id: 'r3',
-    productId: 'p3',
-    productName: 'Tissu wax imprimé 6 yards',
-    productImage: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=200&h=200&fit=crop',
-    vendorName: 'Tissus Kodjo',
-    rating: 5,
-    text: 'Couleurs vives et tissu authentique. Je recommande vivement cette boutique.',
-    createdAt: new Date(Date.now() - 86400000 * 14).toISOString(),
-  },
-  {
-    id: 'r4',
-    productId: 'p4',
-    productName: 'Sandales en cuir tressé',
-    productImage: 'https://images.unsplash.com/photo-1603487742131-4160ec999306?w=200&h=200&fit=crop',
-    vendorName: 'Artisan Chaussures',
-    rating: 3,
-    text: 'Bonne qualité mais taille un peu petit. Prévoir une pointure au-dessus.',
-    createdAt: new Date(Date.now() - 86400000 * 21).toISOString(),
-  },
-];
-
-const containerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.07 } },
-};
 
 const cardVariants = {
   hidden: { opacity: 0, y: 16 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] } },
-  exit: { opacity: 0, scale: 0.95, transition: { duration: 0.2 } },
 };
 
 export default function ReviewsPage() {
   const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const [reviews, setReviews] = useState<ReviewRow[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) loadReviews();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  async function loadReviews() {
+    setIsLoading(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+
+    const { data: rows } = await db
+      .from('reviews')
+      .select(`
+        id, order_id, rating, comment, created_at,
+        vendor:profiles!reviews_to_user_id_fkey(
+          vendor_profiles(shop_name)
+        ),
+        order:orders!reviews_order_id_fkey(
+          order_items(title, image)
+        )
+      `)
+      .eq('from_user_id', user!.uid)
+      .eq('type', 'client_to_vendor')
+      .order('created_at', { ascending: false });
+
+    if (rows) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setReviews(rows.map((r: any) => {
+        const vp = Array.isArray(r.vendor?.vendor_profiles)
+          ? r.vendor.vendor_profiles[0]
+          : r.vendor?.vendor_profiles;
+        const items = r.order?.order_items ?? [];
+        const firstItem = items[0];
+        return {
+          id: r.id,
+          orderId: r.order_id,
+          vendorName: vp?.shop_name ?? 'Boutique',
+          firstItemTitle: firstItem?.title ?? 'Commande',
+          firstItemImage: firstItem?.image ?? null,
+          rating: r.rating,
+          comment: r.comment,
+          createdAt: r.created_at,
+        };
+      }));
+    }
+    setIsLoading(false);
+  }
 
   return (
     <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
       <div className="max-w-2xl mx-auto px-4 md:px-6">
-      {/* Sticky header */}
-      <header
-        className="sticky top-0 z-10 flex items-center gap-3 py-4"
-        style={{ background: 'var(--nafa-white)', borderBottom: '1px solid var(--nafa-gray-200)' }}
-      >
-        <Link
-          href="/profile"
-          className="w-8 h-8 rounded-full flex items-center justify-center"
-          style={{ background: 'var(--nafa-gray-100)' }}
-          aria-label="Retour"
-        >
-          <ChevronLeft size={18} strokeWidth={1.75} style={{ color: 'var(--nafa-black)' }} />
-        </Link>
-        <h1 className="text-lg font-bold" style={{ color: 'var(--nafa-black)' }}>
-          Mes avis
-        </h1>
-        <span
-          className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full"
-          style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}
-        >
-          {MOCK_REVIEWS.length}
-        </span>
-      </header>
+        <header className="sticky top-0 z-10 flex items-center gap-3 py-4"
+          style={{ background: 'var(--nafa-white)', borderBottom: '1px solid var(--nafa-gray-200)' }}>
+          <Link href="/profile" className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ background: 'var(--nafa-gray-100)' }} aria-label="Retour">
+            <ChevronLeft size={18} strokeWidth={1.75} style={{ color: 'var(--nafa-black)' }} />
+          </Link>
+          <h1 className="text-lg font-bold" style={{ color: 'var(--nafa-black)' }}>Mes avis</h1>
+          {!isLoading && (
+            <span className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full"
+              style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>
+              {reviews.length}
+            </span>
+          )}
+        </header>
 
-      <div className="py-4">
-        {MOCK_REVIEWS.length === 0 ? (
-          <EmptyState
-            icon={MessageSquare}
-            title="Aucun avis"
-            description="Vous n'avez pas encore laissé d'avis"
-            action={{ label: 'Explorer les produits', onClick: () => router.push('/home') }}
-          />
-        ) : (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="space-y-3"
-          >
-            <AnimatePresence>
-              {MOCK_REVIEWS.map((review) => (
-                <motion.article
-                  key={review.id}
-                  variants={cardVariants}
-                  layout
-                  className="rounded-2xl p-4"
-                  style={{ background: 'var(--nafa-white)' }}
-                >
-                  {/* Product info */}
+        <div className="py-4">
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="rounded-2xl p-4" style={{ background: 'var(--nafa-white)' }}>
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 relative">
-                      <Image
-                        src={review.productImage}
-                        alt={review.productName}
-                        fill
-                        sizes="56px"
-                        className="object-cover"
-                      />
+                    <Skeleton className="w-14 h-14 rounded-xl flex-shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-4 w-32 rounded" />
+                      <Skeleton className="h-3 w-20 rounded" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <Link
-                        href={`/product/${review.productId}`}
-                        className="text-sm font-semibold line-clamp-1"
-                        style={{ color: 'var(--nafa-gray-900)' }}
-                      >
-                        {review.productName}
-                      </Link>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }}>
-                        {review.vendorName}
+                  </div>
+                  <Skeleton className="h-3 w-24 rounded mb-2" />
+                  <Skeleton className="h-4 w-full rounded" />
+                </div>
+              ))}
+            </div>
+          ) : reviews.length === 0 ? (
+            <EmptyState
+              icon={MessageSquare}
+              title="Aucun avis"
+              description="Vos avis apparaîtront ici après la livraison d'une commande."
+              action={{ label: 'Explorer les produits', onClick: () => router.push('/home') }}
+            />
+          ) : (
+            <motion.div variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.07 } } }}
+              initial="hidden" animate="visible" className="space-y-3">
+              <AnimatePresence>
+                {reviews.map((review) => (
+                  <motion.article key={review.id} variants={cardVariants} layout
+                    className="rounded-2xl p-4" style={{ background: 'var(--nafa-white)' }}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
+                        style={{ background: 'var(--nafa-gray-100)' }}>
+                        {review.firstItemImage
+                          ? <img src={review.firstItemImage} alt={review.firstItemTitle}
+                              className="w-full h-full object-cover" />
+                          : <Package size={20} style={{ color: 'var(--nafa-gray-400)' }} />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold line-clamp-1" style={{ color: 'var(--nafa-gray-900)' }}>
+                          {review.firstItemTitle}
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }}>
+                          {review.vendorName}
+                        </p>
+                      </div>
+                      <p className="text-xs flex-shrink-0" style={{ color: 'var(--nafa-gray-400)' }}>
+                        {formatRelativeTime(review.createdAt)}
                       </p>
                     </div>
-                    <p className="text-xs flex-shrink-0" style={{ color: 'var(--nafa-gray-400)' }}>
-                      {formatRelativeTime(review.createdAt)}
-                    </p>
-                  </div>
 
-                  {/* Rating */}
-                  <div className="mb-2">
-                    <RatingStars rating={review.rating} size={14} showValue />
-                  </div>
+                    <div className="mb-2">
+                      <RatingStars rating={review.rating} size={14} showValue />
+                    </div>
 
-                  {/* Review text */}
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--nafa-gray-700)' }}>
-                    {review.text}
-                  </p>
-                </motion.article>
-              ))}
-            </AnimatePresence>
-          </motion.div>
-        )}
-      </div>
+                    {review.comment && (
+                      <p className="text-sm leading-relaxed" style={{ color: 'var(--nafa-gray-700)' }}>
+                        {review.comment}
+                      </p>
+                    )}
+                  </motion.article>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </div>
       </div>
     </div>
   );

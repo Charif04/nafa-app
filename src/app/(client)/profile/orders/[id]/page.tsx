@@ -1,14 +1,17 @@
 'use client';
-import { use, useEffect } from 'react';
+import { use, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, MapPin, CreditCard, Clock, Package } from 'lucide-react';
+import { ChevronLeft, MapPin, CreditCard, Clock, Package, Star } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { OrderStatusStepper } from '@/components/shared/OrderStatusStepper';
 import { StatusBadge } from '@/components/shared/StatusBadge';
+import { ReviewModal } from '@/components/shared/ReviewModal';
 import { formatCurrency, clientPrice } from '@/lib/utils';
 import { useClientOrdersStore } from '@/stores/clientOrdersStore';
+import { useAuthStore } from '@/stores/authStore';
+import { supabase } from '@/lib/supabase';
 
 const PAYMENT_LABELS = {
   orange_money: 'Orange Money',
@@ -25,13 +28,41 @@ const PAYMENT_COLORS = {
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const user = useAuthStore((s) => s.user);
   const { getOrder, fetchOrders, orders } = useClientOrdersStore();
+
+  const [hasReviewed, setHasReviewed] = useState<boolean | null>(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
   useEffect(() => {
     if (orders.length === 0) fetchOrders();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const order = getOrder(id);
+
+  // Check if review already exists for this order
+  useEffect(() => {
+    if (!order || !user || order.orderStatus !== 'delivered') return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from('reviews')
+      .select('id')
+      .eq('order_id', order.id)
+      .eq('from_user_id', user.uid)
+      .eq('type', 'client_to_vendor')
+      .maybeSingle()
+      .then(({ data }: { data: { id: string } | null }) => {
+        setHasReviewed(!!data);
+      });
+  }, [order, user]);
+
+  const handleReviewSubmitted = () => {
+    setShowReviewModal(false);
+    setReviewSubmitted(true);
+    setHasReviewed(true);
+  };
 
   if (!order) {
     return (
@@ -45,6 +76,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     );
   }
 
+  const canReview = order.orderStatus === 'delivered' && hasReviewed === false;
+
   return (
     <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
       <div className="max-w-3xl mx-auto px-4 md:px-6">
@@ -56,7 +89,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-sm font-bold nafa-mono" style={{ color: 'var(--nafa-black)' }}>
-              #{order.id.toUpperCase()}
+              #{order.id.slice(0, 8).toUpperCase()}
             </h1>
             <p className="text-xs" style={{ color: 'var(--nafa-gray-700)' }} suppressHydrationWarning>
               {new Date(order.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -66,11 +99,44 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         </header>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-4">
-          <div className="lg:flex lg:gap-6 lg:items-start space-y-4 lg:space-y-0">
 
+          {/* Review CTA — shown after delivery if no review yet */}
+          {canReview && !reviewSubmitted && (
+            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+              className="mb-4 p-4 rounded-2xl flex items-center gap-3"
+              style={{ background: 'rgba(255,107,44,0.07)', border: '1px solid rgba(255,107,44,0.2)' }}>
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'rgba(255,107,44,0.12)' }}>
+                <Star size={18} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold" style={{ color: 'var(--nafa-black)' }}>
+                  Votre commande est livrée !
+                </p>
+                <p className="text-xs" style={{ color: 'var(--nafa-gray-700)' }}>
+                  Donnez votre avis sur {order.vendorName}
+                </p>
+              </div>
+              <motion.button whileTap={{ scale: 0.96 }} onClick={() => setShowReviewModal(true)}
+                className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-semibold text-white"
+                style={{ background: 'var(--nafa-orange)' }}>
+                Évaluer
+              </motion.button>
+            </motion.div>
+          )}
+
+          {reviewSubmitted && (
+            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+              className="mb-4 p-4 rounded-2xl flex items-center gap-3"
+              style={{ background: 'rgba(0,200,83,0.07)', border: '1px solid rgba(0,200,83,0.2)' }}>
+              <Star size={18} strokeWidth={1.75} className="text-green-500 flex-shrink-0" />
+              <p className="text-sm font-medium text-green-700">Avis publié — merci !</p>
+            </motion.div>
+          )}
+
+          <div className="lg:flex lg:gap-6 lg:items-start space-y-4 lg:space-y-0">
             {/* Left column */}
             <div className="lg:flex-1 space-y-4">
-
               {/* Items */}
               <div className="bg-white rounded-2xl p-4 border" style={{ borderColor: 'var(--nafa-gray-200)' }}>
                 <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--nafa-gray-400)' }}>
@@ -82,8 +148,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                       <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0" style={{ background: 'var(--nafa-gray-100)' }}>
                         {item.image
                           ? <Image src={item.image} alt={item.title} width={64} height={64} className="object-cover w-full h-full" />
-                          : <div className="w-full h-full flex items-center justify-center"><Package size={20} style={{ color: 'var(--nafa-gray-400)' }} /></div>
-                        }
+                          : <div className="w-full h-full flex items-center justify-center"><Package size={20} style={{ color: 'var(--nafa-gray-400)' }} /></div>}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium" style={{ color: 'var(--nafa-black)' }}>{item.title}</p>
@@ -131,8 +196,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
             {/* Right column */}
             <div className="lg:w-80 space-y-4">
-
-              {/* Tracker */}
               <div className="bg-white rounded-2xl p-4 border" style={{ borderColor: 'var(--nafa-gray-200)' }}>
                 <div className="flex items-center gap-2 mb-4">
                   <Clock size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
@@ -141,7 +204,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 <OrderStatusStepper currentStatus={order.orderStatus} statusHistory={order.statusHistory} />
               </div>
 
-              {/* Address */}
               <div className="bg-white rounded-2xl p-4 border" style={{ borderColor: 'var(--nafa-gray-200)' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <MapPin size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
@@ -154,7 +216,6 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 </p>
               </div>
 
-              {/* Payment */}
               <div className="bg-white rounded-2xl p-4 border" style={{ borderColor: 'var(--nafa-gray-200)' }}>
                 <div className="flex items-center gap-2 mb-3">
                   <CreditCard size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
@@ -173,11 +234,21 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-700">Payé</span>
                 </div>
               </div>
-
             </div>
           </div>
         </motion.div>
       </div>
+
+      {/* Review modal */}
+      {showReviewModal && (
+        <ReviewModal
+          orderId={order.id}
+          vendorId={order.vendorId}
+          vendorName={order.vendorName ?? 'Boutique'}
+          onClose={() => setShowReviewModal(false)}
+          onSubmitted={handleReviewSubmitted}
+        />
+      )}
     </div>
   );
 }
