@@ -12,13 +12,15 @@ import type { Product } from '@/types';
 
 const CATEGORIES = [
   { id: 'all', label: 'Tous' },
-  { id: 'electronics', label: 'Électronique' },
-  { id: 'fashion', label: 'Mode' },
-  { id: 'home', label: 'Maison' },
-  { id: 'beauty', label: 'Beauté' },
+  { id: 'mode', label: 'Mode' },
+  { id: 'électronique', label: 'Électronique' },
+  { id: 'maison', label: 'Maison' },
+  { id: 'beauté', label: 'Beauté' },
   { id: 'sport', label: 'Sport' },
-  { id: 'food', label: 'Alimentation' },
-  { id: 'art', label: 'Artisanat' },
+  { id: 'alimentation', label: 'Alimentation' },
+  { id: 'artisanat', label: 'Artisanat' },
+  { id: 'bijoux', label: 'Bijoux' },
+  { id: 'autre', label: 'Autre' },
 ];
 
 const PRICE_RANGES = [
@@ -43,7 +45,7 @@ export default function HomePage() {
       setIsLoading(true);
       const { data } = await supabase
         .from('products')
-        .select('*, vendor_profiles!inner(shop_name)')
+        .select('*, vendor_profiles(shop_name)')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 

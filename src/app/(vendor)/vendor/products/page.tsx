@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Pencil, Trash2, Package, Search } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { formatCurrency } from '@/lib/utils';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Skeleton } from '@/components/shared/SkeletonShimmer';
@@ -11,6 +12,7 @@ import { supabase } from '@/lib/supabase';
 import type { Product } from '@/types';
 
 export default function VendorProductsPage() {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -117,7 +119,7 @@ export default function VendorProductsPage() {
           icon={Package}
           title="Aucun produit"
           description={search ? 'Aucun résultat pour cette recherche.' : 'Ajoutez votre premier produit pour commencer à vendre.'}
-          action={!search ? { label: 'Ajouter un produit', onClick: () => {} } : undefined}
+          action={!search ? { label: 'Ajouter un produit', onClick: () => router.push('/vendor/products/new') } : undefined}
         />
       ) : (
         <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: 'var(--nafa-gray-200)' }}>

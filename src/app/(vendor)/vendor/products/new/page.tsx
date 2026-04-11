@@ -22,12 +22,16 @@ export default function NewProductPage() {
   const update = (k: string, v: string) => setForm((p) => ({ ...p, [k]: v }));
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = Array.from(e.target.files ?? []).slice(0, 5 - previews.length);
-    selected.forEach((file) => {
+    const selected = Array.from(e.target.files ?? []);
+    const oversized = selected.filter((f) => f.size > 8 * 1024 * 1024);
+    if (oversized.length > 0) {
+      setError(`${oversized.length} fichier(s) dépasse(nt) 8 Mo et seront ignorés.`);
+    }
+    const valid = selected.filter((f) => f.size <= 8 * 1024 * 1024);
+    valid.forEach((file) => {
       setPreviews((p) => [...p, URL.createObjectURL(file)]);
     });
-    setFiles((prev) => [...prev, ...selected]);
-    // Reset input so same file can be re-selected after removal
+    setFiles((prev) => [...prev, ...valid]);
     e.target.value = '';
   };
 
@@ -45,10 +49,11 @@ export default function NewProductPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Non authentifié');
 
-      // Upload images to Supabase Storage
-      let imageUrls: string[] = [];
-      if (files.length > 0) {
-        imageUrls = await uploadProductImages(user.id, files);
+      // Upload images sequentially to avoid rate-limit hangs
+      const imageUrls: string[] = [];
+      for (const file of files) {
+        const url = await uploadProductImages(user.id, [file]);
+        imageUrls.push(...url);
       }
 
       // Insert product in DB
@@ -70,8 +75,11 @@ export default function NewProductPage() {
       if (dbError) throw dbError;
 
       router.push('/vendor/products');
-    } catch (err) {
-      setError((err as Error).message ?? 'Une erreur est survenue.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error
+        ? err.message
+        : (err as { message?: string })?.message ?? 'Une erreur est survenue.';
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +109,7 @@ export default function NewProductPage() {
         {/* Image upload */}
         <div>
           <label className="block text-sm font-medium mb-3" style={{ color: 'var(--nafa-gray-900)' }}>
-            Photos du produit <span className="text-xs font-normal" style={{ color: 'var(--nafa-gray-400)' }}>(max 5)</span>
+            Photos du produit <span className="text-xs font-normal" style={{ color: 'var(--nafa-gray-400)' }}>(max 8 Mo par photo)</span>
           </label>
           <div className="flex gap-3 flex-wrap">
             {previews.map((url, i) => (
@@ -114,8 +122,7 @@ export default function NewProductPage() {
                 </button>
               </div>
             ))}
-            {previews.length < 5 && (
-              <motion.button type="button" whileTap={{ scale: 0.97 }} onClick={() => fileRef.current?.click()}
+            <motion.button type="button" whileTap={{ scale: 0.97 }} onClick={() => fileRef.current?.click()}
                 className="w-24 h-24 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-1.5 flex-shrink-0 transition-colors"
                 style={{ borderColor: 'var(--nafa-gray-200)' }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--nafa-orange)'; }}
@@ -123,7 +130,6 @@ export default function NewProductPage() {
                 <Upload size={18} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
                 <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>Ajouter</span>
               </motion.button>
-            )}
           </div>
           <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
             onChange={handleFiles} aria-label="Sélectionner des images" />

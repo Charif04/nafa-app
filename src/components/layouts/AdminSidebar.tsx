@@ -6,10 +6,9 @@ import {
   BarChart3, Settings, Menu, X, LogOut, ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { signOut } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase';
+import { usePathname, useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/stores/authStore';
 import { Logo } from '@/components/shared/Logo';
 import { cn } from '@/lib/utils';
 
@@ -27,9 +26,13 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const user = useAuthStore((s) => s.user);
+  const adminName = user ? `${user.firstName} ${user.lastName}`.trim() || 'Admin' : 'Admin';
+  const adminEmail = user?.email ?? 'admin@nafa.market';
+  const initial = adminName[0]?.toUpperCase() ?? 'A';
 
   const handleLogout = async () => {
-    if (auth) await signOut(auth);
+    await supabase.auth.signOut();
     router.replace('/login');
   };
 
@@ -71,11 +74,11 @@ export function AdminSidebar() {
             className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
             style={{ background: 'var(--nafa-orange)' }}
           >
-            A
+            {initial}
           </div>
-          <div>
-            <p className="text-xs font-semibold text-white">Admin NAFA</p>
-            <p className="text-xs text-white/50">admin@nafa.market</p>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-white truncate">{adminName}</p>
+            <p className="text-xs text-white/50 truncate">{adminEmail}</p>
           </div>
         </div>
         <button
