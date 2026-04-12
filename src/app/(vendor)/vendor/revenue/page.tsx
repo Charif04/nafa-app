@@ -100,14 +100,17 @@ export default function VendorRevenuePage() {
     setIsLoading(false);
   }
 
-  const commission = Math.round(monthRevenue * COMMISSION_RATE / (1 - COMMISSION_RATE));
-  const netMonth = monthRevenue;
+  // order.subtotal = client price (vendor price × 1.1)
+  // monthRevenue = Math.round(sum(subtotal) / 1.1) = total vendor earnings (their set prices)
+  // NAFA's markup = monthRevenue × 10% (charged on top to clients, not deducted from vendor)
+  const nafaMarkup = Math.round(monthRevenue * COMMISSION_RATE);
+  const clientTotal = monthRevenue + nafaMarkup; // total processed through NAFA
 
   const kpiCards = [
-    { label: 'CA total net', value: totalRevenue, icon: TrendingUp, accent: false },
-    { label: 'CA ce mois (net)', value: netMonth, icon: BarChart2, accent: false },
-    { label: 'Commission NAFA (10%)', value: commission, icon: DollarSign, accent: true },
-    { label: 'Net reçu ce mois', value: netMonth - commission, icon: Wallet, accent: false },
+    { label: 'CA total (net vendeur)', value: totalRevenue, icon: TrendingUp, accent: false },
+    { label: 'Volume client ce mois', value: clientTotal, icon: BarChart2, accent: false },
+    { label: 'Markup NAFA (10%)', value: nafaMarkup, icon: DollarSign, accent: true },
+    { label: 'Vos revenus ce mois', value: monthRevenue, icon: Wallet, accent: false },
   ];
 
   const containerVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } };
@@ -201,22 +204,24 @@ export default function VendorRevenuePage() {
             <table className="w-full min-w-[640px]">
               <thead>
                 <tr style={{ background: 'var(--nafa-gray-100)' }}>
-                  {['Produit', 'Unités vendues', 'CA brut', 'Commission (10%)', 'Net vendeur'].map((h) => (
+                  {['Produit', 'Unités vendues', 'Payé par client', 'Markup NAFA (10%)', 'Vos revenus'].map((h) => (
                     <th key={h} className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {productRevenues.map((p, i) => {
-                  const comm = Math.round(p.gross * COMMISSION_RATE);
-                  const net = p.gross - comm;
+                  // p.gross = item.price × qty = vendor price (raw, pre-markup)
+                  // NAFA adds 10% on top for clients — vendor keeps their full price
+                  const markup = Math.round(p.gross * COMMISSION_RATE);
+                  const clientPaid = p.gross + markup;
                   return (
                     <tr key={i} style={{ borderBottom: '1px solid var(--nafa-gray-100)' }}>
                       <td className="px-5 py-3.5 text-sm font-medium" style={{ color: 'var(--nafa-black)' }}>{p.title}</td>
                       <td className="px-5 py-3.5 text-sm nafa-mono" style={{ color: 'var(--nafa-gray-700)' }}>{p.unitsSold}</td>
-                      <td className="px-5 py-3.5 text-sm font-semibold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(p.gross, 'FCFA')}</td>
-                      <td className="px-5 py-3.5 text-sm nafa-mono" style={{ color: 'var(--nafa-orange)' }}>-{formatCurrency(comm, 'FCFA')}</td>
-                      <td className="px-5 py-3.5 text-sm font-bold nafa-mono text-green-600">{formatCurrency(net, 'FCFA')}</td>
+                      <td className="px-5 py-3.5 text-sm font-semibold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(clientPaid, 'FCFA')}</td>
+                      <td className="px-5 py-3.5 text-sm nafa-mono" style={{ color: 'var(--nafa-orange)' }}>{formatCurrency(markup, 'FCFA')}</td>
+                      <td className="px-5 py-3.5 text-sm font-bold nafa-mono text-green-600">{formatCurrency(p.gross, 'FCFA')}</td>
                     </tr>
                   );
                 })}

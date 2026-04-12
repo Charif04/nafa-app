@@ -47,6 +47,7 @@ export default function CheckoutPage() {
   const [step, setStep] = useState<Step>('address');
   const [isLoading, setIsLoading] = useState(false);
   const [orderError, setOrderError] = useState('');
+  const [realOrderId, setRealOrderId] = useState<string | null>(null);
 
   // Address
   const [address, setAddress] = useState({ street: '', city: 'Ouagadougou', region: '', country: 'Burkina Faso' });
@@ -61,7 +62,6 @@ export default function CheckoutPage() {
   const deliveryFee = getDeliveryFee();
   const total = getTotal();
   const stepIndex = STEPS.indexOf(step);
-  const orderId = `NAFA-${Date.now().toString().slice(-6)}`;
 
   const handleConfirm = async () => {
     setIsLoading(true);
@@ -78,8 +78,9 @@ export default function CheckoutPage() {
       if (items.length > 0) {
         // Create one order per vendor group
         const vendorGroups = useCartStore.getState().getVendorGroups();
+        let firstId: string | null = null;
         for (const group of vendorGroups) {
-          await createOrder({
+          const oid = await createOrder({
             clientId: user.id,
             vendorId: group.vendorId,
             items: group.items.map((item) => ({
@@ -99,7 +100,9 @@ export default function CheckoutPage() {
             deliveryCountry: address.country,
             paymentMethod,
           });
+          if (!firstId) firstId = oid;
         }
+        setRealOrderId(firstId);
       }
 
       clearCart();
@@ -423,7 +426,7 @@ export default function CheckoutPage() {
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
                 className="w-full p-5 rounded-2xl mb-8 text-left" style={{ background: 'var(--nafa-gray-100)' }}>
                 {[
-                  { label: 'N° Commande', value: `#${orderId}` },
+                  { label: 'N° Commande', value: realOrderId ? `#${realOrderId.slice(0, 8).toUpperCase()}` : '—' },
                   { label: 'Montant payé', value: formatCurrency(total, 'FCFA') },
                   { label: 'Moyen de paiement', value: selectedPM.label },
                   { label: 'Statut', value: 'En attente vendeur' },
@@ -435,7 +438,8 @@ export default function CheckoutPage() {
                 ))}
               </motion.div>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }} className="flex flex-col gap-3 w-full">
-                <motion.button whileTap={{ scale: 0.97 }} onClick={() => router.push('/profile/orders')}
+                <motion.button whileTap={{ scale: 0.97 }}
+                  onClick={() => router.push(realOrderId ? `/profile/orders/${realOrderId}` : '/profile/orders')}
                   className="w-full py-3.5 rounded-xl font-semibold text-white flex items-center justify-center gap-2"
                   style={{ background: 'var(--nafa-orange)' }}>
                   Suivre ma commande <ArrowRight size={16} strokeWidth={1.75} />

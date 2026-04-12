@@ -66,6 +66,7 @@ $$;
 -- so no user-facing INSERT policy is needed, but we add a
 -- permissive policy to avoid accidental future breakage.
 
+drop policy if exists "status_history_insert_own" on order_status_history;
 create policy "status_history_insert_own" on order_status_history
   for insert with check (
     exists (

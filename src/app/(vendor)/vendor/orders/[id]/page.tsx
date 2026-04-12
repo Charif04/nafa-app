@@ -217,40 +217,48 @@ export default function VendorOrderDetailPage({ params }: { params: Promise<{ id
           </motion.div>
 
           {/* Récapitulatif financier */}
-          <motion.div variants={itemVariants} className="bg-white rounded-2xl border p-6"
-            style={{ borderColor: 'var(--nafa-gray-200)' }}>
-            <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--nafa-black)' }}>Récapitulatif</h2>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm" style={{ color: 'var(--nafa-gray-700)' }}>Votre prix de vente</span>
-                <span className="text-sm font-medium nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(order.subtotal, order.currency)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm" style={{ color: 'var(--nafa-gray-400)' }}>Commission NAFA (+10%)</span>
-                <span className="text-sm nafa-mono" style={{ color: 'var(--nafa-gray-400)' }}>
-                  +{formatCurrency(Math.round(order.subtotal * 0.1), order.currency)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm" style={{ color: 'var(--nafa-gray-700)' }}>Prix payé par le client</span>
-                <span className="text-sm font-medium nafa-mono" style={{ color: 'var(--nafa-black)' }}>
-                  {formatCurrency(Math.round(order.subtotal * 1.1) + order.deliveryFee, order.currency)}
-                </span>
-              </div>
-              {order.deliveryFee > 0 && (
-                <div className="flex justify-between text-xs" style={{ color: 'var(--nafa-gray-400)' }}>
-                  <span>dont frais de livraison</span>
-                  <span className="nafa-mono">{formatCurrency(order.deliveryFee, order.currency)}</span>
+          {(() => {
+            // order.subtotal = client price (vendor price × 1.1)
+            // Vendor earns their set price; NAFA's markup is added on top for the client
+            const vendorPrice = Math.round(order.subtotal / 1.1);
+            const nafaCommission = order.subtotal - vendorPrice;
+            return (
+              <motion.div variants={itemVariants} className="bg-white rounded-2xl border p-6"
+                style={{ borderColor: 'var(--nafa-gray-200)' }}>
+                <h2 className="text-sm font-semibold mb-4" style={{ color: 'var(--nafa-black)' }}>Récapitulatif</h2>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm" style={{ color: 'var(--nafa-gray-700)' }}>Votre prix de vente</span>
+                    <span className="text-sm font-medium nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(vendorPrice, order.currency)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm" style={{ color: 'var(--nafa-gray-400)' }}>Markup NAFA (+10%)</span>
+                    <span className="text-sm nafa-mono" style={{ color: 'var(--nafa-gray-400)' }}>
+                      +{formatCurrency(nafaCommission, order.currency)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm" style={{ color: 'var(--nafa-gray-700)' }}>Prix payé par le client</span>
+                    <span className="text-sm font-medium nafa-mono" style={{ color: 'var(--nafa-black)' }}>
+                      {formatCurrency(order.subtotal + order.deliveryFee, order.currency)}
+                    </span>
+                  </div>
+                  {order.deliveryFee > 0 && (
+                    <div className="flex justify-between text-xs" style={{ color: 'var(--nafa-gray-400)' }}>
+                      <span>dont frais de livraison</span>
+                      <span className="nafa-mono">{formatCurrency(order.deliveryFee, order.currency)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between pt-3" style={{ borderTop: '1px solid var(--nafa-gray-200)' }}>
+                    <span className="text-base font-bold" style={{ color: 'var(--nafa-black)' }}>Vos revenus</span>
+                    <span className="text-base font-black nafa-mono" style={{ color: 'var(--nafa-green)' }}>
+                      {formatCurrency(vendorPrice, order.currency)}
+                    </span>
+                  </div>
                 </div>
-              )}
-              <div className="flex justify-between pt-3" style={{ borderTop: '1px solid var(--nafa-gray-200)' }}>
-                <span className="text-base font-bold" style={{ color: 'var(--nafa-black)' }}>Vos revenus</span>
-                <span className="text-base font-black nafa-mono" style={{ color: 'var(--nafa-green)' }}>
-                  {formatCurrency(order.subtotal, order.currency)}
-                </span>
-              </div>
-            </div>
-          </motion.div>
+              </motion.div>
+            );
+          })()}
         </div>
 
         {/* Colonne droite : suivi + livraison + paiement */}

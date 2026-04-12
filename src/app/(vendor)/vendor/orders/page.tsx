@@ -7,6 +7,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { formatCurrency } from '@/lib/utils';
 import { useVendorOrdersStore } from '@/stores/vendorOrdersStore';
+import { useAuthStore } from '@/stores/authStore';
 import type { OrderStatus } from '@/types';
 
 const FILTERS: { label: string; value: OrderStatus | 'all' }[] = [
@@ -19,10 +20,16 @@ const FILTERS: { label: string; value: OrderStatus | 'all' }[] = [
 ];
 
 export default function VendorOrdersPage() {
-  const { orders, isLoading, error, fetchOrders } = useVendorOrdersStore();
+  const user = useAuthStore((s) => s.user);
+  const { orders, isLoading, error, fetchOrders, subscribeRealtime, unsubscribe } = useVendorOrdersStore();
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
 
-  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => {
+    fetchOrders();
+    if (user?.uid) subscribeRealtime(user.uid);
+    return () => unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid]);
 
   const filtered = orders.filter((o) => filter === 'all' || o.orderStatus === filter);
 

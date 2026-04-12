@@ -9,12 +9,19 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { OrderCardSkeleton } from '@/components/shared/SkeletonShimmer';
 import { formatCurrency } from '@/lib/utils';
 import { useClientOrdersStore } from '@/stores/clientOrdersStore';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function OrdersPage() {
   const router = useRouter();
-  const { orders, isLoading, error, fetchOrders } = useClientOrdersStore();
+  const user = useAuthStore((s) => s.user);
+  const { orders, isLoading, error, fetchOrders, subscribeRealtime, unsubscribe } = useClientOrdersStore();
 
-  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => {
+    fetchOrders();
+    if (user?.uid) subscribeRealtime(user.uid);
+    return () => unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid]);
 
   return (
     <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
