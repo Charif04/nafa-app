@@ -29,7 +29,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const { id } = use(params);
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const { getOrder, fetchOrders, orders, isLoading } = useClientOrdersStore();
+  const { getOrder, fetchOrders, orders, isLoading, subscribeRealtime, unsubscribe } = useClientOrdersStore();
 
   const [hasReviewed, setHasReviewed] = useState<boolean | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -37,11 +37,15 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
   useEffect(() => {
     if (orders.length === 0) fetchOrders();
+    if (user?.uid) subscribeRealtime(user.uid);
     const onVisible = () => { if (document.visibilityState === 'visible') fetchOrders(); };
     document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
+    return () => {
+      unsubscribe();
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user?.uid]);
 
   const order = getOrder(id);
 

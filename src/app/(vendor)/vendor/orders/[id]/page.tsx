@@ -14,6 +14,7 @@ import {
   VENDOR_TRANSITIONS,
   VENDOR_TRANSITION_LABELS,
 } from '@/stores/vendorOrdersStore';
+import { useAuthStore } from '@/stores/authStore';
 
 
 const sectionVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } };
@@ -21,16 +22,21 @@ const itemVariants = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 
 
 export default function VendorOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { getOrder, advanceStatus, fetchOrders, orders, isLoading } = useVendorOrdersStore();
+  const { getOrder, advanceStatus, fetchOrders, orders, isLoading, subscribeRealtime, unsubscribe } = useVendorOrdersStore();
+  const user = useAuthStore((s) => s.user);
   const order = getOrder(id);
 
   useEffect(() => {
     if (orders.length === 0) fetchOrders();
+    if (user?.uid) subscribeRealtime(user.uid);
     const onVisible = () => { if (document.visibilityState === 'visible') fetchOrders(); };
     document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
+    return () => {
+      unsubscribe();
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user?.uid]);
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [justUpdated, setJustUpdated] = useState(false);

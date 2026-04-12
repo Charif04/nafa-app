@@ -63,12 +63,20 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
   const canCancel = order.orderStatus !== 'delivered' && order.orderStatus !== 'cancelled';
   const isTerminal = order.orderStatus === 'delivered' || order.orderStatus === 'cancelled';
 
+  const runWithTimeout = (promise: Promise<void>, ms = 12000): Promise<void> =>
+    Promise.race([
+      promise,
+      new Promise<void>((_, reject) =>
+        setTimeout(() => reject(new Error('Délai dépassé — veuillez réessayer.')), ms)
+      ),
+    ]);
+
   const handleAdvance = async () => {
     setConfirmAction(null);
     setIsUpdating(true);
     setUpdateError(null);
     try {
-      await advanceStatus(order.id);
+      await runWithTimeout(advanceStatus(order.id));
       setJustUpdated(true);
       setTimeout(() => setJustUpdated(false), 3000);
     } catch (err) {
@@ -83,7 +91,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
     setIsUpdating(true);
     setUpdateError(null);
     try {
-      await cancelOrder(order.id);
+      await runWithTimeout(cancelOrder(order.id));
       setJustUpdated(true);
       setTimeout(() => {
         setJustUpdated(false);
