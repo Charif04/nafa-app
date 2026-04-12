@@ -19,6 +19,7 @@ interface AdminOrdersState {
   isLoading: boolean;
   error: string | null;
   fetchOrders: () => Promise<void>;
+  // Returns true on success, throws on failure so pages can show error
   advanceStatus: (orderId: string) => Promise<void>;
   cancelOrder: (orderId: string) => Promise<void>;
   getOrder: (id: string) => Order | undefined;
@@ -61,13 +62,15 @@ export const useAdminOrdersStore = create<AdminOrdersState>((set, get) => ({
 
     try {
       await updateOrderStatus(orderId, next);
-    } catch {
-      // Rollback
+    } catch (err) {
+      // Rollback optimistic update
       set((state) => ({
         orders: state.orders.map((o) =>
           o.id !== orderId ? o : { ...o, orderStatus: order.orderStatus, statusHistory: order.statusHistory }
         ),
       }));
+      // Re-throw so the page can display the error
+      throw err;
     }
   },
 
@@ -92,13 +95,14 @@ export const useAdminOrdersStore = create<AdminOrdersState>((set, get) => ({
 
     try {
       await updateOrderStatus(orderId, 'cancelled');
-    } catch {
+    } catch (err) {
       // Rollback
       set((state) => ({
         orders: state.orders.map((o) =>
           o.id !== orderId ? o : { ...o, orderStatus: order.orderStatus, statusHistory: order.statusHistory }
         ),
       }));
+      throw err;
     }
   },
 

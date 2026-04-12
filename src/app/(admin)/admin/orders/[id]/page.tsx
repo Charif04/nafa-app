@@ -38,6 +38,8 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
 
   const [confirmAction, setConfirmAction] = useState<'advance' | 'cancel' | null>(null);
   const [justUpdated, setJustUpdated] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   useEffect(() => {
     if (orders.length === 0) fetchOrders();
@@ -62,20 +64,36 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
   const isTerminal = order.orderStatus === 'delivered' || order.orderStatus === 'cancelled';
 
   const handleAdvance = async () => {
-    setConfirmAction(null); // close immediately — don't wait for DB
-    await advanceStatus(order.id);
-    setJustUpdated(true);
-    setTimeout(() => setJustUpdated(false), 3000);
+    setConfirmAction(null);
+    setIsUpdating(true);
+    setUpdateError(null);
+    try {
+      await advanceStatus(order.id);
+      setJustUpdated(true);
+      setTimeout(() => setJustUpdated(false), 3000);
+    } catch (err) {
+      setUpdateError(err instanceof Error ? err.message : 'Erreur lors de la mise à jour du statut.');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleCancel = async () => {
-    setConfirmAction(null); // close immediately — don't wait for DB
-    await cancelOrder(order.id);
-    setJustUpdated(true);
-    setTimeout(() => {
-      setJustUpdated(false);
-      router.push('/admin/orders');
-    }, 1500);
+    setConfirmAction(null);
+    setIsUpdating(true);
+    setUpdateError(null);
+    try {
+      await cancelOrder(order.id);
+      setJustUpdated(true);
+      setTimeout(() => {
+        setJustUpdated(false);
+        router.push('/admin/orders');
+      }, 1500);
+    } catch (err) {
+      setUpdateError(err instanceof Error ? err.message : 'Erreur lors de l\'annulation.');
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
@@ -100,6 +118,20 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
           <StatusBadge status={order.orderStatus} />
         </div>
       </motion.div>
+
+      {/* Error toast */}
+      <AnimatePresence>
+        {updateError && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
+            className="flex items-center gap-2 mb-6 px-4 py-3 rounded-xl text-sm font-medium"
+            style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--nafa-error)', border: '1px solid rgba(239,68,68,0.2)' }}
+          >
+            <AlertTriangle size={16} strokeWidth={1.75} />
+            {updateError}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Toast confirmation */}
       <AnimatePresence>
@@ -133,19 +165,24 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
             {nextStatus && nextLabel && (
               <motion.button
                 whileTap={{ scale: 0.97 }}
+                disabled={isUpdating}
                 onClick={() => setConfirmAction('advance')}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60"
                 style={{ background: 'var(--nafa-orange)' }}
               >
-                <ChevronRight size={15} strokeWidth={1.75} />
+                {isUpdating
+                  ? <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  : <ChevronRight size={15} strokeWidth={1.75} />
+                }
                 {nextLabel}
               </motion.button>
             )}
             {canCancel && (
               <motion.button
                 whileTap={{ scale: 0.97 }}
+                disabled={isUpdating}
                 onClick={() => setConfirmAction('cancel')}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border disabled:opacity-60"
                 style={{ borderColor: 'var(--nafa-error)', color: 'var(--nafa-error)', background: 'rgba(255,23,68,0.05)' }}
               >
                 <XCircle size={15} strokeWidth={1.75} />

@@ -19,7 +19,15 @@ export default function OrdersPage() {
   useEffect(() => {
     fetchOrders();
     if (user?.uid) subscribeRealtime(user.uid);
-    return () => unsubscribe();
+
+    // Fallback: re-fetch when user comes back to this tab
+    const onVisible = () => { if (document.visibilityState === 'visible') fetchOrders(); };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      unsubscribe();
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid]);
 

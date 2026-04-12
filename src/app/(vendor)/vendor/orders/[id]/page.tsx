@@ -26,6 +26,9 @@ export default function VendorOrderDetailPage({ params }: { params: Promise<{ id
 
   useEffect(() => {
     if (orders.length === 0) fetchOrders();
+    const onVisible = () => { if (document.visibilityState === 'visible') fetchOrders(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
