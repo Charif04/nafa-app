@@ -15,20 +15,6 @@ const NOTIF_CONFIG = {
   system: { icon: Info, color: 'bg-gray-100', iconColor: 'text-gray-600', dot: 'bg-gray-400' },
 };
 
-const NOTIF_DETAILS: Record<string, {
-  clientName?: string;
-  vendorName?: string;
-  orderId?: string;
-  amount?: number;
-  status?: string;
-  rating?: number;
-  product?: string;
-}> = {
-  '1': { clientName: 'Fatou Ndiaye', orderId: 'NAFA-2024-00847', amount: 42500, status: 'Livré' },
-  '2': { vendorName: 'NAFA Market', product: 'Toute la catégorie Mode' },
-  '3': { vendorName: 'Boutique Aminata', orderId: 'NAFA-2024-00831', rating: 5, product: 'Boubou brodé' },
-  '4': {},
-};
 
 export default function NotificationsPage() {
   const { notifications, markRead, markAllRead, getUnreadCount, fetchNotifications, subscribeRealtime, unsubscribe } = useNotificationStore();
@@ -206,62 +192,10 @@ export default function NotificationsPage() {
               {/* Body */}
               <p className="text-sm mb-5" style={{ color: 'var(--nafa-gray-700)' }}>{selectedNotif.body}</p>
 
-              {/* Details */}
-              {(() => {
-                const details = NOTIF_DETAILS[selectedNotif.id];
-                if (!details || Object.keys(details).length === 0) return null;
-                return (
-                  <div className="rounded-2xl p-4 space-y-2.5 mb-5" style={{ background: 'var(--nafa-gray-100)' }}>
-                    {details.clientName && (
-                      <div className="flex justify-between text-sm">
-                        <span style={{ color: 'var(--nafa-gray-700)' }}>Client</span>
-                        <span className="font-semibold" style={{ color: 'var(--nafa-black)' }}>{details.clientName}</span>
-                      </div>
-                    )}
-                    {details.vendorName && (
-                      <div className="flex justify-between text-sm">
-                        <span style={{ color: 'var(--nafa-gray-700)' }}>Vendeur</span>
-                        <span className="font-semibold" style={{ color: 'var(--nafa-black)' }}>{details.vendorName}</span>
-                      </div>
-                    )}
-                    {details.orderId && (
-                      <div className="flex justify-between text-sm">
-                        <span style={{ color: 'var(--nafa-gray-700)' }}>Commande</span>
-                        <span className="font-semibold nafa-mono" style={{ color: 'var(--nafa-orange)' }}>#{details.orderId}</span>
-                      </div>
-                    )}
-                    {details.product && (
-                      <div className="flex justify-between text-sm">
-                        <span style={{ color: 'var(--nafa-gray-700)' }}>Produit / Catégorie</span>
-                        <span className="font-semibold" style={{ color: 'var(--nafa-black)' }}>{details.product}</span>
-                      </div>
-                    )}
-                    {details.amount && (
-                      <div className="flex justify-between text-sm">
-                        <span style={{ color: 'var(--nafa-gray-700)' }}>Montant</span>
-                        <span className="font-semibold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{details.amount.toLocaleString('fr-FR')} FCFA</span>
-                      </div>
-                    )}
-                    {details.status && (
-                      <div className="flex justify-between text-sm">
-                        <span style={{ color: 'var(--nafa-gray-700)' }}>Statut</span>
-                        <span className="font-semibold text-green-600">{details.status}</span>
-                      </div>
-                    )}
-                    {details.rating && (
-                      <div className="flex justify-between text-sm">
-                        <span style={{ color: 'var(--nafa-gray-700)' }}>Note</span>
-                        <span className="font-semibold" style={{ color: 'var(--nafa-orange)' }}>{'★'.repeat(details.rating)} {details.rating}/5</span>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-
               {/* CTA */}
-              {selectedNotif.type === 'order_update' && NOTIF_DETAILS[selectedNotif.id]?.orderId && (
+              {selectedNotif.linkedOrderId && (
                 <Link
-                  href={`/profile/orders`}
+                  href={`/profile/orders/${selectedNotif.linkedOrderId}`}
                   onClick={() => setSelectedNotif(null)}
                   className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-sm font-semibold text-white"
                   style={{ background: 'var(--nafa-orange)' }}

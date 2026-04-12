@@ -81,7 +81,7 @@ export default function ProductDetailPage() {
   return (
     <div className="min-h-dvh" style={{ background: 'var(--nafa-white)' }}>
       {/* Header */}
-      <header className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 max-w-5xl mx-auto"
+      <header className="sticky top-0 md:top-16 z-20 flex items-center justify-between px-4 py-3 max-w-5xl mx-auto"
         style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)' }}>
         <button
           onClick={() => router.back()}
