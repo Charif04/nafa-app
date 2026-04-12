@@ -12,7 +12,7 @@ import { useClientOrdersStore } from '@/stores/clientOrdersStore';
 
 export default function OrdersPage() {
   const router = useRouter();
-  const { orders, isLoading, fetchOrders } = useClientOrdersStore();
+  const { orders, isLoading, error, fetchOrders } = useClientOrdersStore();
 
   useEffect(() => { fetchOrders(); }, []);
 
@@ -31,11 +31,17 @@ export default function OrdersPage() {
         </header>
 
         <div className="py-4 space-y-3">
+          {error && (
+            <div className="px-4 py-3 rounded-xl text-sm font-medium mb-2"
+              style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--nafa-error)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              Erreur : {error}
+            </div>
+          )}
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => <OrderCardSkeleton key={i} />)}
             </div>
-          ) : orders.length === 0 ? (
+          ) : error ? null : orders.length === 0 ? (
             <EmptyState icon={Package} title="Aucune commande" description="Vous n'avez pas encore passé de commande."
               action={{ label: 'Explorer les produits', onClick: () => router.push('/home') }} />
           ) : (

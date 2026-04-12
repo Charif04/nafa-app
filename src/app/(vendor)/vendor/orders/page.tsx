@@ -19,7 +19,7 @@ const FILTERS: { label: string; value: OrderStatus | 'all' }[] = [
 ];
 
 export default function VendorOrdersPage() {
-  const { orders, isLoading, fetchOrders } = useVendorOrdersStore();
+  const { orders, isLoading, error, fetchOrders } = useVendorOrdersStore();
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
 
   useEffect(() => { fetchOrders(); }, []);
@@ -46,6 +46,13 @@ export default function VendorOrdersPage() {
           </button>
         ))}
       </div>
+
+      {error && (
+        <div className="px-4 py-3 rounded-xl text-sm font-medium mb-4"
+          style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--nafa-error)', border: '1px solid rgba(239,68,68,0.2)' }}>
+          Erreur : {error}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
