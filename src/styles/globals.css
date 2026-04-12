@@ -133,3 +133,17 @@ button:disabled,
 [aria-disabled="true"] {
   cursor: not-allowed;
 }
+
+/* Safe-area bottom padding for devices with home indicator (iPhone) */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Scrollbar-none utility */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

@@ -428,7 +428,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
       {/* Sticky CTA — mobile only */}
       <div
-        className="fixed bottom-20 left-0 right-0 px-4 pb-3 pt-4 max-w-2xl mx-auto lg:hidden"
+        className="fixed bottom-[4.5rem] left-0 right-0 px-4 pb-3 pt-4 max-w-2xl mx-auto lg:hidden"
         style={{ background: 'linear-gradient(to top, var(--nafa-white) 80%, transparent)' }}
       >
         <div className="flex gap-3">

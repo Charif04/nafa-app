@@ -9,7 +9,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       {/* Top nav — desktop only */}
       <ClientTopNav />
       {/* Content */}
-      <main className="pb-20 md:pb-0 md:pt-16">
+      <main className="pb-24 md:pb-0 md:pt-16">
         {children}
       </main>
       {/* Bottom nav — mobile only */}

@@ -33,6 +33,7 @@ export default function VendorProductsPage() {
       .from('products')
       .select('*')
       .eq('vendor_id', user.id)
+      .eq('is_active', true)
       .order('created_at', { ascending: false });
 
     if (data) {

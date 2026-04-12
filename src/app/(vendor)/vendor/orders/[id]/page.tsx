@@ -21,17 +21,27 @@ const itemVariants = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 
 
 export default function VendorOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { getOrder, advanceStatus, fetchOrders, orders } = useVendorOrdersStore();
+  const { getOrder, advanceStatus, fetchOrders, orders, isLoading } = useVendorOrdersStore();
   const order = getOrder(id);
 
   useEffect(() => {
     if (orders.length === 0) fetchOrders();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [justUpdated, setJustUpdated] = useState(false);
 
   if (!order) {
+    if (isLoading) {
+      return (
+        <div className="p-4 md:p-6 lg:p-8 max-w-4xl mx-auto space-y-4">
+          <div className="h-10 w-48 rounded-xl animate-pulse" style={{ background: 'var(--nafa-gray-200)' }} />
+          <div className="h-32 rounded-2xl animate-pulse" style={{ background: 'var(--nafa-gray-200)' }} />
+          <div className="h-48 rounded-2xl animate-pulse" style={{ background: 'var(--nafa-gray-200)' }} />
+        </div>
+      );
+    }
     return (
       <div className="p-8 text-center">
         <p className="text-sm" style={{ color: 'var(--nafa-gray-700)' }}>Commande introuvable.</p>
