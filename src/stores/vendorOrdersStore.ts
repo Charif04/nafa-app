@@ -86,27 +86,10 @@ export const useVendorOrdersStore = create<VendorOrdersState>((set, get) => ({
 
     const channel = supabase
       .channel(`vendor_orders:${userId}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'orders', filter: `vendor_id=eq.${userId}` },
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' },
         () => { void get().fetchOrders(); }
       )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'orders', filter: `vendor_id=eq.${userId}` },
-        () => { void get().fetchOrders(); }
-      )
-      .subscribe((status) => {
-        if (status === 'CHANNEL_ERROR') {
-          const fallback = supabase
-            .channel(`vendor_orders_fallback:${userId}`)
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' },
-              () => { void get().fetchOrders(); }
-            )
-            .subscribe();
-          set({ channel: fallback });
-        }
-      });
+      .subscribe();
 
     set({ channel });
   },

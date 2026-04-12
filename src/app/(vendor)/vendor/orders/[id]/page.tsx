@@ -29,11 +29,16 @@ export default function VendorOrderDetailPage({ params }: { params: Promise<{ id
   useEffect(() => {
     if (orders.length === 0) fetchOrders();
     if (user?.uid) subscribeRealtime(user.uid);
-    const onVisible = () => { if (document.visibilityState === 'visible') fetchOrders(); };
+
+    const onVisible = () => { if (document.visibilityState === 'visible') void fetchOrders(); };
     document.addEventListener('visibilitychange', onVisible);
+
+    const poll = setInterval(() => void fetchOrders(), 20000);
+
     return () => {
       unsubscribe();
       document.removeEventListener('visibilitychange', onVisible);
+      clearInterval(poll);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid]);

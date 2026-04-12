@@ -38,11 +38,17 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   useEffect(() => {
     if (orders.length === 0) fetchOrders();
     if (user?.uid) subscribeRealtime(user.uid);
-    const onVisible = () => { if (document.visibilityState === 'visible') fetchOrders(); };
+
+    const onVisible = () => { if (document.visibilityState === 'visible') void fetchOrders(); };
     document.addEventListener('visibilitychange', onVisible);
+
+    // Polling fallback — guarantees update even if Realtime channel is silent
+    const poll = setInterval(() => void fetchOrders(), 20000);
+
     return () => {
       unsubscribe();
       document.removeEventListener('visibilitychange', onVisible);
+      clearInterval(poll);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid]);
