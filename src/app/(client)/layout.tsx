@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic';
-
 import { ClientBottomNav } from '@/components/layouts/ClientBottomNav';
 import { ClientTopNav } from '@/components/layouts/ClientTopNav';
 

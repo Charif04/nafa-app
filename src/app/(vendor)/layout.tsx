@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic';
-
 import { VendorSidebar } from '@/components/layouts/VendorSidebar';
 
 export default function VendorLayout({ children }: { children: React.ReactNode }) {
