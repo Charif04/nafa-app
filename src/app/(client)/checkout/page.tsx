@@ -46,6 +46,7 @@ export default function CheckoutPage() {
   const { items, getSubtotal, getDeliveryFee, getTotal, clearCart } = useCartStore();
   const [step, setStep] = useState<Step>('address');
   const [isLoading, setIsLoading] = useState(false);
+  const [orderError, setOrderError] = useState('');
 
   // Address
   const [address, setAddress] = useState({ street: '', city: 'Ouagadougou', region: '', country: 'Burkina Faso' });
@@ -64,10 +65,17 @@ export default function CheckoutPage() {
 
   const handleConfirm = async () => {
     setIsLoading(true);
+    setOrderError('');
     try {
       const { data: { user } } = await supabase.auth.getUser();
 
-      if (user && items.length > 0) {
+      if (!user) {
+        setOrderError('Vous devez être connecté pour passer une commande.');
+        setIsLoading(false);
+        return;
+      }
+
+      if (items.length > 0) {
         // Create one order per vendor group
         const vendorGroups = useCartStore.getState().getVendorGroups();
         for (const group of vendorGroups) {
@@ -93,12 +101,14 @@ export default function CheckoutPage() {
           });
         }
       }
-    } catch {
-      // Order creation failed silently — show success anyway
+
+      clearCart();
+      setStep('success');
+    } catch (err) {
+      setOrderError(err instanceof Error ? err.message : 'Erreur lors de la commande. Veuillez réessayer.');
+    } finally {
+      setIsLoading(false);
     }
-    clearCart();
-    setIsLoading(false);
-    setStep('success');
   };
 
   // Card number formatting
@@ -445,6 +455,12 @@ export default function CheckoutPage() {
       {step !== 'success' && (
         <div className="fixed bottom-0 left-0 right-0 px-4 md:px-6 pb-6 pt-4 max-w-2xl mx-auto"
           style={{ background: 'linear-gradient(to top, white 80%, transparent)' }}>
+          {orderError && (
+            <div className="mb-3 px-4 py-3 rounded-xl text-sm font-medium"
+              style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--nafa-error)', border: '1px solid rgba(239,68,68,0.2)' }}>
+              {orderError}
+            </div>
+          )}
           <motion.button whileTap={{ scale: 0.98 }}
             disabled={isLoading || (step === 'payment' && !canProceedPayment)}
             onClick={() => {
