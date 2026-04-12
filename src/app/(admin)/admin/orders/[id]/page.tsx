@@ -283,7 +283,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
               {[
                 { icon: User, label: 'Nom', value: order.clientName ?? '—' },
                 { icon: MapPin, label: 'Adresse', value: `${order.deliveryAddress.city}, ${order.deliveryAddress.country}`, sub: order.deliveryAddress.street || undefined },
-                { icon: Phone, label: 'Téléphone', value: '+226 70 00 00 00', mono: true },
+                { icon: Phone, label: 'Téléphone', value: order.clientPhone ?? '—', mono: true },
               ].map(({ icon: Icon, label, value, sub, mono }) => (
                 <div key={label} className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--nafa-gray-100)' }}>

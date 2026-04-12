@@ -91,6 +91,7 @@ export interface Order {
   id: string;
   clientId: string;
   clientName?: string;
+  clientPhone?: string;
   vendorId: string;
   vendorName?: string;
   items: OrderItem[];

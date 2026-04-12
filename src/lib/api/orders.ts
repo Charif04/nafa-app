@@ -8,7 +8,7 @@ const ORDER_SELECT = `
   payment_method, payment_status, order_status, created_at,
   items:order_items(product_id, title, price, quantity, image),
   history:order_status_history(status, created_at, updated_by),
-  client:profiles!orders_client_id_fkey(first_name, last_name),
+  client:profiles!orders_client_id_fkey(first_name, last_name, phone),
   vendor:profiles!orders_vendor_id_fkey(vendor_profiles(shop_name))
 `;
 
@@ -21,11 +21,13 @@ export function mapOrder(row: any): Order {
   const clientName = row.client
     ? `${row.client.first_name} ${row.client.last_name}`.trim()
     : undefined;
+  const clientPhone = row.client?.phone ?? undefined;
 
   return {
     id: row.id,
     clientId: row.client_id,
     clientName,
+    clientPhone,
     vendorId: row.vendor_id,
     vendorName: shopName,
     items: (row.items ?? []).map((item: any) => ({
