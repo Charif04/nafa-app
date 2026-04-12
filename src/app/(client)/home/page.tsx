@@ -45,15 +45,24 @@ export default function HomePage() {
       setIsLoading(true);
       const { data } = await supabase
         .from('products')
-        .select('*, vendor_profiles(shop_name)')
+        .select(`
+          *,
+          vendor:profiles!products_vendor_id_fkey(
+            vendor_profiles(shop_name)
+          )
+        `)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (data) {
-        setProducts(data.map((row: any) => ({
+        setProducts(data.map((row: any) => {
+          const vp = Array.isArray(row.vendor?.vendor_profiles)
+            ? row.vendor.vendor_profiles[0]
+            : row.vendor?.vendor_profiles;
+          return {
           id: row.id,
           vendorId: row.vendor_id,
-          vendorName: row.vendor_profiles?.shop_name ?? '',
+          vendorName: vp?.shop_name ?? '',
           title: row.title,
           description: row.description ?? '',
           price: Number(row.price),
@@ -65,7 +74,8 @@ export default function HomePage() {
           reviewCount: row.review_count,
           createdAt: row.created_at,
           updatedAt: row.updated_at,
-        })));
+          };
+        }));
       }
       setIsLoading(false);
     }
