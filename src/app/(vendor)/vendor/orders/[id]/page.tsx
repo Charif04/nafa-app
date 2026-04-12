@@ -3,7 +3,7 @@ import { use, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
-  ChevronRight, CheckCircle2, AlertTriangle, Package,
+  ChevronRight, CheckCircle2, AlertTriangle, Package, RefreshCw,
 } from 'lucide-react';
 import Link from 'next/link';
 import { StatusBadge } from '@/components/shared/StatusBadge';
@@ -27,13 +27,15 @@ export default function VendorOrderDetailPage({ params }: { params: Promise<{ id
   const order = getOrder(id);
 
   useEffect(() => {
-    if (orders.length === 0) fetchOrders();
+    // Always fetch on mount — store may hold stale data from the orders list
+    void fetchOrders();
     if (user?.uid) subscribeRealtime(user.uid);
 
     const onVisible = () => { if (document.visibilityState === 'visible') void fetchOrders(); };
     document.addEventListener('visibilitychange', onVisible);
 
-    const poll = setInterval(() => void fetchOrders(), 20000);
+    // Poll every 10s while on detail page — user is actively watching for updates
+    const poll = setInterval(() => void fetchOrders(), 10000);
 
     return () => {
       unsubscribe();
@@ -43,8 +45,15 @@ export default function VendorOrderDetailPage({ params }: { params: Promise<{ id
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid]);
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchOrders();
+    setIsRefreshing(false);
+  };
+
   const [showConfirm, setShowConfirm] = useState(false);
   const [justUpdated, setJustUpdated] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   if (!order) {
     if (isLoading) {
@@ -97,7 +106,14 @@ export default function VendorOrderDetailPage({ params }: { params: Promise<{ id
             })}
           </p>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <button onClick={() => void handleRefresh()} disabled={isRefreshing}
+            className="w-9 h-9 rounded-xl flex items-center justify-center border disabled:opacity-50"
+            style={{ borderColor: 'var(--nafa-gray-200)', background: 'var(--nafa-white)' }} aria-label="Rafraîchir">
+            <RefreshCw size={15} strokeWidth={1.75}
+              style={{ color: 'var(--nafa-gray-700)' }}
+              className={isRefreshing ? 'animate-spin' : ''} />
+          </button>
           <StatusBadge status={order.orderStatus} />
         </div>
       </motion.div>

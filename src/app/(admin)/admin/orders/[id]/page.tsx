@@ -42,7 +42,9 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
   const [updateError, setUpdateError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (orders.length === 0) fetchOrders();
+    // Always fetch on mount to ensure fresh data
+    void fetchOrders();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Ordre non trouvé
@@ -77,6 +79,8 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
     setUpdateError(null);
     try {
       await runWithTimeout(advanceStatus(order.id));
+      // Re-fetch from DB to confirm the update persisted (not just optimistic)
+      await fetchOrders();
       setJustUpdated(true);
       setTimeout(() => setJustUpdated(false), 3000);
     } catch (err) {
@@ -92,6 +96,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
     setUpdateError(null);
     try {
       await runWithTimeout(cancelOrder(order.id));
+      await fetchOrders();
       setJustUpdated(true);
       setTimeout(() => {
         setJustUpdated(false);

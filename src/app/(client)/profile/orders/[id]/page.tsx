@@ -1,7 +1,7 @@
 'use client';
 import { use, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, MapPin, CreditCard, Clock, Package, Star } from 'lucide-react';
+import { ChevronLeft, MapPin, CreditCard, Clock, Package, Star, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -34,16 +34,18 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [hasReviewed, setHasReviewed] = useState<boolean | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    if (orders.length === 0) fetchOrders();
+    // Always fetch on mount — store may hold stale data from the orders list
+    void fetchOrders();
     if (user?.uid) subscribeRealtime(user.uid);
 
     const onVisible = () => { if (document.visibilityState === 'visible') void fetchOrders(); };
     document.addEventListener('visibilitychange', onVisible);
 
-    // Polling fallback — guarantees update even if Realtime channel is silent
-    const poll = setInterval(() => void fetchOrders(), 20000);
+    // Poll every 10s while on detail page — user is actively watching for updates
+    const poll = setInterval(() => void fetchOrders(), 10000);
 
     return () => {
       unsubscribe();
@@ -52,6 +54,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchOrders();
+    setIsRefreshing(false);
+  };
 
   const order = getOrder(id);
 
@@ -126,6 +134,13 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             </p>
           </div>
           <StatusBadge status={order.orderStatus} />
+          <button onClick={() => void handleRefresh()} disabled={isRefreshing}
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 disabled:opacity-50"
+            style={{ background: 'var(--nafa-gray-100)' }} aria-label="Rafraîchir">
+            <RefreshCw size={15} strokeWidth={1.75}
+              style={{ color: 'var(--nafa-gray-700)' }}
+              className={isRefreshing ? 'animate-spin' : ''} />
+          </button>
         </header>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-4">
