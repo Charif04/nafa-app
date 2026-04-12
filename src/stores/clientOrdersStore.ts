@@ -39,6 +39,9 @@ export const useClientOrdersStore = create<ClientOrdersStore>((set, get) => ({
     const existing = get().channel;
     if (existing) existing.unsubscribe();
 
+    // Filtered subscriptions require REPLICA IDENTITY FULL on the orders table
+    // (see migration 005_realtime_orders.sql). We subscribe to INSERT + UPDATE
+    // filtered by client_id. On any event, re-fetch so RLS is applied properly.
     const channel = supabase
       .channel(`client_orders:${userId}`)
       .on(
@@ -51,7 +54,19 @@ export const useClientOrdersStore = create<ClientOrdersStore>((set, get) => ({
         { event: 'UPDATE', schema: 'public', table: 'orders', filter: `client_id=eq.${userId}` },
         () => { void get().fetchOrders(); }
       )
-      .subscribe();
+      .subscribe((status) => {
+        // Fallback: if filtered subscription fails, subscribe without filter
+        // RLS on fetchClientOrders still ensures only own orders are returned
+        if (status === 'CHANNEL_ERROR') {
+          const fallback = supabase
+            .channel(`client_orders_fallback:${userId}`)
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' },
+              () => { void get().fetchOrders(); }
+            )
+            .subscribe();
+          set({ channel: fallback });
+        }
+      });
 
     set({ channel });
   },

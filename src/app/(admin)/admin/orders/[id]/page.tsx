@@ -62,15 +62,15 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
   const isTerminal = order.orderStatus === 'delivered' || order.orderStatus === 'cancelled';
 
   const handleAdvance = async () => {
+    setConfirmAction(null); // close immediately — don't wait for DB
     await advanceStatus(order.id);
-    setConfirmAction(null);
     setJustUpdated(true);
     setTimeout(() => setJustUpdated(false), 3000);
   };
 
   const handleCancel = async () => {
+    setConfirmAction(null); // close immediately — don't wait for DB
     await cancelOrder(order.id);
-    setConfirmAction(null);
     setJustUpdated(true);
     setTimeout(() => {
       setJustUpdated(false);
