@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Logo } from '@/components/shared/Logo';
-import { GoogleButton } from '@/components/shared/GoogleButton';
 import { cn } from '@/lib/utils';
 
 const COUNTRIES = ['Burkina Faso', 'Côte d\'Ivoire', 'Mali', 'Sénégal', 'Niger', 'Togo', 'Bénin', 'Ghana', 'Guinée', 'Mauritanie', 'France', 'Belgique', 'Canada', 'États-Unis'];
@@ -108,16 +107,6 @@ export default function RegisterPage() {
           <p className="text-sm mb-6" style={{ color: 'var(--nafa-gray-700)' }}>
             Rejoignez NAFA et découvrez des milliers de produits
           </p>
-
-          {/* Google OAuth */}
-          <div className="mb-5">
-            <GoogleButton label="S'inscrire avec Google" />
-            <div className="flex items-center gap-3 mt-5">
-              <div className="flex-1 h-px" style={{ background: 'var(--nafa-gray-200)' }} />
-              <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>ou avec un email</span>
-              <div className="flex-1 h-px" style={{ background: 'var(--nafa-gray-200)' }} />
-            </div>
-          </div>
 
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="grid grid-cols-2 gap-3">

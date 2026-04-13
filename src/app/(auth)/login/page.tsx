@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Logo } from '@/components/shared/Logo';
-import { GoogleButton } from '@/components/shared/GoogleButton';
+import { MagicLinkForm } from '@/components/shared/MagicLinkForm';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -81,16 +81,6 @@ export default function LoginPage() {
           <p className="text-sm mb-8" style={{ color: 'var(--nafa-gray-700)' }}>
             Connectez-vous à votre compte
           </p>
-
-          {/* Google OAuth */}
-          <div className="mb-6">
-            <GoogleButton label="Continuer avec Google" />
-            <div className="flex items-center gap-3 mt-5">
-              <div className="flex-1 h-px" style={{ background: 'var(--nafa-gray-200)' }} />
-              <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>ou</span>
-              <div className="flex-1 h-px" style={{ background: 'var(--nafa-gray-200)' }} />
-            </div>
-          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
@@ -190,6 +180,17 @@ export default function LoginPage() {
               )}
             </motion.button>
           </form>
+
+          {/* Magic link divider */}
+          <div className="flex items-center gap-3 mt-6 mb-4">
+            <div className="flex-1 h-px" style={{ background: 'var(--nafa-gray-200)' }} />
+            <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>ou sans mot de passe</span>
+            <div className="flex-1 h-px" style={{ background: 'var(--nafa-gray-200)' }} />
+          </div>
+          <p className="text-xs mb-2" style={{ color: 'var(--nafa-gray-700)' }}>
+            Recevez un lien de connexion par email — sans mot de passe.
+          </p>
+          <MagicLinkForm />
         </div>
 
         {/* Register link */}
