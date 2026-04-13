@@ -59,6 +59,10 @@ export default function ResetPasswordPage() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const withTimeout = <T,>(p: Promise<T>, ms = 15000): Promise<T> =>
+    Promise.race([p, new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Délai dépassé. Vérifiez votre connexion et réessayez.')), ms))]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirm) {
@@ -72,16 +76,23 @@ export default function ResetPasswordPage() {
     setError('');
     setIsLoading(true);
     try {
+      // Verify session is still active before attempting update
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setStatus('expired');
+        return;
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: updateError } = await (supabase as any).auth.updateUser({ password: newPassword });
+      const { error: updateError } = await withTimeout((supabase as any).auth.updateUser({ password: newPassword }));
       if (updateError) {
         setError(updateError.message ?? 'Impossible de mettre à jour le mot de passe.');
       } else {
         setStatus('success');
         setTimeout(() => router.replace('/home'), 2500);
       }
-    } catch {
-      setError('Erreur réseau. Vérifiez votre connexion.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      setError(msg || 'Erreur réseau. Vérifiez votre connexion.');
     } finally {
       setIsLoading(false);
     }
