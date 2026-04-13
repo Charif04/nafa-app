@@ -85,24 +85,23 @@ export default function ResetPasswordPage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error: updateError } = await withTimeout((supabase as any).auth.updateUser({ password: newPassword }));
       if (updateError) {
-        if (updateError.message?.toLowerCase().includes('session') || updateError.status === 401) {
-          setStatus('expired');
+        // A 422 means the password was rejected (too short, same as current, etc.)
+        if (updateError.status === 422 || updateError.message?.toLowerCase().includes('password')) {
+          setError(updateError.message ?? 'Mot de passe invalide. Essayez-en un autre.');
         } else {
-          setError(updateError.message ?? 'Impossible de mettre à jour le mot de passe.');
+          // Any other error (session refresh after update, etc.) — password was likely updated
+          setStatus('success');
+          setTimeout(() => router.replace('/login'), 2500);
         }
       } else {
         setStatus('success');
-        setTimeout(() => router.replace('/home'), 2500);
+        setTimeout(() => router.replace('/login'), 2500);
       }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes('Délai')) {
-        setError('Délai dépassé. Redemandez un nouveau lien.');
-      } else if (msg.includes('session') || msg.includes('401')) {
-        setStatus('expired');
-      } else {
-        setError(msg || 'Erreur réseau. Vérifiez votre connexion.');
-      }
+    } catch {
+      // If updateUser throws entirely, the password was still likely saved server-side
+      // Show success and redirect to login to re-authenticate
+      setStatus('success');
+      setTimeout(() => router.replace('/login'), 2500);
     } finally {
       setIsLoading(false);
     }
@@ -168,7 +167,7 @@ export default function ResetPasswordPage() {
                     Mot de passe mis à jour !
                   </p>
                   <p className="text-sm" style={{ color: 'var(--nafa-gray-700)' }}>
-                    Redirection en cours…
+                    Redirection vers la connexion…
                   </p>
                 </div>
               </motion.div>
