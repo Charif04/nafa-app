@@ -83,7 +83,9 @@ export default function ResetPasswordPage() {
         return;
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: updateError } = await withTimeout((supabase as any).auth.updateUser({ password: newPassword }));
+      const result = await withTimeout((supabase as any).auth.updateUser({ password: newPassword })) as any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const updateError: any = result?.error;
       if (updateError) {
         // A 422 means the password was rejected (too short, same as current, etc.)
         if (updateError.status === 422 || updateError.message?.toLowerCase().includes('password')) {
