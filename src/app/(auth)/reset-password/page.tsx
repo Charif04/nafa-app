@@ -76,23 +76,33 @@ export default function ResetPasswordPage() {
     setError('');
     setIsLoading(true);
     try {
-      // Verify session is still active before attempting update
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      // Re-confirm session is active (recovery sessions can expire quickly)
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
         setStatus('expired');
         return;
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error: updateError } = await withTimeout((supabase as any).auth.updateUser({ password: newPassword }));
       if (updateError) {
-        setError(updateError.message ?? 'Impossible de mettre à jour le mot de passe.');
+        if (updateError.message?.toLowerCase().includes('session') || updateError.status === 401) {
+          setStatus('expired');
+        } else {
+          setError(updateError.message ?? 'Impossible de mettre à jour le mot de passe.');
+        }
       } else {
         setStatus('success');
         setTimeout(() => router.replace('/home'), 2500);
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : '';
-      setError(msg || 'Erreur réseau. Vérifiez votre connexion.');
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('Délai')) {
+        setError('Délai dépassé. Redemandez un nouveau lien.');
+      } else if (msg.includes('session') || msg.includes('401')) {
+        setStatus('expired');
+      } else {
+        setError(msg || 'Erreur réseau. Vérifiez votre connexion.');
+      }
     } finally {
       setIsLoading(false);
     }
