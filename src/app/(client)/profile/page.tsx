@@ -35,7 +35,7 @@ export default function ProfilePage() {
   return (
     <>
       <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-4xl mx-auto">
 
           {/* Profile header */}
           <div className="px-4 pt-8 pb-6" style={{ background: 'var(--nafa-white)' }}>

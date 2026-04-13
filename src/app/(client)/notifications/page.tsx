@@ -161,7 +161,7 @@ export default function NotificationsPage() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl p-6 max-w-2xl mx-auto"
+              className="fixed bottom-16 md:bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl p-6 max-w-2xl mx-auto"
               style={{ boxShadow: '0 -8px 32px rgba(0,0,0,0.12)' }}
             >
               {/* Handle */}

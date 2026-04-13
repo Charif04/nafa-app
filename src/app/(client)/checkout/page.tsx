@@ -464,35 +464,37 @@ export default function CheckoutPage() {
 
       {/* CTA fixe */}
       {step !== 'success' && (
-        <div className="fixed bottom-0 left-0 right-0 px-4 md:px-6 pb-6 pt-4 max-w-2xl mx-auto"
-          style={{ background: 'linear-gradient(to top, white 80%, transparent)' }}>
-          {orderError && (
-            <div className="mb-3 px-4 py-3 rounded-xl text-sm font-medium"
-              style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--nafa-error)', border: '1px solid rgba(239,68,68,0.2)' }}>
-              {orderError}
-            </div>
-          )}
-          <motion.button whileTap={{ scale: 0.98 }}
-            disabled={isLoading || (step === 'payment' && !canProceedPayment)}
-            onClick={() => {
-              if (step === 'address') setStep('payment');
-              else if (step === 'payment') setStep('summary');
-              else handleConfirm();
-            }}
-            className="w-full py-4 rounded-2xl font-semibold text-white flex items-center justify-center gap-2 transition-opacity"
-            style={{
-              background: 'var(--nafa-orange)',
-              opacity: step === 'payment' && !canProceedPayment ? 0.5 : 1,
-            }}>
-            {isLoading ? (
-              <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-            ) : (
-              <>
-                {step === 'summary' ? 'Confirmer la commande' : 'Continuer'}
-                <ArrowRight size={18} strokeWidth={1.75} />
-              </>
+        <div className="fixed bottom-16 md:bottom-0 left-0 right-0"
+          style={{ background: 'linear-gradient(to top, white 85%, transparent)' }}>
+          <div className="max-w-2xl mx-auto px-4 md:px-6 pb-6 pt-4">
+            {orderError && (
+              <div className="mb-3 px-4 py-3 rounded-xl text-sm font-medium"
+                style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--nafa-error)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                {orderError}
+              </div>
             )}
-          </motion.button>
+            <motion.button whileTap={{ scale: 0.98 }}
+              disabled={isLoading || (step === 'payment' && !canProceedPayment)}
+              onClick={() => {
+                if (step === 'address') setStep('payment');
+                else if (step === 'payment') setStep('summary');
+                else handleConfirm();
+              }}
+              className="w-full py-4 rounded-2xl font-semibold text-white flex items-center justify-center gap-2 transition-opacity"
+              style={{
+                background: 'var(--nafa-orange)',
+                opacity: step === 'payment' && !canProceedPayment ? 0.5 : 1,
+              }}>
+              {isLoading ? (
+                <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              ) : (
+                <>
+                  {step === 'summary' ? 'Confirmer la commande' : 'Continuer'}
+                  <ArrowRight size={18} strokeWidth={1.75} />
+                </>
+              )}
+            </motion.button>
+          </div>
         </div>
       )}
     </div>

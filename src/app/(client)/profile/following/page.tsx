@@ -120,7 +120,7 @@ export default function FollowingPage() {
 
   return (
     <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
-      <div className="max-w-2xl mx-auto px-4 md:px-6">
+      <div className="max-w-4xl mx-auto px-4 md:px-6">
         {/* Sticky header */}
         <header
           className="sticky top-0 md:top-16 z-10 flex items-center gap-3 py-4"
