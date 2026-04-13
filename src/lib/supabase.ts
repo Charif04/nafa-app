@@ -8,5 +8,6 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,   // needed for magic-link + password-reset callbacks
   },
 });
