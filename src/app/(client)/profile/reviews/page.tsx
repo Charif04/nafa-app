@@ -83,7 +83,7 @@ export default function ReviewsPage() {
 
   return (
     <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
-      <div className="max-w-4xl mx-auto px-4 md:px-6">
+      <div className="max-w-7xl mx-auto px-4 md:px-6">
         <header className="sticky top-0 md:top-16 z-10 flex items-center gap-3 py-4"
           style={{ background: 'var(--nafa-white)', borderBottom: '1px solid var(--nafa-gray-200)' }}>
           <Link href="/profile" className="w-8 h-8 rounded-full flex items-center justify-center"
