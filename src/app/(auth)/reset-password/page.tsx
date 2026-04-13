@@ -4,8 +4,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Eye, EyeOff, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { Logo } from '@/components/shared/Logo';
+
+// Dedicated client with autoRefreshToken disabled to avoid lock conflicts
+// during the recovery session flow (updateUser + background token refresh collision)
+const resetClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
+);
 
 type Status = 'loading' | 'ready' | 'expired' | 'success';
 
@@ -27,7 +35,7 @@ export default function ResetPasswordPage() {
 
     if (code) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (supabase.auth as any).exchangeCodeForSession(code)
+      (resetClient.auth as any).exchangeCodeForSession(code)
         .then(({ error: exchangeError }: { error: Error | null }) => {
           if (exchangeError) {
             setStatus('expired');
@@ -39,14 +47,14 @@ export default function ResetPasswordPage() {
     }
 
     // Fallback: listen for PASSWORD_RECOVERY event (old email flow / magic link)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = resetClient.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
         setStatus('ready');
       }
     });
 
     // Also check if a valid session is already active
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    resetClient.auth.getSession().then(({ data: { session } }) => {
       if (session) setStatus('ready');
       else {
         // No code, no session → link is missing or expired
@@ -77,13 +85,13 @@ export default function ResetPasswordPage() {
     setIsLoading(true);
     try {
       // Re-confirm session is active (recovery sessions can expire quickly)
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await resetClient.auth.getSession();
       if (!sessionData.session) {
         setStatus('expired');
         return;
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await withTimeout((supabase as any).auth.updateUser({ password: newPassword })) as any;
+      const result = await withTimeout((resetClient as any).auth.updateUser({ password: newPassword })) as any;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const updateError: any = result?.error;
       if (updateError) {
