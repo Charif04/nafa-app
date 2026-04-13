@@ -18,7 +18,10 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { BecomeVendorModal } from '@/components/shared/BecomeVendorModal';
 
-const LANGUAGES = ['Français', 'English'];
+const ALL_LANGUAGES = [
+  { label: 'Français', available: true },
+  { label: 'English', available: false },
+] as const;
 const CURRENCIES = ['FCFA', 'EUR', 'USD'];
 
 const containerVariants = {
@@ -34,7 +37,7 @@ const sectionVariants = {
 export default function SettingsPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const [selectedLanguage, setSelectedLanguage] = useState('Français');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('Français');
   const [selectedCurrency, setSelectedCurrency] = useState('FCFA');
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
@@ -43,11 +46,11 @@ export default function SettingsPage() {
   useEffect(() => {
     const storedLanguage = localStorage.getItem('nafa_language');
     const storedCurrency = localStorage.getItem('nafa_currency');
-    if (storedLanguage && LANGUAGES.includes(storedLanguage)) setSelectedLanguage(storedLanguage);
+    if (storedLanguage && ALL_LANGUAGES.some((l) => l.label === storedLanguage && l.available)) setSelectedLanguage(storedLanguage);
     if (storedCurrency && CURRENCIES.includes(storedCurrency)) setSelectedCurrency(storedCurrency);
   }, []);
 
-  useEffect(() => { localStorage.setItem('nafa_language', selectedLanguage); }, [selectedLanguage]);
+  useEffect(() => { localStorage.setItem('nafa_language', selectedLanguage as string); }, [selectedLanguage]);
   useEffect(() => { localStorage.setItem('nafa_currency', selectedCurrency); }, [selectedCurrency]);
 
   const handleLogout = async () => {
@@ -152,12 +155,21 @@ export default function SettingsPage() {
                       transition={{ duration: 0.25, ease: 'easeOut' }}
                       style={{ overflow: 'hidden', borderTop: '1px solid var(--nafa-gray-100)' }}
                     >
-                      {LANGUAGES.map((lang) => (
-                        <button key={lang} onClick={() => { setSelectedLanguage(lang); setShowLanguagePicker(false); }}
+                      {ALL_LANGUAGES.map(({ label, available }) => (
+                        <button key={label}
+                          onClick={() => { if (available) { setSelectedLanguage(label as string); setShowLanguagePicker(false); } }}
+                          disabled={!available}
                           className="flex items-center justify-between px-4 py-3 w-full text-left"
-                          style={{ borderTop: '1px solid var(--nafa-gray-100)' }}>
-                          <span className="text-sm" style={{ color: 'var(--nafa-gray-900)' }}>{lang}</span>
-                          {selectedLanguage === lang && <div className="w-4 h-4 rounded-full" style={{ background: 'var(--nafa-orange)' }} />}
+                          style={{ borderTop: '1px solid var(--nafa-gray-100)', opacity: available ? 1 : 0.5 }}>
+                          <span className="text-sm" style={{ color: 'var(--nafa-gray-900)' }}>{label}</span>
+                          <div className="flex items-center gap-2">
+                            {!available && (
+                              <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-400)' }}>
+                                Bientôt
+                              </span>
+                            )}
+                            {available && selectedLanguage === label && <div className="w-4 h-4 rounded-full" style={{ background: 'var(--nafa-orange)' }} />}
+                          </div>
                         </button>
                       ))}
                     </motion.div>

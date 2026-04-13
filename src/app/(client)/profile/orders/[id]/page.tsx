@@ -86,7 +86,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   };
 
   if (!order) {
-    if (isLoading) {
+    // Show skeleton until the fetch has run at least once (isLoading=true) OR store is empty
+    if (isLoading || orders.length === 0) {
       return (
         <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
           <div className="max-w-3xl mx-auto px-4 md:px-6">

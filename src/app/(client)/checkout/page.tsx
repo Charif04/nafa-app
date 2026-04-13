@@ -63,15 +63,22 @@ export default function CheckoutPage() {
   const total = getTotal();
   const stepIndex = STEPS.indexOf(step);
 
+  const withTimeout = <T,>(p: Promise<T>, ms = 15000): Promise<T> =>
+    Promise.race([
+      p,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error('Délai dépassé. Vérifiez votre connexion et réessayez.')), ms)
+      ),
+    ]);
+
   const handleConfirm = async () => {
     setIsLoading(true);
     setOrderError('');
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await withTimeout(supabase.auth.getUser());
 
       if (!user) {
         setOrderError('Vous devez être connecté pour passer une commande.');
-        setIsLoading(false);
         return;
       }
 
@@ -80,7 +87,7 @@ export default function CheckoutPage() {
         const vendorGroups = useCartStore.getState().getVendorGroups();
         let firstId: string | null = null;
         for (const group of vendorGroups) {
-          const oid = await createOrder({
+          const oid = await withTimeout(createOrder({
             clientId: user.id,
             vendorId: group.vendorId,
             items: group.items.map((item) => ({
@@ -99,7 +106,7 @@ export default function CheckoutPage() {
             deliveryRegion: address.region,
             deliveryCountry: address.country,
             paymentMethod,
-          });
+          }));
           if (!firstId) firstId = oid;
         }
         setRealOrderId(firstId);
