@@ -57,11 +57,36 @@
 }
 
 /* Font imports via next/font — applied via body class */
+html {
+  /* Prevent horizontal scroll from causing zoom on mobile */
+  overflow-x: hidden;
+}
+
 body {
   color: var(--nafa-black);
   background: var(--nafa-white);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent horizontal overflow causing mobile zoom */
+  overflow-x: hidden;
+  /* Ensure full width on mobile */
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* Fix iOS Safari auto-zoom on inputs (triggers when font-size < 16px) */
+@media screen and (max-width: 768px) {
+  input,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="search"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* Shimmer skeleton animation */
