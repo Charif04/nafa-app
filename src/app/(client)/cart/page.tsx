@@ -44,7 +44,7 @@ export default function CartPage() {
 
   return (
     <div className="min-h-dvh" style={{ background: 'var(--nafa-white)' }}>
-      <div className="max-w-7xl mx-auto px-4 md:px-6">
+      <div className="px-4 md:px-6 lg:px-10">
         <header className="pt-6 pb-4">
           <h1 className="text-xl font-bold" style={{ color: 'var(--nafa-black)' }}>
             Mon panier ({items.length} article{items.length > 1 ? 's' : ''})

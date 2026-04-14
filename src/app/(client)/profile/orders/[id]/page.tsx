@@ -90,7 +90,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     if (isLoading || orders.length === 0) {
       return (
         <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
-          <div className="max-w-7xl mx-auto px-4 md:px-6">
+          <div className="px-4 md:px-6 lg:px-10">
             <header className="flex items-center gap-3 py-4 sticky top-0 md:top-16 z-10"
               style={{ background: 'var(--nafa-white)', borderBottom: '1px solid var(--nafa-gray-200)' }}>
               <div className="w-8 h-8 rounded-full animate-pulse" style={{ background: 'var(--nafa-gray-200)' }} />

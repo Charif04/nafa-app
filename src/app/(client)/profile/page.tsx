@@ -35,7 +35,6 @@ export default function ProfilePage() {
   return (
     <>
       <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
-        <div className="max-w-7xl mx-auto">
 
           {/* Profile header */}
           <div className="px-4 pt-8 pb-6" style={{ background: 'var(--nafa-white)' }}>
@@ -132,7 +131,6 @@ export default function ProfilePage() {
 
             <p className="text-center text-xs py-2" style={{ color: 'var(--nafa-gray-400)' }}>NAFA Market v1.0.0</p>
           </motion.div>
-        </div>
       </div>
 
       <AnimatePresence>
