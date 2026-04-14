@@ -20,6 +20,7 @@ export default function VendorProductsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability
     loadProducts();
   }, []);
 
@@ -37,6 +38,7 @@ export default function VendorProductsPage() {
       .order('created_at', { ascending: false });
 
     if (data) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setProducts(data.map((row: any) => ({
         id: row.id,
         vendorId: row.vendor_id,

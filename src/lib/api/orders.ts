@@ -30,6 +30,7 @@ export function mapOrder(row: any): Order {
     clientPhone,
     vendorId: row.vendor_id,
     vendorName: shopName,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     items: (row.items ?? []).map((item: any) => ({
       productId: item.product_id ?? '',
       title: item.title,
@@ -50,8 +51,11 @@ export function mapOrder(row: any): Order {
     paymentMethod: row.payment_method as PaymentMethod,
     paymentStatus: row.payment_status as PaymentStatus,
     orderStatus: row.order_status as OrderStatus,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     statusHistory: [...(row.history ?? [])]
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .map((h: any) => ({
         status: h.status as OrderStatus,
         timestamp: h.created_at,

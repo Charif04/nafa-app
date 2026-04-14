@@ -213,13 +213,13 @@ export type Database = {
         Update: Partial<Database['public']['Tables']['alerts']['Insert']>;
       };
     };
-    Views: {};
+    Views: Record<string, never>;
     Functions: {
       get_my_role: {
-        Args: {};
+        Args: Record<string, never>;
         Returns: 'client' | 'vendor' | 'admin';
       };
     };
-    Enums: {};
+    Enums: Record<string, never>;
   };
 };

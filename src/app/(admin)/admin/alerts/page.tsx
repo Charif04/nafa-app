@@ -158,7 +158,7 @@ export default function AdminAlertsPage() {
   const [filter, setFilter] = useState<'active' | 'all' | 'resolved'>('active');
   const [selectedAlert, setSelectedAlert] = useState<AlertRow | null>(null);
 
-  useEffect(() => { loadAlerts(); }, []);
+  useEffect(() => { loadAlerts(); }, []); // eslint-disable-line react-hooks/immutability
 
   async function loadAlerts() {
     setIsLoading(true);

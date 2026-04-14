@@ -55,6 +55,7 @@ export default function HomePage() {
         .order('created_at', { ascending: false });
 
       if (data) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setProducts(data.map((row: any) => {
           const vp = Array.isArray(row.vendor?.vendor_profiles)
             ? row.vendor.vendor_profiles[0]

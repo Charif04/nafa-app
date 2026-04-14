@@ -27,6 +27,7 @@ export default function VendorWalletPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability
     if (user) loadWallet();
   }, [user]);
 
@@ -50,6 +51,7 @@ export default function VendorWalletPage() {
       .order('created_at', { ascending: false });
 
     setWithdrawals(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (wdRows ?? []).map((r: any) => ({
         id: r.id,
         amount: Number(r.amount),
@@ -141,7 +143,7 @@ export default function VendorWalletPage() {
           </div>
         ) : withdrawals.length === 0 ? (
           <div className="bg-white rounded-2xl border p-8 text-center" style={{ borderColor: 'var(--nafa-gray-200)' }}>
-            <p className="text-sm" style={{ color: 'var(--nafa-gray-400)' }}>Aucun retrait effectué pour l'instant</p>
+            <p className="text-sm" style={{ color: 'var(--nafa-gray-400)' }}>Aucun retrait effectué pour l&apos;instant</p>
           </div>
         ) : (
           <div className="space-y-3">

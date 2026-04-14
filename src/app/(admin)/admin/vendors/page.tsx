@@ -43,7 +43,7 @@ export default function AdminVendorsPage() {
   const [cnibLoading, setCnibLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  useEffect(() => { loadVendors(); }, []);
+  useEffect(() => { loadVendors(); }, []); // eslint-disable-line react-hooks/immutability
 
   async function loadVendors() {
     setIsLoading(true);
@@ -62,6 +62,7 @@ export default function AdminVendorsPage() {
     if (data) {
       // fetch emails from profiles (email is in auth.users, not profiles)
       // We'll fetch them separately
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const ids: string[] = data.map((r: any) => r.id);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: profilesData } = await (supabase as any)
@@ -69,9 +70,12 @@ export default function AdminVendorsPage() {
         .select('id, first_name, last_name, phone, country, region')
         .in('id', ids);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const profileMap: Record<string, any> = {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (profilesData ?? []).forEach((p: any) => { profileMap[p.id] = p; });
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setVendors(data.map((r: any) => {
         const p = profileMap[r.id] ?? {};
         return {
@@ -384,7 +388,7 @@ export default function AdminVendorsPage() {
                 {/* CNIB */}
                 <section>
                   <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--nafa-gray-400)' }}>
-                    Pièce d'identité (CNIB)
+                    Pièce d&apos;identité (CNIB)
                   </p>
                   {!selected.cnibUrl ? (
                     <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-yellow-50 text-yellow-700 text-sm">

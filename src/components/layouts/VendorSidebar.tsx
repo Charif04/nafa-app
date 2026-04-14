@@ -35,7 +35,7 @@ export function VendorSidebar() {
     router.replace('/login');
   };
 
-  const SidebarContent = () => (
+  const sidebarContent = (
     <div className="flex flex-col h-full">
       <div className="p-6 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
         <Logo size="sm" />
@@ -86,7 +86,7 @@ export function VendorSidebar() {
   return (
     <>
       <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-64 z-40" style={{ background: 'var(--nafa-dark)' }}>
-        <SidebarContent />
+        {sidebarContent}
       </aside>
 
       <button onClick={() => setMobileOpen(true)} className="lg:hidden fixed top-4 left-4 z-50 w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--nafa-dark)' }} aria-label="Ouvrir le menu">
@@ -103,7 +103,7 @@ export function VendorSidebar() {
                   <X size={16} strokeWidth={1.75} className="text-white" />
                 </button>
               </div>
-              <SidebarContent />
+              {sidebarContent}
             </motion.aside>
           </>
         )}

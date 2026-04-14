@@ -307,7 +307,7 @@ export default function CheckoutPage() {
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium mb-1" style={{ color: 'var(--nafa-gray-900)' }}>Date d'expiration</label>
+                        <label className="block text-xs font-medium mb-1" style={{ color: 'var(--nafa-gray-900)' }}>Date d&apos;expiration</label>
                         <div className="relative">
                           <Calendar size={14} strokeWidth={1.75} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--nafa-gray-400)' }} />
                           <input type="text" inputMode="numeric" value={card.expiry}

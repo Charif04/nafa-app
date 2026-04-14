@@ -1,4 +1,4 @@
-import { AlertTriangle, XCircle, Info, AlertOctagon } from 'lucide-react';
+import { AlertTriangle, XCircle, AlertOctagon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AlertSeverity, AlertType } from '@/types';
 
@@ -10,14 +10,15 @@ interface SeverityIndicatorProps {
 }
 
 export function SeverityIndicator({ severity, type, size = 18, className }: SeverityIndicatorProps) {
-  const getIcon = () => {
-    if (type === 'payment_failed') return XCircle;
-    if (type === 'high_cancellation') return AlertOctagon;
-    if (type === 'delivery_late') return AlertTriangle;
-    return severity === 'critical' ? XCircle : AlertTriangle;
-  };
+  const iconClass = severity === 'critical' ? 'text-red-500' : 'text-orange-500';
+  const iconProps = { size, strokeWidth: 1.75, className: iconClass };
 
-  const Icon = getIcon();
+  const icon =
+    type === 'payment_failed' ? <XCircle {...iconProps} /> :
+    type === 'high_cancellation' ? <AlertOctagon {...iconProps} /> :
+    type === 'delivery_late' ? <AlertTriangle {...iconProps} /> :
+    severity === 'critical' ? <XCircle {...iconProps} /> :
+    <AlertTriangle {...iconProps} />;
 
   return (
     <div className={cn('flex items-center gap-1.5', className)}>
@@ -27,11 +28,7 @@ export function SeverityIndicator({ severity, type, size = 18, className }: Seve
           severity === 'critical' ? 'bg-red-500' : 'bg-orange-500'
         )}
       />
-      <Icon
-        size={size}
-        strokeWidth={1.75}
-        className={severity === 'critical' ? 'text-red-500' : 'text-orange-500'}
-      />
+      {icon}
     </div>
   );
 }

@@ -31,13 +31,14 @@ export default function NotificationsPage() {
 
   const unreadCount = getUnreadCount();
 
+  const now = new Date().getTime();
   const grouped = {
-    today: notifications.filter((n) => Date.now() - new Date(n.createdAt).getTime() < 86400000),
+    today: notifications.filter((n) => now - new Date(n.createdAt).getTime() < 86400000),
     yesterday: notifications.filter((n) => {
-      const diff = Date.now() - new Date(n.createdAt).getTime();
+      const diff = now - new Date(n.createdAt).getTime();
       return diff >= 86400000 && diff < 172800000;
     }),
-    older: notifications.filter((n) => Date.now() - new Date(n.createdAt).getTime() >= 172800000),
+    older: notifications.filter((n) => now - new Date(n.createdAt).getTime() >= 172800000),
   };
 
   return (

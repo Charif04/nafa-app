@@ -36,7 +36,7 @@ export function AdminSidebar() {
     router.replace('/login');
   };
 
-  const SidebarContent = () => (
+  const sidebarContent = (
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="p-6 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
@@ -100,7 +100,7 @@ export function AdminSidebar() {
         className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-64 z-40"
         style={{ background: 'var(--nafa-dark)' }}
       >
-        <SidebarContent />
+        {sidebarContent}
       </aside>
 
       {/* Mobile hamburger */}
@@ -137,7 +137,7 @@ export function AdminSidebar() {
                   <X size={16} strokeWidth={1.75} className="text-white" />
                 </button>
               </div>
-              <SidebarContent />
+              {sidebarContent}
             </motion.aside>
           </>
         )}

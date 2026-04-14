@@ -37,18 +37,19 @@ const sectionVariants = {
 export default function SettingsPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const [selectedLanguage, setSelectedLanguage] = useState<string>('Français');
-  const [selectedCurrency, setSelectedCurrency] = useState('FCFA');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'Français';
+    const stored = localStorage.getItem('nafa_language');
+    return stored && ALL_LANGUAGES.some((l) => l.label === stored && l.available) ? stored : 'Français';
+  });
+  const [selectedCurrency, setSelectedCurrency] = useState(() => {
+    if (typeof window === 'undefined') return 'FCFA';
+    const stored = localStorage.getItem('nafa_currency');
+    return stored && CURRENCIES.includes(stored) ? stored : 'FCFA';
+  });
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [showVendorModal, setShowVendorModal] = useState(false);
-
-  useEffect(() => {
-    const storedLanguage = localStorage.getItem('nafa_language');
-    const storedCurrency = localStorage.getItem('nafa_currency');
-    if (storedLanguage && ALL_LANGUAGES.some((l) => l.label === storedLanguage && l.available)) setSelectedLanguage(storedLanguage);
-    if (storedCurrency && CURRENCIES.includes(storedCurrency)) setSelectedCurrency(storedCurrency);
-  }, []);
 
   useEffect(() => { localStorage.setItem('nafa_language', selectedLanguage as string); }, [selectedLanguage]);
   useEffect(() => { localStorage.setItem('nafa_currency', selectedCurrency); }, [selectedCurrency]);

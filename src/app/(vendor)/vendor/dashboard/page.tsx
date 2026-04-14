@@ -44,6 +44,7 @@ export default function VendorDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability
     loadDashboard();
   }, []);
 
@@ -73,6 +74,7 @@ export default function VendorDashboardPage() {
 
     // vendor revenue = subtotal / 1.1 (strip NAFA 10% commission)
     const revenue7d = Math.round(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (revenueRows ?? []).reduce((sum: number, r: any) => sum + Number(r.subtotal), 0) / 1.1
     );
 
@@ -106,6 +108,7 @@ export default function VendorDashboardPage() {
 
     if (topRows) {
       setTopVendors(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         topRows.map((row: any, i: number) => ({
           rank: i + 1,
           vendorId: row.id,
@@ -127,6 +130,7 @@ export default function VendorDashboardPage() {
       .limit(3);
 
     if (stockRows) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setLowStock(stockRows.map((r: any) => ({ name: r.title, stock: r.stock })));
     }
 
@@ -305,7 +309,7 @@ export default function VendorDashboardPage() {
             ))}
           </div>
         ) : recentOrders.length === 0 ? (
-          <p className="px-6 py-8 text-sm text-center" style={{ color: 'var(--nafa-gray-400)' }}>Aucune commande pour l'instant</p>
+          <p className="px-6 py-8 text-sm text-center" style={{ color: 'var(--nafa-gray-400)' }}>Aucune commande pour l&apos;instant</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px]">

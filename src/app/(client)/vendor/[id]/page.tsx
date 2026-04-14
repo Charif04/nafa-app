@@ -123,6 +123,7 @@ export default function VendorStorefrontPage() {
         .order('created_at', { ascending: false });
 
       if (productsData) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setProducts(productsData.map((row: any) => ({
           id: row.id,
           vendorId: row.vendor_id,

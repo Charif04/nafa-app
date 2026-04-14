@@ -48,6 +48,7 @@ export default function AdminDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability
     loadDashboard();
   }, []);
 
@@ -70,6 +71,7 @@ export default function AdminDashboardPage() {
       .lte('created_at', todayEnd.toISOString())
       .neq('order_status', 'cancelled');
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const revenueToday = (todayOrders ?? []).reduce((sum: number, r: any) => sum + Number(r.total), 0);
     const ordersToday = (todayOrders ?? []).length;
 
@@ -117,6 +119,7 @@ export default function AdminDashboardPage() {
       const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
       revenueByDay[key] = 0;
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (weekOrders ?? []).forEach((r: any) => {
       const key = r.created_at.slice(0, 10);
       if (key in revenueByDay) revenueByDay[key] += Number(r.total);

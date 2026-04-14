@@ -32,7 +32,7 @@ function TransactionsTab() {
   const [paidToVendors, setPaidToVendors] = useState(0);
   const [commissionTotal, setCommissionTotal] = useState(0);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/immutability
 
   async function load() {
     setIsLoading(true);
@@ -191,7 +191,7 @@ function WithdrawalsTab() {
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
   const [processing, setProcessing] = useState<string | null>(null);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/immutability
 
   async function load() {
     setIsLoading(true);

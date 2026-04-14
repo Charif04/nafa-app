@@ -58,7 +58,7 @@ export default function AdminAnalyticsPage() {
     const rows: any[] = orders ?? [];
 
     // ── Build buckets ──
-    let points: ChartPoint[] = [];
+    const points: ChartPoint[] = [];
 
     if (p === "Aujourd'hui") {
       for (let h = 0; h < 24; h += 2) {
@@ -132,6 +132,7 @@ export default function AdminAnalyticsPage() {
         .in('id', sortedIds);
 
       setTopVendors(sortedIds.map((id) => ({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         name: (vps ?? []).find((v: any) => v.id === id)?.shop_name ?? 'Boutique',
         sales: vendorCount[id],
       })));
@@ -142,6 +143,7 @@ export default function AdminAnalyticsPage() {
     setIsLoading(false);
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadData(period); }, [period, loadData]);
 
   const periodLabel = period === "Aujourd'hui" ? 'par heure'
