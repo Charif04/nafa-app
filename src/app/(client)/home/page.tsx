@@ -99,7 +99,7 @@ export default function HomePage() {
         className="sticky top-0 md:top-16 z-30 px-4 md:px-6 lg:px-10 py-3"
         style={{ background: 'var(--nafa-white)', boxShadow: '0 1px 0 var(--nafa-gray-200)' }}
       >
-        <div className="max-w-7xl mx-auto">
+        <div>
           {/* Mobile: logo + search bar */}
           <div className="flex items-center gap-3 md:hidden">
             <Logo size="sm" className="flex-shrink-0" />
@@ -246,8 +246,7 @@ export default function HomePage() {
 
       {/* Promotional banner */}
       <div className="px-4 md:px-6 lg:px-10 pt-4 pb-0">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
+        <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
@@ -271,13 +270,12 @@ export default function HomePage() {
               style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}>
               <Package size={30} strokeWidth={1.5} className="text-white" />
             </div>
-          </motion.div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Products grid */}
       <main className="p-4 md:px-6 lg:px-10">
-        <div className="max-w-7xl mx-auto">
+        <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-bold" style={{ color: 'var(--nafa-black)' }}>
               Recommandés pour vous
@@ -287,7 +285,7 @@ export default function HomePage() {
             </button>
           </div>
           {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
               {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
             </div>
           ) : filtered.length === 0 ? (
@@ -298,7 +296,7 @@ export default function HomePage() {
               action={{ label: 'Voir tous les produits', onClick: () => { setActiveCategory('all'); setSearch(''); setActivePriceRange('all'); } }}
             />
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
               {filtered.map((p, i) => (
                 <ProductCard key={p.id} product={p} index={i} />
               ))}
