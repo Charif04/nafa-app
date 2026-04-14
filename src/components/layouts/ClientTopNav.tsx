@@ -38,6 +38,7 @@ export function ClientTopNav() {
             <Link
               key={href}
               href={href}
+              prefetch={true}
               className="relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
               style={{
                 background: isActive ? 'rgba(255,107,44,0.08)' : 'transparent',

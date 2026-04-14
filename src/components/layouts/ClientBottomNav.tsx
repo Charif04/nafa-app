@@ -36,6 +36,7 @@ export function ClientBottomNav() {
             <Link
               key={href}
               href={href}
+              prefetch={true}
               className={cn(
                 'flex-1 flex flex-col items-center justify-center py-2.5 gap-1 relative min-h-[56px] transition-colors',
                 isActive ? '' : 'opacity-60'
