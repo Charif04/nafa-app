@@ -33,19 +33,18 @@ export default function OrdersPage() {
 
   return (
     <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
-      <div className="px-4 md:px-6 lg:px-10">
-        <header className="sticky top-0 md:top-16 z-10 flex items-center gap-3 py-4"
-          style={{ background: 'var(--nafa-white)', borderBottom: '1px solid var(--nafa-gray-200)' }}>
-          <button onClick={() => router.back()} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--nafa-gray-100)' }} aria-label="Retour">
-            <ChevronLeft size={18} strokeWidth={1.75} style={{ color: 'var(--nafa-black)' }} />
-          </button>
-          <h1 className="text-lg font-bold" style={{ color: 'var(--nafa-black)' }}>Mes commandes</h1>
-          <span className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>
-            {orders.length}
-          </span>
-        </header>
+      <header className="sticky top-0 md:top-16 z-10 flex items-center gap-3 px-4 md:px-6 lg:px-10 py-4"
+        style={{ background: 'var(--nafa-white)', borderBottom: '1px solid var(--nafa-gray-200)' }}>
+        <button onClick={() => router.back()} className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--nafa-gray-100)' }} aria-label="Retour">
+          <ChevronLeft size={18} strokeWidth={1.75} style={{ color: 'var(--nafa-black)' }} />
+        </button>
+        <h1 className="text-lg font-bold" style={{ color: 'var(--nafa-black)' }}>Mes commandes</h1>
+        <span className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>
+          {orders.length}
+        </span>
+      </header>
 
-        <div className="py-4 space-y-3">
+      <div className="px-4 md:px-6 lg:px-10 py-4 space-y-3">
           {error && (
             <div className="px-4 py-3 rounded-xl text-sm font-medium mb-2"
               style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--nafa-error)', border: '1px solid rgba(239,68,68,0.2)' }}>
@@ -100,7 +99,6 @@ export default function OrdersPage() {
               </motion.div>
             ))
           )}
-        </div>
       </div>
     </div>
   );

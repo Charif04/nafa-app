@@ -83,23 +83,22 @@ export default function ReviewsPage() {
 
   return (
     <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
-      <div className="px-4 md:px-6 lg:px-10">
-        <header className="sticky top-0 md:top-16 z-10 flex items-center gap-3 py-4"
-          style={{ background: 'var(--nafa-white)', borderBottom: '1px solid var(--nafa-gray-200)' }}>
-          <Link href="/profile" className="w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: 'var(--nafa-gray-100)' }} aria-label="Retour">
-            <ChevronLeft size={18} strokeWidth={1.75} style={{ color: 'var(--nafa-black)' }} />
-          </Link>
-          <h1 className="text-lg font-bold" style={{ color: 'var(--nafa-black)' }}>Mes avis</h1>
-          {!isLoading && (
-            <span className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full"
-              style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>
-              {reviews.length}
-            </span>
-          )}
-        </header>
+      <header className="sticky top-0 md:top-16 z-10 flex items-center gap-3 px-4 md:px-6 lg:px-10 py-4"
+        style={{ background: 'var(--nafa-white)', borderBottom: '1px solid var(--nafa-gray-200)' }}>
+        <Link href="/profile" className="w-8 h-8 rounded-full flex items-center justify-center"
+          style={{ background: 'var(--nafa-gray-100)' }} aria-label="Retour">
+          <ChevronLeft size={18} strokeWidth={1.75} style={{ color: 'var(--nafa-black)' }} />
+        </Link>
+        <h1 className="text-lg font-bold" style={{ color: 'var(--nafa-black)' }}>Mes avis</h1>
+        {!isLoading && (
+          <span className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-full"
+            style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>
+            {reviews.length}
+          </span>
+        )}
+      </header>
 
-        <div className="py-4">
+      <div className="px-4 md:px-6 lg:px-10 py-4">
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
@@ -165,7 +164,6 @@ export default function ReviewsPage() {
               </AnimatePresence>
             </motion.div>
           )}
-        </div>
       </div>
     </div>
   );
