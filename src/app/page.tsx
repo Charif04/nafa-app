@@ -2,14 +2,24 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
 
 export default function SplashPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.replace('/login');
-    }, 2400);
+    let timer: ReturnType<typeof setTimeout>;
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        // Already authenticated — show a brief splash then go straight to app
+        timer = setTimeout(() => router.replace('/home'), 600);
+      } else {
+        // Not logged in — show the full splash animation then go to login
+        timer = setTimeout(() => router.replace('/login'), 2400);
+      }
+    });
+
     return () => clearTimeout(timer);
   }, [router]);
 
@@ -32,7 +42,6 @@ export default function SplashPage() {
           transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.1 }}
           className="relative"
         >
-          {/* Background circle */}
           <div
             className="w-24 h-24 rounded-3xl flex items-center justify-center"
             style={{ background: 'linear-gradient(135deg, var(--nafa-orange) 0%, var(--nafa-orange-dark) 100%)' }}
