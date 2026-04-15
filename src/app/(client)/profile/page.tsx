@@ -66,7 +66,8 @@ export default function ProfilePage() {
 
           <motion.div variants={containerVariants} initial="hidden" animate="visible" className="px-4 py-4 space-y-4">
 
-            {/* Devenir vendeur */}
+            {/* Devenir vendeur — only for clients */}
+            {user?.role === 'client' && (
             <motion.div variants={itemVariants}>
               <button onClick={() => setShowVendorModal(true)} className="w-full text-left">
                 <motion.div whileTap={{ scale: 0.98 }}
@@ -83,6 +84,7 @@ export default function ProfilePage() {
                 </motion.div>
               </button>
             </motion.div>
+            )}
 
             {/* Mon compte */}
             <motion.div variants={itemVariants} className="rounded-2xl overflow-hidden" style={{ background: 'var(--nafa-white)' }}>

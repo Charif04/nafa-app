@@ -51,7 +51,6 @@ export function mapOrder(row: any): Order {
     paymentMethod: row.payment_method as PaymentMethod,
     paymentStatus: row.payment_status as PaymentStatus,
     orderStatus: row.order_status as OrderStatus,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     statusHistory: [...(row.history ?? [])]
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
@@ -97,14 +96,54 @@ export async function fetchClientOrders(clientId: string): Promise<Order[]> {
   return (data ?? []).map(mapOrder);
 }
 
+const STATUS_LABELS: Record<OrderStatus, string> = {
+  placed: 'Commande passée',
+  confirmed: 'Commande confirmée',
+  preparing: 'En préparation',
+  in_transit_warehouse: 'En route vers l\'entrepôt',
+  at_warehouse: 'À l\'entrepôt NAFA',
+  delivering: 'En cours de livraison',
+  delivered: 'Commande livrée 🎉',
+  cancelled: 'Commande annulée',
+};
+
 export async function updateOrderStatus(orderId: string, status: OrderStatus): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase as any)
-    .from('orders')
-    .update({ order_status: status })
-    .eq('id', orderId);
+  const db = supabase as any;
 
+  // 1. Update order status
+  const { error } = await db.from('orders').update({ order_status: status }).eq('id', orderId);
   if (error) throw error;
+
+  // 2. Fetch client_id for this order to send push notification
+  const { data: order } = await db.from('orders').select('client_id').eq('id', orderId).single();
+  if (!order?.client_id) return;
+
+  // 3. Insert a notification row (Realtime will pick it up for in-app display)
+  await db.from('notifications').insert({
+    user_id: order.client_id,
+    type: 'order_status',
+    title: STATUS_LABELS[status] ?? 'Mise à jour de commande',
+    body: `Commande #${orderId.slice(0, 8).toUpperCase()} — ${STATUS_LABELS[status] ?? status}`,
+    linked_order_id: orderId,
+    is_read: false,
+  });
+
+  // 4. Send server-side push notification (works even when app is closed)
+  try {
+    await fetch('/api/push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: order.client_id,
+        title: STATUS_LABELS[status] ?? 'Mise à jour de commande',
+        body: `Commande #${orderId.slice(0, 8).toUpperCase()} — ${STATUS_LABELS[status] ?? status}`,
+        url: `/profile/orders/${orderId}`,
+      }),
+    });
+  } catch {
+    // Non-critical — notification already in DB via Realtime
+  }
 }
 
 export async function createOrder(payload: {

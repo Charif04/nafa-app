@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Circle, Loader2 } from 'lucide-react';
+import { CheckCircle2, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getOrderStatusLabel } from '@/lib/utils';
 import type { OrderStatus, StatusHistoryEntry } from '@/types';

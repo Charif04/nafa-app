@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { getOrderStatusLabel, getOrderStatusColor } from '@/lib/utils';
+import { getOrderStatusLabel } from '@/lib/utils';
 import type { OrderStatus } from '@/types';
 
 interface StatusBadgeProps {

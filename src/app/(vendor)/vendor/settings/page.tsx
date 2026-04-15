@@ -30,8 +30,8 @@ export default function VendorSettingsPage() {
 
   useEffect(() => {
     if (!user) return;
-    // eslint-disable-next-line react-hooks/immutability
     loadProfile();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   async function loadProfile() {

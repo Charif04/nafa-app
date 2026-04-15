@@ -8,6 +8,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/stores/cartStore';
 // useCartStore.getState() used in handleConfirm for vendor groups
+import { useUiStore } from '@/stores/uiStore';
 import { formatCurrency, clientPrice } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { createOrder } from '@/lib/api/orders';
@@ -44,6 +45,7 @@ const onBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, getSubtotal, getDeliveryFee, getTotal, clearCart } = useCartStore();
+  const currency = useUiStore((s) => s.currency);
   const [step, setStep] = useState<Step>('address');
   const [isLoading, setIsLoading] = useState(false);
   const [orderError, setOrderError] = useState('');
@@ -100,7 +102,7 @@ export default function CheckoutPage() {
             subtotal: group.subtotal,
             deliveryFee: group.deliveryFee,
             total: group.total,
-            currency: 'FCFA',
+            currency: currency,
             deliveryStreet: address.street,
             deliveryCity: address.city,
             deliveryRegion: address.region,
@@ -359,24 +361,24 @@ export default function CheckoutPage() {
                         {item.title} ×{item.quantity}
                       </span>
                       <span className="nafa-mono font-medium ml-3" style={{ color: 'var(--nafa-black)' }}>
-                        {formatCurrency(clientPrice(item.price) * item.quantity, 'FCFA')}
+                        {formatCurrency(clientPrice(item.price) * item.quantity, currency)}
                       </span>
                     </div>
                   ))}
                   <div className="border-t pt-3 mt-3 space-y-1.5" style={{ borderColor: 'var(--nafa-gray-200)' }}>
                     <div className="flex justify-between text-sm">
                       <span style={{ color: 'var(--nafa-gray-700)' }}>Sous-total</span>
-                      <span className="nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(subtotal, 'FCFA')}</span>
+                      <span className="nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(subtotal, currency)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span style={{ color: 'var(--nafa-gray-700)' }}>Livraison</span>
                       <span className="nafa-mono" style={{ color: deliveryFee === 0 ? 'var(--nafa-green)' : 'var(--nafa-black)' }}>
-                        {deliveryFee === 0 ? 'GRATUIT' : formatCurrency(deliveryFee, 'FCFA')}
+                        {deliveryFee === 0 ? 'GRATUIT' : formatCurrency(deliveryFee, currency)}
                       </span>
                     </div>
                     <div className="flex justify-between font-bold pt-1">
                       <span style={{ color: 'var(--nafa-black)' }}>Total</span>
-                      <span className="nafa-mono" style={{ color: 'var(--nafa-orange)' }}>{formatCurrency(total, 'FCFA')}</span>
+                      <span className="nafa-mono" style={{ color: 'var(--nafa-orange)' }}>{formatCurrency(total, currency)}</span>
                     </div>
                   </div>
                 </div>
@@ -434,7 +436,7 @@ export default function CheckoutPage() {
                 className="w-full p-5 rounded-2xl mb-8 text-left" style={{ background: 'var(--nafa-gray-100)' }}>
                 {[
                   { label: 'N° Commande', value: realOrderId ? `#${realOrderId.slice(0, 8).toUpperCase()}` : '—' },
-                  { label: 'Montant payé', value: formatCurrency(total, 'FCFA') },
+                  { label: 'Montant payé', value: formatCurrency(total, currency) },
                   { label: 'Moyen de paiement', value: selectedPM.label },
                   { label: 'Statut', value: 'En attente vendeur' },
                 ].map(({ label, value }) => (

@@ -1,11 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Tag, PackageCheck, MessageSquare, Info, BellOff, X } from 'lucide-react';
 import Link from 'next/link';
 import { formatRelativeTime } from '@/lib/utils';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { useAuthStore } from '@/stores/authStore';
 import type { Notification } from '@/types';
 
 const NOTIF_CONFIG = {
@@ -18,16 +18,16 @@ const NOTIF_CONFIG = {
 
 export default function NotificationsPage() {
   const { notifications, markRead, markAllRead, getUnreadCount, fetchNotifications, subscribeRealtime, unsubscribe } = useNotificationStore();
+  const currentUser = useAuthStore((s) => s.user);
   const [notifEnabled, setNotifEnabled] = useState(true);
   const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null);
 
   useEffect(() => {
     fetchNotifications();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) subscribeRealtime(user.id);
-    });
+    if (currentUser?.uid) subscribeRealtime(currentUser.uid);
     return () => unsubscribe();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.uid]);
 
   const unreadCount = getUnreadCount();
 

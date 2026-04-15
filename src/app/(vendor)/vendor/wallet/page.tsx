@@ -27,8 +27,8 @@ export default function VendorWalletPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/immutability
     if (user) loadWallet();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   async function loadWallet() {

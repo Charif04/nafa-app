@@ -49,8 +49,9 @@ export function BecomeVendorModal({ onClose }: { onClose: () => void }) {
     setIsLoading(true);
     setError('');
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Non authentifié');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) throw new Error('Non authentifié');
+      const user = session.user;
 
       // Upload CNIB
       let cnibPath: string | null = null;

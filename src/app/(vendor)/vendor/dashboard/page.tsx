@@ -11,6 +11,7 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Skeleton } from '@/components/shared/SkeletonShimmer';
 import { formatCurrency } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/stores/authStore';
 import { fetchVendorOrders } from '@/lib/api/orders';
 import type { Order } from '@/types';
 
@@ -36,6 +37,7 @@ const cardVariants: Variants = { hidden: { opacity: 0, y: 20 }, visible: { opaci
 const RANK_BADGE: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
 export default function VendorDashboardPage() {
+  const currentUser = useAuthStore((s) => s.user);
   const [topPeriod, setTopPeriod] = useState<'jour' | 'semaine' | 'mois'>('semaine');
   const [stats, setStats] = useState<VendorStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
@@ -44,14 +46,16 @@ export default function VendorDashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/immutability
-    loadDashboard();
-  }, []);
+    if (currentUser?.uid) {
+      // eslint-disable-next-line react-hooks/immutability
+      loadDashboard(currentUser.uid);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.uid]);
 
-  async function loadDashboard() {
+  async function loadDashboard(userId: string) {
     setIsLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setIsLoading(false); return; }
+    const user = { id: userId };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;

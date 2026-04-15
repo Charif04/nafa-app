@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Order } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { fetchClientOrders } from '@/lib/api/orders';
+import { useAuthStore } from '@/stores/authStore';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface ClientOrdersStore {
@@ -24,9 +25,9 @@ export const useClientOrdersStore = create<ClientOrdersStore>((set, get) => ({
   fetchOrders: async () => {
     set({ isLoading: true, error: null });
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Non authentifié');
-      const orders = await fetchClientOrders(user.id);
+      const userId = useAuthStore.getState().user?.uid;
+      if (!userId) throw new Error('Non authentifié');
+      const orders = await fetchClientOrders(userId);
       set({ orders, isLoading: false });
     } catch (err) {
       set({ error: (err as Error).message, isLoading: false });

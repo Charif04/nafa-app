@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { formatCurrency, clientPrice } from '@/lib/utils';
 import { useCartStore } from '@/stores/cartStore';
+import { useUiStore } from '@/stores/uiStore';
 import { Skeleton } from './SkeletonShimmer';
 import type { Product } from '@/types';
 
@@ -20,6 +21,7 @@ export function ProductCard({ product, index = 0, className }: ProductCardProps)
   const [imgLoaded, setImgLoaded] = useState(false);
   const [adding, setAdding] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
+  const currency = useUiStore((s) => s.currency);
   const addItem = useCartStore((s) => s.addItem);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
@@ -100,7 +102,7 @@ export function ProductCard({ product, index = 0, className }: ProductCardProps)
 
           {/* Price */}
           <p className="text-base font-bold nafa-mono mb-2" style={{ color: 'var(--nafa-black)' }}>
-            {formatCurrency(clientPrice(product.price), product.currency)}
+            {formatCurrency(clientPrice(product.price), currency)}
           </p>
 
           {/* Vendor */}

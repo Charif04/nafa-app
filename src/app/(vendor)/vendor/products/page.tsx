@@ -9,10 +9,12 @@ import { formatCurrency } from '@/lib/utils';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Skeleton } from '@/components/shared/SkeletonShimmer';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/stores/authStore';
 import type { Product } from '@/types';
 
 export default function VendorProductsPage() {
   const router = useRouter();
+  const currentUser = useAuthStore((s) => s.user);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -20,20 +22,20 @@ export default function VendorProductsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/immutability
-    loadProducts();
-  }, []);
+    if (currentUser?.uid) {
+      loadProducts(currentUser.uid);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.uid]);
 
-  async function loadProducts() {
+  async function loadProducts(userId: string) {
     setIsLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setIsLoading(false); return; }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase as any)
       .from('products')
       .select('*')
-      .eq('vendor_id', user.id)
+      .eq('vendor_id', userId)
       .eq('is_active', true)
       .order('created_at', { ascending: false });
 

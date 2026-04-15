@@ -4,12 +4,14 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, Upload, X, Plus, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/stores/authStore';
 import { uploadProductImages } from '@/lib/api/storage';
 
 const CATEGORIES = ['Mode', 'Électronique', 'Maison', 'Beauté', 'Sport', 'Alimentation', 'Artisanat', 'Bijoux', 'Autre'];
 
 export default function NewProductPage() {
   const router = useRouter();
+  const currentUser = useAuthStore((s) => s.user);
   const fileRef = useRef<HTMLInputElement>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -46,13 +48,12 @@ export default function NewProductPage() {
     setIsLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Non authentifié');
+      if (!currentUser?.uid) throw new Error('Non authentifié');
 
       // Upload images sequentially to avoid rate-limit hangs
       const imageUrls: string[] = [];
       for (const file of files) {
-        const url = await uploadProductImages(user.id, [file]);
+        const url = await uploadProductImages(currentUser.uid, [file]);
         imageUrls.push(...url);
       }
 
@@ -61,7 +62,7 @@ export default function NewProductPage() {
       const { error: dbError } = await (supabase as any)
         .from('products')
         .insert({
-          vendor_id: user.id,
+          vendor_id: currentUser.uid,
           title: form.title.trim(),
           description: form.description.trim(),
           price: Number(form.price),

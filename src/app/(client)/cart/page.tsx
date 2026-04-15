@@ -5,6 +5,7 @@ import { Truck, Trash2, Plus, Minus, ShoppingBag, ArrowRight, Store } from 'luci
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/stores/cartStore';
+import { useUiStore } from '@/stores/uiStore';
 import { formatCurrency, clientPrice, FREE_DELIVERY_THRESHOLD } from '@/lib/utils';
 import { EmptyState } from '@/components/shared/EmptyState';
 
@@ -16,6 +17,7 @@ export default function CartPage() {
   const total = getTotal();
   const vendorGroups = getVendorGroups();
   const multiVendor = vendorGroups.length > 1;
+  const currency = useUiStore((s) => s.currency);
 
   // For single-vendor free delivery progress bar
   const singleGroup = !multiVendor ? vendorGroups[0] : null;
@@ -61,7 +63,7 @@ export default function CartPage() {
                 <p className="text-sm font-medium" style={{ color: 'var(--nafa-green)' }}>Livraison gratuite appliquée !</p>
               ) : (
                 <p className="text-sm" style={{ color: 'var(--nafa-gray-700)' }}>
-                  Plus que <strong className="nafa-mono">{formatCurrency(remaining, 'FCFA')}</strong> pour la livraison gratuite
+                  Plus que <strong className="nafa-mono">{formatCurrency(remaining, currency)}</strong> pour la livraison gratuite
                 </p>
               )}
             </div>
@@ -89,7 +91,7 @@ export default function CartPage() {
                     <span className="text-xs ml-auto" style={{ color: 'var(--nafa-gray-400)' }}>
                       Livraison : {group.deliveryFee === 0
                         ? <span style={{ color: 'var(--nafa-green)' }}>GRATUITE</span>
-                        : formatCurrency(group.deliveryFee, 'FCFA')}
+                        : formatCurrency(group.deliveryFee, currency)}
                     </span>
                   )}
                 </div>
@@ -113,7 +115,7 @@ export default function CartPage() {
                             {item.title}
                           </p>
                           <p className="text-base font-bold nafa-mono" style={{ color: 'var(--nafa-orange)' }}>
-                            {formatCurrency(clientPrice(item.price) * item.quantity, 'FCFA')}
+                            {formatCurrency(clientPrice(item.price) * item.quantity, currency)}
                           </p>
                         </div>
                         <div className="flex flex-col items-end justify-between">
@@ -158,12 +160,12 @@ export default function CartPage() {
                       <p className="text-xs font-semibold mb-1" style={{ color: 'var(--nafa-gray-700)' }}>{g.vendorName}</p>
                       <div className="flex justify-between text-xs">
                         <span style={{ color: 'var(--nafa-gray-400)' }}>Sous-total</span>
-                        <span className="nafa-mono">{formatCurrency(g.subtotal, 'FCFA')}</span>
+                        <span className="nafa-mono">{formatCurrency(g.subtotal, currency)}</span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span style={{ color: 'var(--nafa-gray-400)' }}>Livraison</span>
                         <span className="nafa-mono" style={{ color: g.deliveryFee === 0 ? 'var(--nafa-green)' : undefined }}>
-                          {g.deliveryFee === 0 ? 'GRATUIT' : formatCurrency(g.deliveryFee, 'FCFA')}
+                          {g.deliveryFee === 0 ? 'GRATUIT' : formatCurrency(g.deliveryFee, currency)}
                         </span>
                       </div>
                     </div>
@@ -175,18 +177,18 @@ export default function CartPage() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span style={{ color: 'var(--nafa-gray-700)' }}>Sous-total</span>
-                  <span className="nafa-mono font-medium" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(subtotal, 'FCFA')}</span>
+                  <span className="nafa-mono font-medium" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(subtotal, currency)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span style={{ color: 'var(--nafa-gray-700)' }}>Frais de livraison</span>
                   <span className="nafa-mono font-medium" style={{ color: deliveryFee === 0 ? 'var(--nafa-green)' : 'var(--nafa-black)' }}>
-                    {deliveryFee === 0 ? 'GRATUIT' : formatCurrency(deliveryFee, 'FCFA')}
+                    {deliveryFee === 0 ? 'GRATUIT' : formatCurrency(deliveryFee, currency)}
                   </span>
                 </div>
                 <div className="h-px my-2" style={{ background: 'var(--nafa-gray-200)' }} />
                 <div className="flex justify-between">
                   <span className="font-semibold" style={{ color: 'var(--nafa-black)' }}>Total</span>
-                  <span className="text-lg font-black nafa-mono" style={{ color: 'var(--nafa-orange)' }}>{formatCurrency(total, 'FCFA')}</span>
+                  <span className="text-lg font-black nafa-mono" style={{ color: 'var(--nafa-orange)' }}>{formatCurrency(total, currency)}</span>
                 </div>
                 {multiVendor && (
                   <p className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>

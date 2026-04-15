@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Order, OrderStatus } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { fetchVendorOrders, updateOrderStatus } from '@/lib/api/orders';
+import { useAuthStore } from '@/stores/authStore';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export const VENDOR_TRANSITIONS: Partial<Record<OrderStatus, OrderStatus>> = {
@@ -37,9 +38,9 @@ export const useVendorOrdersStore = create<VendorOrdersState>((set, get) => ({
   fetchOrders: async () => {
     set({ isLoading: true, error: null });
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Non authentifié');
-      const orders = await fetchVendorOrders(user.id);
+      const userId = useAuthStore.getState().user?.uid;
+      if (!userId) throw new Error('Non authentifié');
+      const orders = await fetchVendorOrders(userId);
       set({ orders, isLoading: false });
     } catch (err) {
       set({ error: (err as Error).message, isLoading: false });

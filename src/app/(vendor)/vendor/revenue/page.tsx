@@ -31,8 +31,8 @@ export default function VendorRevenuePage() {
   const [productRevenues, setProductRevenues] = useState<ProductRevenue[]>([]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/immutability
     if (user) loadRevenue();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   async function loadRevenue() {

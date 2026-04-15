@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/stores/authStore';
 import { EmptyState } from '@/components/shared/EmptyState';
 
 interface FollowedVendor {
@@ -35,6 +36,7 @@ function getInitials(name: string): string {
 }
 
 export default function FollowingPage() {
+  const currentUser = useAuthStore((s) => s.user);
   const [vendors, setVendors] = useState<FollowedVendor[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [unfollowing, setUnfollowing] = useState<Set<string>>(new Set());
@@ -42,8 +44,7 @@ export default function FollowingPage() {
   useEffect(() => {
     async function load() {
       setIsLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      if (!currentUser?.uid) {
         setIsLoading(false);
         return;
       }
@@ -57,7 +58,7 @@ export default function FollowingPage() {
             vendor_profiles(shop_name, follower_count)
           )
         `)
-        .eq('follower_id', user.id)
+        .eq('follower_id', currentUser.uid)
         .order('created_at', { ascending: false });
 
       if (data) {
@@ -82,11 +83,11 @@ export default function FollowingPage() {
       setIsLoading(false);
     }
     load();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.uid]);
 
   const handleUnfollow = async (vendorId: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!currentUser?.uid) return;
 
     setUnfollowing((prev) => new Set(prev).add(vendorId));
 
@@ -94,7 +95,7 @@ export default function FollowingPage() {
     await (supabase as any)
       .from('follows')
       .delete()
-      .eq('follower_id', user.id)
+      .eq('follower_id', currentUser.uid)
       .eq('vendor_id', vendorId);
 
     setVendors((prev) => prev.filter((v) => v.id !== vendorId));

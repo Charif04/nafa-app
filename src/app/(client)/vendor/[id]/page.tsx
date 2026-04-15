@@ -6,6 +6,7 @@ import { ChevronLeft, Heart, Package, ShoppingBag, Calendar, Star } from 'lucide
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { formatRelativeTime } from '@/lib/utils';
+import { useAuthStore } from '@/stores/authStore';
 import { RatingStars } from '@/components/shared/RatingStars';
 import { ProductCard } from '@/components/shared/ProductCard';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -55,6 +56,7 @@ export default function VendorStorefrontPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const vendorId = params.id;
+  const currentUser = useAuthStore((s) => s.user);
 
   const [vendor, setVendor] = useState<VendorData | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -63,15 +65,10 @@ export default function VendorStorefrontPage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
   const [followLoading, setFollowLoading] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       setIsLoading(true);
-
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUserId(user?.id ?? null);
 
       // Fetch vendor profile
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -104,11 +101,11 @@ export default function VendorStorefrontPage() {
       setFollowerCount(vpRow.follower_count);
 
       // Check if current user follows this vendor
-      if (user) {
+      if (currentUser?.uid) {
         const { data: followRow } = await supabase
           .from('follows')
           .select('vendor_id')
-          .eq('follower_id', user.id)
+          .eq('follower_id', currentUser.uid)
           .eq('vendor_id', vendorId)
           .maybeSingle();
         setIsFollowing(!!followRow);
@@ -179,7 +176,7 @@ export default function VendorStorefrontPage() {
   }, [vendorId]);
 
   const handleFollowToggle = async () => {
-    if (!currentUserId || followLoading) return;
+    if (!currentUser?.uid || followLoading) return;
     setFollowLoading(true);
 
     try {
@@ -188,7 +185,7 @@ export default function VendorStorefrontPage() {
         await (supabase as any)
           .from('follows')
           .delete()
-          .eq('follower_id', currentUserId)
+          .eq('follower_id', currentUser?.uid)
           .eq('vendor_id', vendorId);
         setIsFollowing(false);
         setFollowerCount((c) => c - 1);
@@ -196,7 +193,7 @@ export default function VendorStorefrontPage() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (supabase as any)
           .from('follows')
-          .insert({ follower_id: currentUserId, vendor_id: vendorId });
+          .insert({ follower_id: currentUser?.uid, vendor_id: vendorId });
         setIsFollowing(true);
         setFollowerCount((c) => c + 1);
       }
@@ -297,7 +294,7 @@ export default function VendorStorefrontPage() {
                     )}
                   </div>
 
-                  {currentUserId && (
+                  {currentUser?.uid && (
                     <motion.button
                       whileTap={{ scale: 0.93 }}
                       onClick={handleFollowToggle}

@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import type { Notification } from '@/types';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/stores/authStore';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { showLocalNotification } from '@/lib/pushNotifications';
 
 interface NotificationStore {
   notifications: Notification[];
@@ -36,13 +38,13 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
 
   fetchNotifications: async () => {
     set({ isLoading: true });
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { set({ isLoading: false }); return; }
+    const userId = useAuthStore.getState().user?.uid;
+    if (!userId) { set({ isLoading: false }); return; }
 
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -72,6 +74,8 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
           set((state) => ({
             notifications: [newNotif, ...state.notifications],
           }));
+          // Show push notification (works even if tab is backgrounded)
+          showLocalNotification(newNotif.title, newNotif.body, newNotif.linkedOrderId ? `/profile/orders/${newNotif.linkedOrderId}` : '/notifications');
         }
       )
       .on(
@@ -120,8 +124,8 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
   },
 
   markAllRead: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    const userId = useAuthStore.getState().user?.uid;
+    if (!userId) return;
 
     // Optimistic update
     set((state) => ({
@@ -132,7 +136,7 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
     await (supabase as any)
       .from('notifications')
       .update({ is_read: true })
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('is_read', false);
   },
 }));

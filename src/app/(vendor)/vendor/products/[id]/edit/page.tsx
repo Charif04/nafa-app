@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, Upload, X, Save, AlertCircle, Package } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/stores/authStore';
 import { uploadProductImages } from '@/lib/api/storage';
 
 const CATEGORIES = ['Mode', 'Électronique', 'Maison', 'Beauté', 'Sport', 'Alimentation', 'Artisanat', 'Bijoux', 'Autre'];
@@ -11,6 +12,7 @@ const CATEGORIES = ['Mode', 'Électronique', 'Maison', 'Beauté', 'Sport', 'Alim
 export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const currentUser = useAuthStore((s) => s.user);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Existing images already uploaded (URLs)
@@ -81,13 +83,12 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     setIsLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Non authentifié');
+      if (!currentUser?.uid) throw new Error('Non authentifié');
 
       // Upload new images sequentially
       const uploadedUrls: string[] = [];
       for (const file of newFiles) {
-        const urls = await uploadProductImages(user.id, [file]);
+        const urls = await uploadProductImages(currentUser.uid, [file]);
         uploadedUrls.push(...urls);
       }
 

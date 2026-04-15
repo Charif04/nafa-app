@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { formatCurrency, clientPrice, formatRelativeTime } from '@/lib/utils';
 import { useCartStore } from '@/stores/cartStore';
+import { useUiStore } from '@/stores/uiStore';
 import { RatingStars } from '@/components/shared/RatingStars';
 import { Logo } from '@/components/shared/Logo';
 import type { Product } from '@/types';
@@ -32,6 +33,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
+  const currency = useUiStore((s) => s.currency);
 
   useEffect(() => {
     async function load() {
@@ -114,6 +116,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       image: product.images[0] ?? '',
       quantity,
       vendorId: product.vendorId,
+      vendorName: product.vendorName,
       stock: product.stock,
     });
     setAddedToCart(true);
@@ -129,6 +132,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       image: product.images[0] ?? '',
       quantity,
       vendorId: product.vendorId,
+      vendorName: product.vendorName,
       stock: product.stock,
     });
     router.push('/checkout');
@@ -304,7 +308,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             {/* Price */}
             <div className="flex items-center justify-between">
               <span className="text-3xl font-black nafa-mono" style={{ color: 'var(--nafa-orange)' }}>
-                {formatCurrency(displayPrice, product.currency)}
+                {formatCurrency(displayPrice, currency)}
               </span>
               {/* Quantity selector */}
               <div className="flex items-center gap-2 rounded-xl border p-1" style={{ borderColor: 'var(--nafa-gray-200)' }}>

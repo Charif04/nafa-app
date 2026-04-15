@@ -22,7 +22,7 @@ const itemVariants = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 
 
 export default function VendorOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { getOrder, advanceStatus, fetchOrders, orders, isLoading, subscribeRealtime, unsubscribe } = useVendorOrdersStore();
+  const { getOrder, advanceStatus, fetchOrders, isLoading, subscribeRealtime, unsubscribe } = useVendorOrdersStore();
   const user = useAuthStore((s) => s.user);
   const order = getOrder(id);
 
