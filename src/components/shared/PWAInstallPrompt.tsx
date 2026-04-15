@@ -4,12 +4,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Share, Plus, MoreVertical, Download, Smartphone } from 'lucide-react';
 
-const STORAGE_KEY = 'nafa_pwa_install_dismissed';
+// "Ne plus afficher" → permanent (localStorage)
+const KEY_PERM = 'nafa_pwa_never';
+// Fermer avec X → session seulement (sessionStorage)
+const KEY_SESSION = 'nafa_pwa_session';
 
 type DeviceType = 'ios' | 'android' | 'other';
 
 function detectDevice(): DeviceType {
-  if (typeof window === 'undefined') return 'other';
   const ua = navigator.userAgent;
   if (/iPhone|iPad|iPod/.test(ua)) return 'ios';
   if (/Android/.test(ua)) return 'android';
@@ -17,11 +19,18 @@ function detectDevice(): DeviceType {
 }
 
 function isStandaloneMode(): boolean {
-  if (typeof window === 'undefined') return false;
   return (
     window.matchMedia('(display-mode: standalone)').matches ||
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window.navigator as any).standalone === true
+  );
+}
+
+function shouldSkip(): boolean {
+  return (
+    isStandaloneMode() ||
+    !!localStorage.getItem(KEY_PERM) ||
+    !!sessionStorage.getItem(KEY_SESSION)
   );
 }
 
@@ -74,51 +83,51 @@ const ANDROID_STEPS = [
 ];
 
 export function PWAInstallPrompt() {
+  // `ready` = initial client checks done — prevents any flash during hydration
+  const [ready, setReady] = useState(false);
   const [visible, setVisible] = useState(false);
   const [device, setDevice] = useState<DeviceType>('other');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
-    // Don't show if already installed or dismissed
-    if (isStandaloneMode()) return;
-    if (localStorage.getItem(STORAGE_KEY)) return;
+    // All checks require `window` — run only on client after mount
+    if (shouldSkip()) {
+      setReady(true); // mark ready but don't show
+      return;
+    }
 
     const detected = detectDevice();
     setDevice(detected);
+    setReady(true);
 
-    // Android: listen for native install prompt
+    // Capture the native Android install prompt without showing immediately
     const onBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      setVisible(true);
+      // Don't call setVisible here — let the timer control timing
     };
     window.addEventListener('beforeinstallprompt', onBeforeInstall);
 
-    // iOS / other: show manual guide 5s after login (component mounts post-login)
-    if (detected === 'ios') {
-      const timer = setTimeout(() => setVisible(true), 5000);
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener('beforeinstallprompt', onBeforeInstall);
-      };
-    }
+    // Show after 5s — applies to all devices (iOS guide, Android guide or native)
+    const timer = setTimeout(() => setVisible(true), 5000);
 
-    // Android without prompt (non-Chrome): show guide 5s after login
-    if (detected === 'android') {
-      const timer = setTimeout(() => setVisible(true), 5000);
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener('beforeinstallprompt', onBeforeInstall);
-      };
-    }
-
-    return () => window.removeEventListener('beforeinstallprompt', onBeforeInstall);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('beforeinstallprompt', onBeforeInstall);
+    };
   }, []);
 
-  const dismiss = useCallback(() => {
+  // X button: hide for this session only
+  const dismissSession = useCallback(() => {
     setVisible(false);
-    localStorage.setItem(STORAGE_KEY, '1');
+    sessionStorage.setItem(KEY_SESSION, '1');
+  }, []);
+
+  // "Ne plus afficher": hide permanently
+  const dismissPermanent = useCallback(() => {
+    setVisible(false);
+    localStorage.setItem(KEY_PERM, '1');
   }, []);
 
   const handleNativeInstall = useCallback(async () => {
@@ -126,11 +135,14 @@ export function PWAInstallPrompt() {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
-      localStorage.setItem(STORAGE_KEY, '1');
+      localStorage.setItem(KEY_PERM, '1');
     }
     setDeferredPrompt(null);
     setVisible(false);
   }, [deferredPrompt]);
+
+  // Nothing to render until client checks are done (prevents SSR/hydration flash)
+  if (!ready) return null;
 
   const steps = device === 'ios' ? IOS_STEPS : ANDROID_STEPS;
 
@@ -145,7 +157,7 @@ export function PWAInstallPrompt() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50"
             style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
-            onClick={dismiss}
+            onClick={dismissSession}
           />
 
           {/* Card — slides up from bottom */}
@@ -160,7 +172,6 @@ export function PWAInstallPrompt() {
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                {/* NAFA logo placeholder */}
                 <div
                   className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-white font-black text-lg"
                   style={{ background: 'var(--nafa-orange)' }}
@@ -177,7 +188,7 @@ export function PWAInstallPrompt() {
                 </div>
               </div>
               <button
-                onClick={dismiss}
+                onClick={dismissSession}
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
                 style={{ background: 'var(--nafa-gray-100)' }}
                 aria-label="Fermer"
@@ -206,7 +217,7 @@ export function PWAInstallPrompt() {
               <div>
                 <p className="text-sm mb-4" style={{ color: 'var(--nafa-gray-700)' }}>
                   {device === 'ios'
-                    ? 'Sur Safari, suis ces étapes pour ajouter NAFA à ton écran d\'accueil :'
+                    ? "Sur Safari, suis ces étapes pour ajouter NAFA à ton écran d'accueil :"
                     : 'Sur Chrome, suis ces étapes pour installer NAFA :'}
                 </p>
                 <ol className="space-y-3">
@@ -233,7 +244,6 @@ export function PWAInstallPrompt() {
                   ))}
                 </ol>
 
-                {/* iOS arrow hint */}
                 {device === 'ios' && (
                   <div
                     className="mt-4 p-3 rounded-2xl flex items-center gap-2"
@@ -248,9 +258,9 @@ export function PWAInstallPrompt() {
               </div>
             )}
 
-            {/* Don't show again */}
+            {/* Ne plus afficher — permanent */}
             <button
-              onClick={dismiss}
+              onClick={dismissPermanent}
               className="w-full mt-4 py-2 text-sm text-center"
               style={{ color: 'var(--nafa-gray-400)' }}
             >
