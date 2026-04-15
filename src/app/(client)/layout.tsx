@@ -10,7 +10,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   return (
     <AuthGuard allowedRoles={['client', 'vendor', 'admin']}>
       <PushNotificationProvider>
-        <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
+        <div className="min-h-dvh w-full" style={{ background: 'var(--nafa-gray-100)', overflowX: 'hidden' }}>
           {/* Top nav — desktop only */}
           <ClientTopNav />
           {/* Content */}

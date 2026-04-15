@@ -130,8 +130,8 @@ export default function ShopPage() {
     <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
       {/* ── Header ── */}
       <header
-        className="sticky top-0 md:top-16 z-30 px-4 py-3"
-        style={{ background: 'var(--nafa-white)', boxShadow: '0 1px 0 var(--nafa-gray-200)' }}
+        className="sticky top-0 md:top-16 z-30 px-4 py-3 w-full"
+        style={{ background: 'var(--nafa-white)', boxShadow: '0 1px 0 var(--nafa-gray-200)', overflowX: 'hidden' }}
       >
         <div className="flex items-center gap-3 mb-3">
           <button

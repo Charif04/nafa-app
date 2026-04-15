@@ -56,6 +56,12 @@
   --z-toast: 1000;
 }
 
+/* Prevent horizontal overflow — critical on iOS Safari */
+html {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 /* Font imports via next/font — applied via body class */
 body {
   color: var(--nafa-black);
@@ -63,6 +69,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  /* Safe-area padding for iOS notch / Dynamic Island */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
 }
 
 /* Remove 300ms tap delay on all interactive elements */
@@ -155,16 +167,21 @@ button:disabled,
   cursor: not-allowed;
 }
 
-/* Safe-area bottom padding for devices with home indicator (iPhone) */
+/* Safe-area utilities */
 .safe-area-pb {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+.safe-area-pt {
+  padding-top: env(safe-area-inset-top, 0px);
+}
 
-/* Scrollbar-none utility */
-.scrollbar-none {
+/* Scrollbar-none utility (both spellings used across the codebase) */
+.scrollbar-none,
+.hide-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-.scrollbar-none::-webkit-scrollbar {
+.scrollbar-none::-webkit-scrollbar,
+.hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
