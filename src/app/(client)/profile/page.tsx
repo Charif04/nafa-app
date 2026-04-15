@@ -3,12 +3,13 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LogOut, ChevronRight, Package, Star, Users, Camera,
-  Store, ArrowRight, Settings, MapPin,
+  Store, ArrowRight, Settings, MapPin, Heart,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
+import { useWishlistStore } from '@/stores/wishlistStore';
 import { BecomeVendorModal } from '@/components/shared/BecomeVendorModal';
 
 // ─── Profile page ─────────────────────────────────────────────────────────────
@@ -17,6 +18,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [showVendorModal, setShowVendorModal] = useState(false);
   const user = useAuthStore((s) => s.user);
+  const wishlistCount = useWishlistStore((s) => s.items.length);
 
   const handleLogout = async () => {
     const confirmed = window.confirm('Voulez-vous vraiment vous déconnecter ?');
@@ -90,9 +92,10 @@ export default function ProfilePage() {
             <motion.div variants={itemVariants} className="rounded-2xl overflow-hidden" style={{ background: 'var(--nafa-white)' }}>
               <p className="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>Mon compte</p>
               {[
-                { icon: Package, label: 'Mes commandes', href: '/profile/orders' },
-                { icon: Star, label: 'Mes avis', href: '/profile/reviews' },
-                { icon: Users, label: 'Vendeurs suivis', href: '/profile/following' },
+                { icon: Package, label: 'Mes commandes', href: '/profile/orders', badge: null },
+                { icon: Heart, label: 'Mes favoris', href: '/profile/favorites', badge: wishlistCount > 0 ? wishlistCount : null },
+                { icon: Star, label: 'Mes avis', href: '/profile/reviews', badge: null },
+                { icon: Users, label: 'Vendeurs suivis', href: '/profile/following', badge: null },
               ].map((item, i) => (
                 <Link key={item.label} href={item.href}
                   className="flex items-center gap-3 px-4 py-3.5 transition-colors"
@@ -101,6 +104,12 @@ export default function ProfilePage() {
                     <item.icon size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
                   </div>
                   <span className="flex-1 text-sm font-medium" style={{ color: 'var(--nafa-gray-900)' }}>{item.label}</span>
+                  {item.badge !== null && (
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full mr-1"
+                      style={{ background: 'rgba(255,107,44,0.1)', color: 'var(--nafa-orange)' }}>
+                      {item.badge}
+                    </span>
+                  )}
                   <ChevronRight size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
                 </Link>
               ))}

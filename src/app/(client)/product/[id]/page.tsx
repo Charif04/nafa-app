@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { formatCurrency, clientPrice, formatRelativeTime } from '@/lib/utils';
 import { useCartStore } from '@/stores/cartStore';
 import { useUiStore } from '@/stores/uiStore';
+import { useWishlistStore } from '@/stores/wishlistStore';
 import { RatingStars } from '@/components/shared/RatingStars';
 import { Logo } from '@/components/shared/Logo';
 import type { Product } from '@/types';
@@ -29,11 +30,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [reviews, setReviews] = useState<ProductReview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
-  const [isFav, setIsFav] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const currency = useUiStore((s) => s.currency);
+  const toggleWishlist = useWishlistStore((s) => s.toggle);
+  const isLiked = useWishlistStore((s) => s.isLiked);
+  const isFav = product ? isLiked(product.id) : false;
 
   useEffect(() => {
     async function load() {
@@ -196,7 +199,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         <Logo size="sm" />
         <motion.button
           whileTap={{ scale: 0.9 }}
-          onClick={() => setIsFav(!isFav)}
+          onClick={() => { if (product) toggleWishlist(product); }}
           className="w-9 h-9 rounded-full flex items-center justify-center"
           style={{ background: 'var(--nafa-gray-100)' }}
           aria-label={isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}

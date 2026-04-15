@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { formatCurrency, clientPrice } from '@/lib/utils';
 import { useCartStore } from '@/stores/cartStore';
 import { useUiStore } from '@/stores/uiStore';
+import { useWishlistStore } from '@/stores/wishlistStore';
 import { Skeleton } from './SkeletonShimmer';
 import type { Product } from '@/types';
 
@@ -20,9 +21,11 @@ interface ProductCardProps {
 export function ProductCard({ product, index = 0, className }: ProductCardProps) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [adding, setAdding] = useState(false);
-  const [wishlisted, setWishlisted] = useState(false);
   const currency = useUiStore((s) => s.currency);
   const addItem = useCartStore((s) => s.addItem);
+  const toggle = useWishlistStore((s) => s.toggle);
+  const isLiked = useWishlistStore((s) => s.isLiked);
+  const wishlisted = isLiked(product.id);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -67,7 +70,7 @@ export function ProductCard({ product, index = 0, className }: ProductCardProps)
           )}
           {/* Wishlist button */}
           <button
-            onClick={(e) => { e.preventDefault(); setWishlisted((w) => !w); }}
+            onClick={(e) => { e.preventDefault(); toggle(product); }}
             className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-transform active:scale-90"
             style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(4px)' }}
             aria-label={wishlisted ? 'Retirer des favoris' : 'Ajouter aux favoris'}
