@@ -95,18 +95,18 @@ export function PWAInstallPrompt() {
     };
     window.addEventListener('beforeinstallprompt', onBeforeInstall);
 
-    // iOS / other: show manual guide after 20s on first visit
+    // iOS / other: show manual guide 5s after login (component mounts post-login)
     if (detected === 'ios') {
-      const timer = setTimeout(() => setVisible(true), 20000);
+      const timer = setTimeout(() => setVisible(true), 5000);
       return () => {
         clearTimeout(timer);
         window.removeEventListener('beforeinstallprompt', onBeforeInstall);
       };
     }
 
-    // Android without prompt (non-Chrome): show guide after 20s
+    // Android without prompt (non-Chrome): show guide 5s after login
     if (detected === 'android') {
-      const timer = setTimeout(() => setVisible(true), 20000);
+      const timer = setTimeout(() => setVisible(true), 5000);
       return () => {
         clearTimeout(timer);
         window.removeEventListener('beforeinstallprompt', onBeforeInstall);
@@ -169,7 +169,7 @@ export function PWAInstallPrompt() {
                 </div>
                 <div>
                   <p className="font-bold text-base" style={{ color: 'var(--nafa-black)' }}>
-                    Installer NAFA Market
+                    Installer NAFA
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }}>
                     Accès rapide depuis ton écran d&apos;accueil
