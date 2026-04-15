@@ -5,7 +5,7 @@ import { ShoppingBag, Truck, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatOrderId } from '@/lib/utils';
 import { useVendorOrdersStore } from '@/stores/vendorOrdersStore';
 import { useAuthStore } from '@/stores/authStore';
 import type { OrderStatus } from '@/types';
@@ -100,7 +100,7 @@ export default function VendorOrdersPage() {
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <p className="text-xs nafa-mono font-semibold" style={{ color: 'var(--nafa-orange)' }}>
-                        #{order.id.toUpperCase()}
+                        {formatOrderId(order.id)}
                       </p>
                       <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }} suppressHydrationWarning>
                         {new Date(order.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}

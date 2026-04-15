@@ -8,7 +8,7 @@ import {
 import Link from 'next/link';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { OrderStatusStepper } from '@/components/shared/OrderStatusStepper';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatOrderId } from '@/lib/utils';
 import {
   useVendorOrdersStore,
   VENDOR_TRANSITIONS,
@@ -98,7 +98,7 @@ export default function VendorOrderDetailPage({ params }: { params: Promise<{ id
         </Link>
         <div>
           <h1 className="text-xl font-bold nafa-mono tracking-tight" style={{ color: 'var(--nafa-black)' }}>
-            Commande #{order.id.toUpperCase()}
+            {formatOrderId(order.id)}
           </h1>
           <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }} suppressHydrationWarning>
             {new Date(order.createdAt).toLocaleDateString('fr-FR', {

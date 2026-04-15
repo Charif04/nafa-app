@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Package, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 import { Logo } from '@/components/shared/Logo';
 import { ProductCard } from '@/components/shared/ProductCard';
 import { ProductCardSkeleton } from '@/components/shared/SkeletonShimmer';
@@ -281,9 +282,9 @@ export default function HomePage() {
             <h2 className="text-base font-bold" style={{ color: 'var(--nafa-black)' }}>
               Recommandés pour vous
             </h2>
-            <button className="flex items-center gap-1 text-xs font-semibold" style={{ color: 'var(--nafa-orange)' }}>
+            <Link href="/shop" className="flex items-center gap-1 text-xs font-semibold" style={{ color: 'var(--nafa-orange)' }}>
               Voir tout <ChevronRight size={14} strokeWidth={2} />
-            </button>
+            </Link>
           </div>
           {isLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">

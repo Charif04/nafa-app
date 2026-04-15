@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { OrderCardSkeleton } from '@/components/shared/SkeletonShimmer';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatOrderId } from '@/lib/utils'; // formatOrderId added below
 import { useClientOrdersStore } from '@/stores/clientOrdersStore';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -75,7 +75,7 @@ export default function OrdersPage() {
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold nafa-mono" style={{ color: 'var(--nafa-orange)' }}>
-                        #{order.id.toUpperCase()}
+                        {formatOrderId(order.id)}
                       </p>
                       <p className="text-sm font-medium truncate mt-0.5" style={{ color: 'var(--nafa-black)' }}>
                         {order.items[0]?.title}{order.items.length > 1 ? ` +${order.items.length - 1} article${order.items.length > 2 ? 's' : ''}` : ''}

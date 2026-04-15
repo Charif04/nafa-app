@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { AnimatedCounter } from '@/components/shared/AnimatedCounter';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { Skeleton } from '@/components/shared/SkeletonShimmer';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatOrderId } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { fetchVendorOrders } from '@/lib/api/orders';
@@ -327,7 +327,7 @@ export default function VendorDashboardPage() {
               <tbody>
                 {recentOrders.map((order) => (
                   <tr key={order.id} style={{ borderBottom: '1px solid var(--nafa-gray-100)' }}>
-                    <td className="px-6 py-3 text-xs nafa-mono" style={{ color: 'var(--nafa-gray-700)' }}>#{order.id.slice(0, 8).toUpperCase()}</td>
+                    <td className="px-6 py-3 text-xs nafa-mono" style={{ color: 'var(--nafa-gray-700)' }}>{formatOrderId(order.id)}</td>
                     <td className="px-6 py-3 text-xs truncate max-w-32" style={{ color: 'var(--nafa-gray-700)' }}>{order.items[0]?.title ?? '—'}</td>
                     <td className="px-6 py-3 text-sm font-bold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(order.total, order.currency)}</td>
                     <td className="px-6 py-3"><StatusBadge status={order.orderStatus} /></td>

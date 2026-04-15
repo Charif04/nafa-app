@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { AnimatedCounter } from '@/components/shared/AnimatedCounter';
 import { Skeleton } from '@/components/shared/SkeletonShimmer';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatOrderId } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 
 // ─── Transactions tab ──────────────────────────────────────────────────────────
@@ -152,7 +152,7 @@ function TransactionsTab() {
                     <motion.tr key={t.fullId} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
                       style={{ borderBottom: '1px solid var(--nafa-gray-100)' }}>
                       <td className="px-4 py-3 text-xs" style={{ color: 'var(--nafa-gray-700)' }}>{new Date(t.date).toLocaleDateString('fr-FR')}</td>
-                      <td className="px-4 py-3 text-xs nafa-mono font-semibold" style={{ color: 'var(--nafa-orange)' }}>#{t.id}</td>
+                      <td className="px-4 py-3 text-xs nafa-mono font-semibold" style={{ color: 'var(--nafa-orange)' }}>{formatOrderId(t.id)}</td>
                       <td className="px-4 py-3 text-sm" style={{ color: 'var(--nafa-black)' }}>{t.vendor}</td>
                       <td className="px-4 py-3 text-sm font-bold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(t.gross, 'FCFA')}</td>
                       <td className="px-4 py-3 text-sm nafa-mono" style={{ color: 'var(--nafa-gray-700)' }}>{formatCurrency(comm, 'FCFA')}</td>

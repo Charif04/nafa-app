@@ -1,53 +1,87 @@
 'use client';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
+import { useAuthStore } from '@/stores/authStore';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   animated?: boolean;
+  /** Override the link destination. Pass false to render without a link. */
+  href?: string | false;
 }
 
-export function Logo({ size = 'md', className, animated = false }: LogoProps) {
-  const sizes = { sm: 'text-xl', md: 'text-2xl', lg: 'text-4xl' };
+function useLogoHref(): string {
+  const user = useAuthStore((s) => s.user);
+  if (!user) return '/';
+  if (user.role === 'admin') return '/admin/dashboard';
+  if (user.role === 'vendor') return '/vendor/dashboard';
+  return '/home';
+}
 
-  const letters = ['N', 'A', 'F', 'A'];
+const LETTER_COLORS = ['var(--nafa-orange)', 'var(--nafa-black)', 'var(--nafa-orange)', 'var(--nafa-black)'];
 
-  if (animated) {
-    return (
-      <div className={cn('flex items-center gap-0', sizes[size], className)}>
-        {letters.map((letter, i) => (
-          <motion.span
-            key={i}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className="font-black tracking-tight"
-            style={{ color: i % 2 === 0 ? 'var(--nafa-orange)' : 'var(--nafa-black)' }}
-          >
-            {letter}
-          </motion.span>
-        ))}
+export function Logo({ size = 'md', className, animated = false, href }: LogoProps) {
+  const autoHref = useLogoHref();
+  const dest = href === false ? null : (href ?? autoHref);
+
+  const sizeClass = {
+    sm: 'text-[1.25rem]',
+    md: 'text-[1.6rem]',
+    lg: 'text-[2.8rem]',
+  }[size];
+
+  const letterSpacing = {
+    sm: '0.04em',
+    md: '0.05em',
+    lg: '0.06em',
+  }[size];
+
+  const inner = animated ? (
+    <div className={cn('inline-flex items-baseline gap-0', sizeClass, className)}>
+      {['N', 'A', 'F', 'A'].map((letter, i) => (
         <motion.span
-          initial={{ opacity: 0, scaleX: 0 }}
-          animate={{ opacity: 1, scaleX: 1 }}
-          transition={{ delay: 0.5, duration: 0.3 }}
-          className="ml-1 text-xs font-medium tracking-widest uppercase"
-          style={{ color: 'var(--nafa-gray-700)', alignSelf: 'flex-end', marginBottom: 2 }}
+          key={i}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.09, duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            color: LETTER_COLORS[i],
+            fontWeight: 900,
+            letterSpacing,
+            fontFamily: "'DM Sans', system-ui, sans-serif",
+            lineHeight: 1,
+          }}
         >
-          market
+          {letter}
         </motion.span>
-      </div>
-    );
-  }
+      ))}
+    </div>
+  ) : (
+    <div className={cn('inline-flex items-baseline gap-0', sizeClass, className)}>
+      {['N', 'A', 'F', 'A'].map((letter, i) => (
+        <span
+          key={i}
+          style={{
+            color: LETTER_COLORS[i],
+            fontWeight: 900,
+            letterSpacing,
+            fontFamily: "'DM Sans', system-ui, sans-serif",
+            lineHeight: 1,
+          }}
+        >
+          {letter}
+        </span>
+      ))}
+    </div>
+  );
+
+  if (!dest) return inner;
 
   return (
-    <div className={cn('flex items-center gap-0', sizes[size], className)}>
-      <span className="font-black tracking-tight" style={{ color: 'var(--nafa-orange)' }}>N</span>
-      <span className="font-black tracking-tight" style={{ color: 'var(--nafa-black)' }}>A</span>
-      <span className="font-black tracking-tight" style={{ color: 'var(--nafa-orange)' }}>F</span>
-      <span className="font-black tracking-tight" style={{ color: 'var(--nafa-black)' }}>A</span>
-      <span className="ml-1 text-xs font-medium tracking-widest uppercase" style={{ color: 'var(--nafa-gray-700)', alignSelf: 'flex-end', marginBottom: 2 }}>market</span>
-    </div>
+    <Link href={dest} aria-label="Accueil NAFA">
+      {inner}
+    </Link>
   );
 }

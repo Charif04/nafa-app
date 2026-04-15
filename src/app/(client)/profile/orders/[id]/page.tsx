@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { OrderStatusStepper } from '@/components/shared/OrderStatusStepper';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { ReviewModal } from '@/components/shared/ReviewModal';
-import { formatCurrency, clientPrice } from '@/lib/utils';
+import { formatCurrency, formatOrderId, clientPrice } from '@/lib/utils';
 import { useClientOrdersStore } from '@/stores/clientOrdersStore';
 import { useAuthStore } from '@/stores/authStore';
 import { supabase } from '@/lib/supabase';
@@ -127,7 +127,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-sm font-bold nafa-mono" style={{ color: 'var(--nafa-black)' }}>
-              #{order.id.slice(0, 8).toUpperCase()}
+              {formatOrderId(order.id)}
             </h1>
             <p className="text-xs" style={{ color: 'var(--nafa-gray-700)' }} suppressHydrationWarning>
               {new Date(order.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}

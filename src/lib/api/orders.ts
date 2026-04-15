@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { formatOrderId } from '@/lib/utils';
 import type { Order, OrderStatus, Currency, PaymentMethod, PaymentStatus } from '@/types';
 
 // Select string réutilisable pour toutes les requêtes orders
@@ -124,7 +125,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
     user_id: order.client_id,
     type: 'order_status',
     title: STATUS_LABELS[status] ?? 'Mise à jour de commande',
-    body: `Commande #${orderId.slice(0, 8).toUpperCase()} — ${STATUS_LABELS[status] ?? status}`,
+    body: `Commande #${formatOrderId(orderId)} — ${STATUS_LABELS[status] ?? status}`,
     linked_order_id: orderId,
     is_read: false,
   });
@@ -137,7 +138,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
       body: JSON.stringify({
         userId: order.client_id,
         title: STATUS_LABELS[status] ?? 'Mise à jour de commande',
-        body: `Commande #${orderId.slice(0, 8).toUpperCase()} — ${STATUS_LABELS[status] ?? status}`,
+        body: `Commande #${formatOrderId(orderId)} — ${STATUS_LABELS[status] ?? status}`,
         url: `/profile/orders/${orderId}`,
       }),
     });

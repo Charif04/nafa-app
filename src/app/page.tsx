@@ -58,25 +58,20 @@ export default function SplashPage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{
-                delay: 0.3 + i * 0.08,
+                delay: 0.3 + i * 0.09,
                 duration: 0.5,
                 ease: [0.22, 1, 0.36, 1],
               }}
-              className="text-5xl font-black tracking-tight"
-              style={{ color: i % 2 === 0 ? 'var(--nafa-orange)' : 'var(--nafa-black)' }}
+              className="text-5xl font-black"
+              style={{
+                color: i % 2 === 0 ? 'var(--nafa-orange)' : 'var(--nafa-black)',
+                letterSpacing: '0.06em',
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+              }}
             >
               {letter}
             </motion.span>
           ))}
-          <motion.span
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.8, duration: 0.4 }}
-            className="text-sm font-medium tracking-widest uppercase ml-2"
-            style={{ color: 'var(--nafa-gray-700)', paddingBottom: 8 }}
-          >
-            market
-          </motion.span>
         </div>
 
         {/* Tagline */}

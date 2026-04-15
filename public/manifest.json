@@ -1,0 +1,36 @@
+{
+  "name": "NAFA",
+  "short_name": "NAFA",
+  "description": "La marketplace africaine qui vous connecte",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FF6B2C",
+  "categories": ["shopping", "lifestyle"],
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Accueil",
+      "url": "/home",
+      "description": "Retour à l'accueil"
+    }
+  ]
+}

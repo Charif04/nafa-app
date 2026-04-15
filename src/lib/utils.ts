@@ -6,6 +6,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** Returns a short, human-friendly order ID: NAFA-XXXXXXXX */
+export function formatOrderId(id: string): string {
+  return `NAFA-${id.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+}
+
 export function formatCurrency(amount: number, currency: Currency = 'FCFA'): string {
   const formatters: Record<Currency, Intl.NumberFormat> = {
     FCFA: new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }),

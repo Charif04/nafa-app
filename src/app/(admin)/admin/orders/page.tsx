@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Search, Filter, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { StatusBadge } from '@/components/shared/StatusBadge';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatOrderId } from '@/lib/utils';
 import { useAdminOrdersStore } from '@/stores/adminOrdersStore';
 import type { OrderStatus } from '@/types';
 
@@ -74,7 +74,7 @@ export default function AdminOrdersPage() {
               {filtered.map((order, i) => (
                 <motion.tr key={order.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
                   style={{ borderBottom: '1px solid var(--nafa-gray-100)' }}>
-                  <td className="px-4 py-3 text-xs nafa-mono font-semibold" style={{ color: 'var(--nafa-orange)' }}>#{order.id}</td>
+                  <td className="px-4 py-3 text-xs nafa-mono font-semibold" style={{ color: 'var(--nafa-orange)' }}>{formatOrderId(order.id)}</td>
                   <td className="px-4 py-3 text-sm font-medium" style={{ color: 'var(--nafa-black)' }}>{order.clientName}</td>
                   <td className="px-4 py-3 text-sm" style={{ color: 'var(--nafa-gray-700)' }}>{order.vendorName}</td>
                   <td className="px-4 py-3 text-sm font-bold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(order.total, order.currency)}</td>

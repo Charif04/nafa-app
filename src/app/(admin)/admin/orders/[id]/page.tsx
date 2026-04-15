@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { OrderStatusStepper } from '@/components/shared/OrderStatusStepper';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatOrderId } from '@/lib/utils';
 import {
   useAdminOrdersStore,
   ADMIN_TRANSITIONS,
@@ -121,7 +121,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
         </Link>
         <div>
           <h1 className="text-xl font-bold nafa-mono tracking-tight" style={{ color: 'var(--nafa-black)' }}>
-            Commande #{order.id}
+            {formatOrderId(order.id)}
           </h1>
           <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }} suppressHydrationWarning>
             {new Date(order.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
