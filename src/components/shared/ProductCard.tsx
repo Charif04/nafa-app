@@ -24,8 +24,7 @@ export function ProductCard({ product, index = 0, className }: ProductCardProps)
   const currency = useUiStore((s) => s.currency);
   const addItem = useCartStore((s) => s.addItem);
   const toggle = useWishlistStore((s) => s.toggle);
-  const isLiked = useWishlistStore((s) => s.isLiked);
-  const wishlisted = isLiked(product.id);
+  const wishlisted = useWishlistStore((s) => s.items.some((p) => p.id === product.id));
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();

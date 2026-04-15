@@ -35,8 +35,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const addItem = useCartStore((s) => s.addItem);
   const currency = useUiStore((s) => s.currency);
   const toggleWishlist = useWishlistStore((s) => s.toggle);
-  const isLiked = useWishlistStore((s) => s.isLiked);
-  const isFav = product ? isLiked(product.id) : false;
+  const isFav = useWishlistStore((s) => product ? s.items.some((p) => p.id === product.id) : false);
 
   useEffect(() => {
     async function load() {
