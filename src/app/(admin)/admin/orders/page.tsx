@@ -27,9 +27,15 @@ export default function AdminOrdersPage() {
   useEffect(() => { fetchOrders(); }, []);
   const [activeFilter, setActiveFilter] = useState<OrderStatus | 'all'>('all');
 
+  const q = search.trim().toLowerCase();
   const filtered = orders.filter((o) => {
     const matchStatus = activeFilter === 'all' || o.orderStatus === activeFilter;
-    const matchSearch = !search || o.id.toLowerCase().includes(search.toLowerCase()) || (o.clientName?.toLowerCase().includes(search.toLowerCase()) ?? false);
+    const matchSearch = !q
+      || formatOrderId(o.id).toLowerCase().includes(q)
+      || o.id.toLowerCase().includes(q)
+      || (o.clientName ?? '').toLowerCase().includes(q)
+      || (o.vendorName ?? '').toLowerCase().includes(q)
+      || o.items.some((it) => it.title.toLowerCase().includes(q));
     return matchStatus && matchSearch;
   });
 
@@ -37,20 +43,20 @@ export default function AdminOrdersPage() {
     <div className="p-4 md:p-6 lg:p-8 w-full">
       <div className="mb-6">
         <h1 className="text-2xl font-bold" style={{ color: 'var(--nafa-black)' }}>Commandes</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--nafa-gray-700)' }}>{orders.length} commandes au total</p>
+        <p className="text-sm mt-1" style={{ color: 'var(--nafa-gray-700)' }}>{filtered.length} / {orders.length} commandes</p>
       </div>
 
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 mb-6">
         <div className="relative flex-1 max-w-sm">
           <Search size={16} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--nafa-gray-400)' }} />
           <input type="search" value={search} onChange={(e) => setSearch(e.target.value)}
-            placeholder="ID commande ou client..." aria-label="Rechercher une commande"
+            placeholder="ID, client, vendeur ou produit…" aria-label="Rechercher une commande"
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm outline-none bg-white"
             style={{ borderColor: 'var(--nafa-gray-200)' }} />
         </div>
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
           <Filter size={14} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)', flexShrink: 0 }} />
-          {STATUS_FILTERS.slice(0, 6).map((f) => (
+          {STATUS_FILTERS.map((f) => (
             <button key={f.value} onClick={() => setActiveFilter(f.value)}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
               style={{ background: activeFilter === f.value ? 'var(--nafa-orange)' : 'white', color: activeFilter === f.value ? 'white' : 'var(--nafa-gray-700)', border: `1px solid ${activeFilter === f.value ? 'var(--nafa-orange)' : 'var(--nafa-gray-200)'}` }}>

@@ -47,6 +47,14 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Client-side email format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(form.email.trim())) {
+      setError("L'adresse email semble invalide. Vérifiez le format (ex : vous@exemple.com).");
+      return;
+    }
+
     setIsLoading(true);
 
     try {

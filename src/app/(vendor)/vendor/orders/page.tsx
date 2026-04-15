@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingBag, Truck, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Truck, ChevronRight, Search, X } from 'lucide-react';
 import Link from 'next/link';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -16,19 +16,22 @@ const FILTERS: { label: string; value: OrderStatus | 'all' }[] = [
   { label: 'Confirmées', value: 'confirmed' },
   { label: 'En préparation', value: 'preparing' },
   { label: 'Envoyées', value: 'in_transit_warehouse' },
+  { label: 'À l\'entrepôt', value: 'at_warehouse' },
+  { label: 'En livraison', value: 'delivering' },
   { label: 'Livrées', value: 'delivered' },
+  { label: 'Annulées', value: 'cancelled' },
 ];
 
 export default function VendorOrdersPage() {
   const user = useAuthStore((s) => s.user);
   const { orders, isLoading, error, fetchOrders, subscribeRealtime, unsubscribe } = useVendorOrdersStore();
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     fetchOrders();
     if (user?.uid) subscribeRealtime(user.uid);
 
-    // Fallback: re-fetch when user comes back to this tab
     const onVisible = () => { if (document.visibilityState === 'visible') fetchOrders(); };
     document.addEventListener('visibilitychange', onVisible);
 
@@ -39,15 +42,43 @@ export default function VendorOrdersPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid]);
 
-  const filtered = orders.filter((o) => filter === 'all' || o.orderStatus === filter);
+  const q = search.trim().toLowerCase();
+  const filtered = orders.filter((o) => {
+    const matchFilter = filter === 'all' || o.orderStatus === filter;
+    const matchSearch = !q
+      || formatOrderId(o.id).toLowerCase().includes(q)
+      || o.items.some((it) => it.title.toLowerCase().includes(q))
+      || (o.clientName ?? '').toLowerCase().includes(q);
+    return matchFilter && matchSearch;
+  });
 
   return (
     <div className="p-4 md:p-6 lg:p-8 w-full">
-      <div className="mb-6">
+      <div className="mb-5">
         <h1 className="text-2xl font-bold" style={{ color: 'var(--nafa-black)' }}>Commandes reçues</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--nafa-gray-700)' }}>{orders.length} commandes</p>
+        <p className="text-sm mt-1" style={{ color: 'var(--nafa-gray-700)' }}>{filtered.length} / {orders.length} commandes</p>
       </div>
 
+      {/* Search bar */}
+      <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border mb-4 bg-white"
+        style={{ borderColor: 'var(--nafa-gray-200)' }}>
+        <Search size={15} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Rechercher par ID, produit ou client…"
+          className="flex-1 bg-transparent text-sm outline-none"
+          style={{ color: 'var(--nafa-black)' }}
+        />
+        {search && (
+          <button onClick={() => setSearch('')} aria-label="Effacer">
+            <X size={13} strokeWidth={2} style={{ color: 'var(--nafa-gray-400)' }} />
+          </button>
+        )}
+      </div>
+
+      {/* Status filter chips */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
         {FILTERS.map((f) => (
           <button key={f.value} onClick={() => setFilter(f.value)}
@@ -75,20 +106,25 @@ export default function VendorOrdersPage() {
             <div key={i} className="bg-white rounded-2xl p-5 border animate-pulse" style={{ borderColor: 'var(--nafa-gray-200)' }}>
               <div className="flex justify-between mb-3">
                 <div className="space-y-2">
-                  <div className="h-4 w-32 rounded animate-pulse" style={{ background: 'var(--nafa-gray-200)' }} />
-                  <div className="h-3 w-24 rounded animate-pulse" style={{ background: 'var(--nafa-gray-200)' }} />
+                  <div className="h-4 w-32 rounded" style={{ background: 'var(--nafa-gray-200)' }} />
+                  <div className="h-3 w-24 rounded" style={{ background: 'var(--nafa-gray-200)' }} />
                 </div>
-                <div className="h-6 w-20 rounded-full animate-pulse" style={{ background: 'var(--nafa-gray-200)' }} />
+                <div className="h-6 w-20 rounded-full" style={{ background: 'var(--nafa-gray-200)' }} />
               </div>
               <div className="space-y-2">
-                <div className="h-3 w-full rounded animate-pulse" style={{ background: 'var(--nafa-gray-200)' }} />
-                <div className="h-3 w-3/4 rounded animate-pulse" style={{ background: 'var(--nafa-gray-200)' }} />
+                <div className="h-3 w-full rounded" style={{ background: 'var(--nafa-gray-200)' }} />
+                <div className="h-3 w-3/4 rounded" style={{ background: 'var(--nafa-gray-200)' }} />
               </div>
             </div>
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <EmptyState icon={ShoppingBag} title="Aucune commande" description="Vous n'avez pas encore reçu de commandes." />
+        <EmptyState
+          icon={ShoppingBag}
+          title={q ? 'Aucun résultat' : 'Aucune commande'}
+          description={q ? `Aucune commande ne correspond à "${search}".` : "Vous n'avez pas encore reçu de commandes."}
+          action={q ? { label: 'Effacer la recherche', onClick: () => setSearch('') } : undefined}
+        />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {filtered.map((order, i) => (
