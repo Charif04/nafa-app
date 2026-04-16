@@ -10,10 +10,24 @@ export default function SplashPage() {
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        // Already authenticated — show a brief splash then go straight to app
-        timer = setTimeout(() => router.replace('/home'), 600);
+        // Fetch role to redirect to the right portal
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const role = (profile as any)?.role ?? 'client';
+        const dest = role === 'admin'
+          ? '/admin/dashboard'
+          : role === 'vendor'
+          ? '/vendor/dashboard'
+          : '/home';
+
+        timer = setTimeout(() => router.replace(dest), 600);
       } else {
         // Not logged in — show the full splash animation then go to login
         timer = setTimeout(() => router.replace('/login'), 2400);
