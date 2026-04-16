@@ -11,9 +11,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     <AuthGuard allowedRoles={['client', 'vendor', 'admin']}>
       <PushNotificationProvider>
         <div className="min-h-dvh w-full" style={{ background: 'var(--nafa-gray-100)', overflowX: 'hidden' }}>
-          {/* iOS PWA: push content below the status bar on mobile.
-              In browser mode safe-area-inset-top = 0, so this is invisible. */}
-          <div className="nafa-safe-top-spacer md:hidden" aria-hidden="true" />
           {/* Top nav — desktop only */}
           <ClientTopNav />
           {/* Content */}

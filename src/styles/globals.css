@@ -172,19 +172,13 @@ button:disabled,
   padding-top: env(safe-area-inset-top, 0px);
 }
 
-/* iOS PWA safe-area spacer — fills the status bar zone (env safe-area-inset-top).
-   Invisible on browser; ~44px on iPhone with notch in standalone PWA mode. */
-.nafa-safe-top-spacer {
-  height: env(safe-area-inset-top, 0px);
-  flex-shrink: 0;
-}
-
 /* Sticky page headers in the client portal.
-   Mobile  : stick just below the iOS status bar (env safe-area-inset-top).
+   Mobile  : stick at the very top (top:0) so iOS never scrolls the page to
+             "reveal" the input — the header background covers the status bar.
    Desktop : stick at 4rem (below the ClientTopNav which is 64px tall). */
 .nafa-client-header {
   position: sticky;
-  top: env(safe-area-inset-top, 0px);
+  top: 0;
 }
 @media (min-width: 768px) {
   .nafa-client-header {
