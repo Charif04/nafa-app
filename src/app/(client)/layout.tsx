@@ -14,7 +14,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
           {/* Top nav — desktop only */}
           <ClientTopNav />
           {/* Content */}
-          <main className="pb-24 md:pb-0 md:pt-16">
+          <main className="nafa-client-main pb-24 md:pb-0">
             {children}
           </main>
           {/* Bottom nav — mobile only */}
