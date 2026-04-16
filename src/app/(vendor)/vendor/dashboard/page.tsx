@@ -348,32 +348,54 @@ export default function VendorDashboardPage() {
         ) : recentOrders.length === 0 ? (
           <p className="px-6 py-8 text-sm text-center" style={{ color: 'var(--nafa-gray-400)' }}>Aucune commande pour l&apos;instant</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px]">
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--nafa-gray-200)' }}>
-                  {['ID', 'Produit', 'Montant', 'Statut', 'Action'].map((h) => (
-                    <th key={h} className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {recentOrders.map((order) => (
-                  <tr key={order.id} style={{ borderBottom: '1px solid var(--nafa-gray-100)' }}>
-                    <td className="px-6 py-3 text-xs nafa-mono" style={{ color: 'var(--nafa-gray-700)' }}>{formatOrderId(order.id)}</td>
-                    <td className="px-6 py-3 text-xs truncate max-w-32" style={{ color: 'var(--nafa-gray-700)' }}>{order.items[0]?.title ?? '—'}</td>
-                    <td className="px-6 py-3 text-sm font-bold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(order.total, order.currency)}</td>
-                    <td className="px-6 py-3"><StatusBadge status={order.orderStatus} /></td>
-                    <td className="px-6 py-3">
-                      <Link href={`/vendor/orders/${order.id}`} className="text-xs font-medium" style={{ color: 'var(--nafa-orange)' }}>
-                        Détails
-                      </Link>
-                    </td>
+          <>
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full min-w-[640px]">
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--nafa-gray-200)' }}>
+                    {['ID', 'Produit', 'Montant', 'Statut', 'Action'].map((h) => (
+                      <th key={h} className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {recentOrders.map((order) => (
+                    <tr key={order.id} style={{ borderBottom: '1px solid var(--nafa-gray-100)' }}>
+                      <td className="px-6 py-3 text-xs nafa-mono" style={{ color: 'var(--nafa-gray-700)' }}>{formatOrderId(order.id)}</td>
+                      <td className="px-6 py-3 text-xs truncate max-w-32" style={{ color: 'var(--nafa-gray-700)' }}>{order.items[0]?.title ?? '—'}</td>
+                      <td className="px-6 py-3 text-sm font-bold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(order.total, order.currency)}</td>
+                      <td className="px-6 py-3"><StatusBadge status={order.orderStatus} /></td>
+                      <td className="px-6 py-3">
+                        <Link href={`/vendor/orders/${order.id}`} className="text-xs font-medium" style={{ color: 'var(--nafa-orange)' }}>
+                          Détails
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y" style={{ borderColor: 'var(--nafa-gray-100)' }}>
+              {recentOrders.map((order) => (
+                <div key={order.id} className="p-4 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold nafa-mono" style={{ color: 'var(--nafa-orange)' }}>{formatOrderId(order.id)}</span>
+                    <StatusBadge status={order.orderStatus} />
+                  </div>
+                  <p className="text-sm font-medium line-clamp-1" style={{ color: 'var(--nafa-black)' }}>{order.items[0]?.title ?? '—'}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(order.total, order.currency)}</span>
+                    <Link href={`/vendor/orders/${order.id}`} className="text-xs font-semibold" style={{ color: 'var(--nafa-orange)' }}>
+                      Détails →
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </motion.div>
 

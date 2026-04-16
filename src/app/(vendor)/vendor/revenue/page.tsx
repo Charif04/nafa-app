@@ -207,34 +207,56 @@ export default function VendorRevenuePage() {
         ) : productRevenues.length === 0 ? (
           <p className="px-6 py-10 text-sm text-center" style={{ color: 'var(--nafa-gray-400)' }}>Aucune vente pour l&apos;instant</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px]">
-              <thead>
-                <tr style={{ background: 'var(--nafa-gray-100)' }}>
-                  {['Produit', 'Unités vendues', 'Payé par client', 'Markup NAFA (10%)', 'Vos revenus'].map((h) => (
-                    <th key={h} className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {productRevenues.map((p, i) => {
-                  // p.gross = item.price × qty = vendor price (raw, pre-markup)
-                  // NAFA adds 10% on top for clients — vendor keeps their full price
-                  const markup = Math.round(p.gross * COMMISSION_RATE);
-                  const clientPaid = p.gross + markup;
-                  return (
-                    <tr key={i} style={{ borderBottom: '1px solid var(--nafa-gray-100)' }}>
-                      <td className="px-5 py-3.5 text-sm font-medium" style={{ color: 'var(--nafa-black)' }}>{p.title}</td>
-                      <td className="px-5 py-3.5 text-sm nafa-mono" style={{ color: 'var(--nafa-gray-700)' }}>{p.unitsSold}</td>
-                      <td className="px-5 py-3.5 text-sm font-semibold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(clientPaid, 'FCFA')}</td>
-                      <td className="px-5 py-3.5 text-sm nafa-mono" style={{ color: 'var(--nafa-orange)' }}>{formatCurrency(markup, 'FCFA')}</td>
-                      <td className="px-5 py-3.5 text-sm font-bold nafa-mono text-green-600">{formatCurrency(p.gross, 'FCFA')}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <>
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full min-w-[640px]">
+                <thead>
+                  <tr style={{ background: 'var(--nafa-gray-100)' }}>
+                    {['Produit', 'Unités vendues', 'Payé par client', 'Markup NAFA (10%)', 'Vos revenus'].map((h) => (
+                      <th key={h} className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {productRevenues.map((p, i) => {
+                    const markup = Math.round(p.gross * COMMISSION_RATE);
+                    const clientPaid = p.gross + markup;
+                    return (
+                      <tr key={i} style={{ borderBottom: '1px solid var(--nafa-gray-100)' }}>
+                        <td className="px-5 py-3.5 text-sm font-medium" style={{ color: 'var(--nafa-black)' }}>{p.title}</td>
+                        <td className="px-5 py-3.5 text-sm nafa-mono" style={{ color: 'var(--nafa-gray-700)' }}>{p.unitsSold}</td>
+                        <td className="px-5 py-3.5 text-sm font-semibold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(clientPaid, 'FCFA')}</td>
+                        <td className="px-5 py-3.5 text-sm nafa-mono" style={{ color: 'var(--nafa-orange)' }}>{formatCurrency(markup, 'FCFA')}</td>
+                        <td className="px-5 py-3.5 text-sm font-bold nafa-mono text-green-600">{formatCurrency(p.gross, 'FCFA')}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y" style={{ borderColor: 'var(--nafa-gray-100)' }}>
+              {productRevenues.map((p, i) => {
+                const markup = Math.round(p.gross * COMMISSION_RATE);
+                const clientPaid = p.gross + markup;
+                return (
+                  <div key={i} className="p-4 flex flex-col gap-2">
+                    <p className="text-sm font-semibold line-clamp-1" style={{ color: 'var(--nafa-black)' }}>{p.title}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs" style={{ color: 'var(--nafa-gray-700)' }}>{p.unitsSold} unité{p.unitsSold > 1 ? 's' : ''} vendue{p.unitsSold > 1 ? 's' : ''}</span>
+                      <span className="text-xs" style={{ color: 'var(--nafa-orange)' }}>Markup : {formatCurrency(markup, 'FCFA')}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs" style={{ color: 'var(--nafa-gray-700)' }}>Client : <span className="font-semibold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(clientPaid, 'FCFA')}</span></span>
+                      <span className="text-sm font-bold nafa-mono text-green-600">{formatCurrency(p.gross, 'FCFA')}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </motion.div>
     </div>

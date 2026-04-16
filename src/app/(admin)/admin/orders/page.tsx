@@ -67,7 +67,8 @@ export default function AdminOrdersPage() {
       </div>
 
       <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: 'var(--nafa-gray-200)' }}>
-        <div className="overflow-x-auto">
+        {/* Desktop table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full min-w-[600px]">
             <thead>
               <tr style={{ background: 'var(--nafa-gray-100)', borderBottom: '1px solid var(--nafa-gray-200)' }}>
@@ -103,6 +104,28 @@ export default function AdminOrdersPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile cards */}
+        <div className="md:hidden divide-y" style={{ borderColor: 'var(--nafa-gray-100)' }}>
+          {filtered.map((order, i) => (
+            <motion.div key={order.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
+              className="p-4 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold nafa-mono" style={{ color: 'var(--nafa-orange)' }}>{formatOrderId(order.id)}</span>
+                <StatusBadge status={order.orderStatus} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium" style={{ color: 'var(--nafa-black)' }}>{order.clientName}</span>
+                <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>{order.vendorName}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(order.total, order.currency)}</span>
+                <Link href={`/admin/orders/${order.id}`} className="text-xs font-semibold" style={{ color: 'var(--nafa-orange)' }}>Détails →</Link>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
         {filtered.length === 0 && (
           <div className="py-16 text-center">
             <p className="text-sm" style={{ color: 'var(--nafa-gray-700)' }}>Aucune commande trouvée</p>

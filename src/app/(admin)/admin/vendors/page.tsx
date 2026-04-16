@@ -214,7 +214,8 @@ export default function AdminVendorsPage() {
 
       {/* Table */}
       <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: 'var(--nafa-gray-200)' }}>
-        <div className="overflow-x-auto">
+        {/* Desktop table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full min-w-[640px]">
             <thead>
               <tr style={{ background: 'var(--nafa-gray-100)', borderBottom: '1px solid var(--nafa-gray-200)' }}>
@@ -309,6 +310,59 @@ export default function AdminVendorsPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile cards */}
+        <div className="md:hidden divide-y" style={{ borderColor: 'var(--nafa-gray-100)' }}>
+          {isLoading ? (
+            [1, 2, 3, 4].map((i) => (
+              <div key={i} className="p-4 flex flex-col gap-2">
+                <Skeleton className="h-4 w-32 rounded" />
+                <Skeleton className="h-3 w-24 rounded" />
+                <Skeleton className="h-4 w-20 rounded" />
+              </div>
+            ))
+          ) : filtered.length === 0 ? (
+            <p className="px-4 py-12 text-center text-sm" style={{ color: 'var(--nafa-gray-400)' }}>Aucun vendeur trouvé</p>
+          ) : (
+            filtered.map((vendor, i) => (
+              <motion.div key={vendor.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
+                className="p-4 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                      style={{ background: 'var(--nafa-orange)' }}>
+                      {vendor.shopName[0]?.toUpperCase()}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm font-semibold" style={{ color: 'var(--nafa-black)' }}>{vendor.shopName}</span>
+                      {vendor.isVerified && <BadgeCheck size={12} strokeWidth={1.75} style={{ color: 'var(--nafa-blue)' }} />}
+                    </div>
+                  </div>
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                    vendor.isSuspended ? 'bg-red-50 text-red-700' :
+                    vendor.isVerified ? 'bg-green-50 text-green-700' :
+                    'bg-yellow-50 text-yellow-700'
+                  }`}>
+                    {vendor.isSuspended ? 'Suspendu' : vendor.isVerified ? 'Vérifié' : 'En attente'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs" style={{ color: 'var(--nafa-gray-700)' }}>{vendor.firstName} {vendor.lastName}</span>
+                  <div className="flex items-center gap-1">
+                    <Star size={11} strokeWidth={1.75} className="fill-[var(--nafa-orange)] text-[var(--nafa-orange)]" />
+                    <span className="text-xs nafa-mono" style={{ color: 'var(--nafa-black)' }}>{vendor.rating.toFixed(1)}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(vendor.totalRevenue, 'FCFA')}</span>
+                  <button onClick={() => openDetail(vendor)} className="text-xs font-semibold" style={{ color: 'var(--nafa-orange)' }}>
+                    Dossier →
+                  </button>
+                </div>
+              </motion.div>
+            ))
+          )}
         </div>
       </div>
 

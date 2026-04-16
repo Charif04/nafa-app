@@ -128,7 +128,8 @@ export default function VendorProductsPage() {
         />
       ) : (
         <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: 'var(--nafa-gray-200)' }}>
-          <div className="overflow-x-auto">
+          {/* Desktop table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full min-w-[640px]">
               <thead>
                 <tr style={{ background: 'var(--nafa-gray-100)', borderBottom: '1px solid var(--nafa-gray-200)' }}>
@@ -216,6 +217,57 @@ export default function VendorProductsPage() {
                 </AnimatePresence>
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="md:hidden divide-y" style={{ borderColor: 'var(--nafa-gray-100)' }}>
+            <AnimatePresence>
+              {filtered.map((product, i) => (
+                <motion.div key={product.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  transition={{ delay: i * 0.03 }} className="p-4 flex gap-3">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0" style={{ background: 'var(--nafa-gray-100)' }}>
+                    {product.images[0] ? (
+                      <Image src={product.images[0]} alt={product.title} width={56} height={56} className="object-cover w-full h-full" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package size={20} style={{ color: 'var(--nafa-gray-400)' }} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 flex flex-col gap-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-semibold line-clamp-1" style={{ color: 'var(--nafa-black)' }}>{product.title}</p>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                        product.stock === 0 ? 'bg-red-50 text-red-600' :
+                        product.stock <= 3 ? 'bg-orange-50 text-orange-600' :
+                        'bg-green-50 text-green-700'
+                      }`}>
+                        {product.stock === 0 ? 'Épuisé' : `${product.stock} en stock`}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(product.price, product.currency)}</span>
+                      <div className="flex items-center gap-2">
+                        <Link href={`/vendor/products/${product.id}/edit`}>
+                          <motion.button whileTap={{ scale: 0.9 }}
+                            className="w-8 h-8 rounded-xl flex items-center justify-center"
+                            style={{ background: 'var(--nafa-gray-100)' }}
+                            aria-label={`Modifier ${product.title}`}>
+                            <Pencil size={13} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-700)' }} />
+                          </motion.button>
+                        </Link>
+                        <motion.button whileTap={{ scale: 0.9 }}
+                          onClick={() => setDeleteId(product.id)}
+                          className="w-8 h-8 rounded-xl flex items-center justify-center bg-red-50"
+                          aria-label={`Supprimer ${product.title}`}>
+                          <Trash2 size={13} strokeWidth={1.75} className="text-red-500" />
+                        </motion.button>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         </div>
       )}
