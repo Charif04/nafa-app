@@ -103,24 +103,57 @@ export default function VendorDashboardPage() {
       setRecentOrders(orders.slice(0, 5));
     } catch { /* empty orders */ }
 
-    // Top 5 vendors by total_revenue (public data from vendor_profiles)
-    const { data: topRows } = await db
-      .from('vendor_profiles')
-      .select('id, shop_name, total_revenue, total_sales')
-      .order('total_revenue', { ascending: false })
-      .limit(5);
+    // Top 5 vendors ranked by actual order count (vendor_profiles.total_sales is never
+    // updated by a trigger, so we count from the orders table directly).
+    const { data: orderRows } = await db
+      .from('orders')
+      .select('vendor_id')
+      .neq('order_status', 'cancelled');
 
-    if (topRows) {
-      setTopVendors(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        topRows.map((row: any, i: number) => ({
-          rank: i + 1,
-          vendorId: row.id,
-          name: row.shop_name,
-          sales: row.total_sales,
-          isMe: row.id === user.id,
-        }))
+    if (orderRows) {
+      // Count orders per vendor
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const countMap: Record<string, number> = (orderRows as any[]).reduce(
+        (acc: Record<string, number>, row: { vendor_id: string }) => {
+          acc[row.vendor_id] = (acc[row.vendor_id] ?? 0) + 1;
+          return acc;
+        },
+        {}
       );
+
+      // Fetch vendor profiles for the vendors that have orders
+      const topIds = Object.entries(countMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([id]) => id);
+
+      const { data: vpRows } = await db
+        .from('vendor_profiles')
+        .select('id, shop_name')
+        .in('id', topIds.length > 0 ? topIds : ['00000000-0000-0000-0000-000000000000']);
+
+      if (vpRows) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const vpMap: Record<string, string> = (vpRows as any[]).reduce(
+          (acc: Record<string, string>, row: { id: string; shop_name: string }) => {
+            acc[row.id] = row.shop_name;
+            return acc;
+          },
+          {}
+        );
+
+        setTopVendors(
+          topIds
+            .filter((id) => vpMap[id])
+            .map((id, i) => ({
+              rank: i + 1,
+              vendorId: id,
+              name: vpMap[id],
+              sales: countMap[id],
+              isMe: id === user.id,
+            }))
+        );
+      }
     }
 
     // Low stock products (≤ 5 units)
