@@ -71,10 +71,7 @@ body {
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
-  /* Safe-area padding for iOS notch / Dynamic Island */
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-left: env(safe-area-inset-left, 0px);
-  padding-right: env(safe-area-inset-right, 0px);
+  /* NOTE: do NOT add padding-top/safe-area here — it shifts sticky top:0 elements */
 }
 
 /* Remove 300ms tap delay on all interactive elements */
@@ -173,6 +170,26 @@ button:disabled,
 }
 .safe-area-pt {
   padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* iOS PWA safe-area spacer — fills the status bar zone (env safe-area-inset-top).
+   Invisible on browser; ~44px on iPhone with notch in standalone PWA mode. */
+.nafa-safe-top-spacer {
+  height: env(safe-area-inset-top, 0px);
+  flex-shrink: 0;
+}
+
+/* Sticky page headers in the client portal.
+   Mobile  : stick just below the iOS status bar (env safe-area-inset-top).
+   Desktop : stick at 4rem (below the ClientTopNav which is 64px tall). */
+.nafa-client-header {
+  position: sticky;
+  top: env(safe-area-inset-top, 0px);
+}
+@media (min-width: 768px) {
+  .nafa-client-header {
+    top: 4rem;
+  }
 }
 
 /* Scrollbar-none utility (both spellings used across the codebase) */

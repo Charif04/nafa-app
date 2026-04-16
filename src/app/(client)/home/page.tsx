@@ -120,7 +120,7 @@ export default function HomePage() {
     <div className="min-h-dvh" style={{ background: 'var(--nafa-white)' }}>
       {/* Sticky header — visible on all screens, sits below top nav on desktop */}
       <header
-        className="sticky top-0 md:top-16 z-30 px-4 md:px-6 lg:px-10 py-3 w-full"
+        className="nafa-client-header z-30 px-4 md:px-6 lg:px-10 py-3 w-full"
         style={{ background: 'var(--nafa-white)', boxShadow: '0 1px 0 var(--nafa-gray-200)', overflowX: 'hidden' }}
       >
         <div>

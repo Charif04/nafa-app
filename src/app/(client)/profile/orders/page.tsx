@@ -42,7 +42,7 @@ export default function OrdersPage() {
 
   return (
     <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
-      <header className="sticky top-0 md:top-16 z-10 px-4 md:px-6 lg:px-10 py-3"
+      <header className="nafa-client-header z-10 px-4 md:px-6 lg:px-10 py-3"
         style={{ background: 'var(--nafa-white)', borderBottom: '1px solid var(--nafa-gray-200)' }}>
         <div className="flex items-center gap-3 mb-3">
           <button onClick={() => router.back()} className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"

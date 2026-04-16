@@ -143,7 +143,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   if (isLoading) {
     return (
       <div className="min-h-dvh" style={{ background: 'var(--nafa-white)' }}>
-        <header className="sticky top-0 md:top-16 z-20 flex items-center justify-between px-4 py-3"
+        <header className="nafa-client-header z-20 flex items-center justify-between px-4 py-3"
           style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)' }}>
           <div className="w-9 h-9 rounded-full animate-pulse" style={{ background: 'var(--nafa-gray-200)' }} />
           <Logo size="sm" />
@@ -185,7 +185,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   return (
     <div className="min-h-dvh" style={{ background: 'var(--nafa-white)' }}>
       {/* Header */}
-      <header className="sticky top-0 md:top-16 z-20 flex items-center justify-between px-4 py-3"
+      <header className="nafa-client-header z-20 flex items-center justify-between px-4 py-3"
         style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(12px)' }}>
         <button
           onClick={() => router.back()}
