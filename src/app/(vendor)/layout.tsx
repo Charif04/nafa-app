@@ -8,7 +8,7 @@ export default function VendorLayout({ children }: { children: React.ReactNode }
     <AuthGuard allowedRoles={['vendor', 'admin']}>
       <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
         <VendorSidebar />
-        <main className="lg:pl-64 pt-14 lg:pt-0 overflow-x-hidden">
+        <main className="lg:pl-64 admin-vendor-main overflow-x-hidden">
           {children}
         </main>
       </div>

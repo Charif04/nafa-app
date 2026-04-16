@@ -205,6 +205,18 @@ button:disabled,
   }
 }
 
+/* Admin & Vendor portal main content area.
+   Mobile  : padding-top = safe-area + 52px (height of the mobile top bar)
+   Desktop : padding-top = 0 (sidebar is on the left, no top bar needed) */
+.admin-vendor-main {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 52px);
+}
+@media (min-width: 1024px) {
+  .admin-vendor-main {
+    padding-top: 0;
+  }
+}
+
 /* Scrollbar-none utility (both spellings used across the codebase) */
 .scrollbar-none,
 .hide-scrollbar {

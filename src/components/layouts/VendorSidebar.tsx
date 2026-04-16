@@ -89,16 +89,28 @@ export function VendorSidebar() {
         {sidebarContent}
       </aside>
 
-      <button onClick={() => setMobileOpen(true)} className="lg:hidden fixed top-4 left-4 z-50 w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--nafa-dark)' }} aria-label="Ouvrir le menu">
-        <Menu size={18} strokeWidth={1.75} className="text-white" />
-      </button>
+      {/* Mobile top bar — covers iOS status bar + provides hamburger */}
+      <div
+        className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-end px-4 pb-2"
+        style={{ background: 'var(--nafa-dark)', height: 'calc(env(safe-area-inset-top, 0px) + 52px)' }}
+      >
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="w-9 h-9 rounded-xl flex items-center justify-center"
+          style={{ background: 'rgba(255,255,255,0.1)' }}
+          aria-label="Ouvrir le menu"
+        >
+          <Menu size={18} strokeWidth={1.75} className="text-white" />
+        </button>
+        <span className="ml-3 text-white font-semibold text-sm truncate">{shopName}</span>
+      </div>
 
       <AnimatePresence>
         {mobileOpen && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMobileOpen(false)} className="lg:hidden fixed inset-0 z-40 bg-black/50" />
-            <motion.aside initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} className="lg:hidden fixed left-0 top-0 bottom-0 w-64 z-50 flex flex-col" style={{ background: 'var(--nafa-dark)' }}>
-              <div className="absolute top-4 right-4">
+            <motion.aside initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} className="lg:hidden fixed left-0 top-0 bottom-0 w-72 z-50 flex flex-col" style={{ background: 'var(--nafa-dark)' }}>
+              <div className="absolute right-4" style={{ top: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}>
                 <button onClick={() => setMobileOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center bg-white/10" aria-label="Fermer">
                   <X size={16} strokeWidth={1.75} className="text-white" />
                 </button>
