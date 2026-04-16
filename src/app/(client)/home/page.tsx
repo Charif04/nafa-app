@@ -44,8 +44,23 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!searchOpen) return;
+
+    // iOS Safari: lock body scroll so the keyboard opening doesn't scroll
+    // the page under the fixed overlay (which makes it appear to jump)
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+
     const t = setTimeout(() => searchInputRef.current?.focus(), 150);
-    return () => clearTimeout(t);
+
+    return () => {
+      clearTimeout(t);
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollY);
+    };
   }, [searchOpen]);
 
   useEffect(() => {
