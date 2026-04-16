@@ -1,6 +1,6 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Search, X, Package, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/shared/Logo';
@@ -35,33 +35,10 @@ const PRICE_RANGES = [
 
 export default function HomePage() {
   const [search, setSearch] = useState('');
-  const [searchOpen, setSearchOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState('all');
   const [activePriceRange, setActivePriceRange] = useState('all');
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!searchOpen) return;
-
-    // iOS Safari: lock body scroll so the keyboard opening doesn't scroll
-    // the page under the fixed overlay (which makes it appear to jump)
-    const scrollY = window.scrollY;
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
-
-    const t = setTimeout(() => searchInputRef.current?.focus(), 150);
-
-    return () => {
-      clearTimeout(t);
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      window.scrollTo(0, scrollY);
-    };
-  }, [searchOpen]);
 
   useEffect(() => {
     async function load() {
@@ -118,155 +95,91 @@ export default function HomePage() {
 
   return (
     <div className="min-h-dvh" style={{ background: 'var(--nafa-white)' }}>
-      {/* Sticky header — visible on all screens, sits below top nav on desktop */}
+      {/* Sticky header */}
       <header
         className="nafa-client-header z-30 px-4 md:px-6 lg:px-10 py-3 w-full"
         style={{ background: 'var(--nafa-white)', boxShadow: '0 1px 0 var(--nafa-gray-200)', overflowX: 'hidden' }}
       >
-        <div>
-          {/* Mobile: logo + search bar */}
-          <div className="flex items-center gap-3 md:hidden">
-            <Logo size="sm" className="flex-shrink-0" />
-            <motion.button
-              onClick={() => setSearchOpen(true)}
-              className="flex-1 flex items-center gap-2 px-4 py-2.5 rounded-full border text-sm text-left"
-              style={{ borderColor: 'var(--nafa-gray-200)', background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-400)' }}
-              whileTap={{ scale: 0.99 }}
-              aria-label="Rechercher un produit"
-            >
-              <Search size={15} strokeWidth={1.75} />
-              <span>Rechercher un produit...</span>
-            </motion.button>
-          </div>
-
-          {/* Desktop: search bar only (logo is in top nav) */}
-          <div className="hidden md:flex items-center gap-4 mb-3">
-            <div className="flex-1 relative">
-              <Search size={16} strokeWidth={1.75} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--nafa-gray-400)' }} />
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher un produit, une boutique..."
-                className="w-full pl-11 pr-4 py-3 rounded-full border text-sm outline-none transition-colors"
-                style={{ borderColor: 'var(--nafa-gray-200)', background: 'var(--nafa-gray-100)', color: 'var(--nafa-black)' }}
-                onFocus={(e) => { e.target.style.borderColor = 'var(--nafa-orange)'; e.target.style.background = 'white'; }}
-                onBlur={(e) => { e.target.style.borderColor = 'var(--nafa-gray-200)'; e.target.style.background = 'var(--nafa-gray-100)'; }}
-              />
-            </div>
-          </div>
-
-          {/* Category chips */}
-          <div className="flex gap-2 mt-3 md:mt-0 overflow-x-auto pb-1 scrollbar-none" role="tablist" aria-label="Catégories">
-            {CATEGORIES.map((cat) => (
-              <motion.button
-                key={cat.id}
-                role="tab"
-                aria-selected={activeCategory === cat.id}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setActiveCategory(cat.id)}
-                className="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-colors"
-                style={{
-                  background: activeCategory === cat.id ? 'var(--nafa-orange)' : 'var(--nafa-gray-200)',
-                  color: activeCategory === cat.id ? 'var(--nafa-white)' : 'var(--nafa-gray-700)',
-                }}
-              >
-                {cat.label}
-              </motion.button>
-            ))}
-          </div>
-
-          {/* Price range chips */}
-          <div className="flex gap-2 mt-2 overflow-x-auto pb-1 scrollbar-none" role="tablist" aria-label="Fourchette de prix">
-            {PRICE_RANGES.map((range) => (
-              <motion.button
-                key={range.id}
-                role="tab"
-                aria-selected={activePriceRange === range.id}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setActivePriceRange(range.id)}
-                className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors border"
-                style={{
-                  background: activePriceRange === range.id ? 'rgba(255,107,44,0.1)' : 'transparent',
-                  borderColor: activePriceRange === range.id ? 'var(--nafa-orange)' : 'var(--nafa-gray-200)',
-                  color: activePriceRange === range.id ? 'var(--nafa-orange)' : 'var(--nafa-gray-700)',
-                }}
-              >
-                {range.label}{range.id !== 'all' ? ' FCFA' : ''}
-              </motion.button>
-            ))}
+        {/* Mobile: logo + inline search input */}
+        <div className="flex items-center gap-3 mb-3 md:hidden">
+          <Logo size="sm" className="flex-shrink-0" />
+          <div className="flex-1 flex items-center gap-2 px-4 py-2.5 rounded-full border"
+            style={{ borderColor: 'var(--nafa-gray-200)', background: 'var(--nafa-gray-100)' }}>
+            <Search size={15} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher un produit..."
+              className="flex-1 bg-transparent text-sm outline-none"
+              style={{ color: 'var(--nafa-black)' }}
+            />
+            {search && (
+              <button onClick={() => setSearch('')} aria-label="Effacer">
+                <X size={14} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
+              </button>
+            )}
           </div>
         </div>
-      </header>
 
-      {/* Mobile search overlay */}
-      <AnimatePresence>
-        {searchOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex flex-col md:hidden"
-            style={{ background: 'var(--nafa-white)', overscrollBehavior: 'none' }}
-          >
-            <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: 'var(--nafa-gray-200)' }}>
-              <div className="flex-1 flex items-center gap-2 px-4 py-2.5 rounded-full border"
-                style={{ borderColor: 'var(--nafa-orange)', background: 'var(--nafa-gray-100)' }}>
-                <Search size={15} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
-                <input
-                  ref={searchInputRef}
-                  type="search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Rechercher un produit..."
-                  className="flex-1 bg-transparent text-sm outline-none"
-                  style={{ color: 'var(--nafa-black)' }}
-                  aria-label="Recherche"
-                />
-                {search && (
-                  <button onClick={() => setSearch('')} aria-label="Effacer">
-                    <X size={14} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
-                  </button>
-                )}
-              </div>
-              <button
-                onClick={() => { setSearchOpen(false); setSearch(''); }}
-                className="text-sm font-medium"
-                style={{ color: 'var(--nafa-orange)' }}
-              >
-                Annuler
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              {search ? (
-                <div>
-                  <p className="text-xs mb-4" style={{ color: 'var(--nafa-gray-400)' }}>
-                    {filtered.length} résultat{filtered.length !== 1 ? 's' : ''} pour &quot;{search}&quot;
-                  </p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {filtered.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-xs font-medium mb-3" style={{ color: 'var(--nafa-gray-700)' }}>Recherches populaires</p>
-                  {['Boubou', 'Tissu wax', 'Bijoux', 'Artisanat', 'Huile karité'].map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setSearch(s)}
-                      className="flex items-center gap-3 w-full py-2.5 text-sm text-left"
-                      style={{ borderBottom: '1px solid var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}
-                    >
-                      <Search size={14} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        {/* Desktop: search bar only (logo is in top nav) */}
+        <div className="hidden md:flex items-center gap-4 mb-3">
+          <div className="flex-1 relative">
+            <Search size={16} strokeWidth={1.75} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: 'var(--nafa-gray-400)' }} />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher un produit, une boutique..."
+              className="w-full pl-11 pr-4 py-3 rounded-full border text-sm outline-none transition-colors"
+              style={{ borderColor: 'var(--nafa-gray-200)', background: 'var(--nafa-gray-100)', color: 'var(--nafa-black)' }}
+              onFocus={(e) => { e.target.style.borderColor = 'var(--nafa-orange)'; e.target.style.background = 'white'; }}
+              onBlur={(e) => { e.target.style.borderColor = 'var(--nafa-gray-200)'; e.target.style.background = 'var(--nafa-gray-100)'; }}
+            />
+          </div>
+        </div>
+
+        {/* Category chips */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none" role="tablist" aria-label="Catégories">
+          {CATEGORIES.map((cat) => (
+            <motion.button
+              key={cat.id}
+              role="tab"
+              aria-selected={activeCategory === cat.id}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setActiveCategory(cat.id)}
+              className="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-colors"
+              style={{
+                background: activeCategory === cat.id ? 'var(--nafa-orange)' : 'var(--nafa-gray-200)',
+                color: activeCategory === cat.id ? 'var(--nafa-white)' : 'var(--nafa-gray-700)',
+              }}
+            >
+              {cat.label}
+            </motion.button>
+          ))}
+        </div>
+
+        {/* Price range chips */}
+        <div className="flex gap-2 mt-2 overflow-x-auto pb-1 scrollbar-none" role="tablist" aria-label="Fourchette de prix">
+          {PRICE_RANGES.map((range) => (
+            <motion.button
+              key={range.id}
+              role="tab"
+              aria-selected={activePriceRange === range.id}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setActivePriceRange(range.id)}
+              className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors border"
+              style={{
+                background: activePriceRange === range.id ? 'rgba(255,107,44,0.1)' : 'transparent',
+                borderColor: activePriceRange === range.id ? 'var(--nafa-orange)' : 'var(--nafa-gray-200)',
+                color: activePriceRange === range.id ? 'var(--nafa-orange)' : 'var(--nafa-gray-700)',
+              }}
+            >
+              {range.label}{range.id !== 'all' ? ' FCFA' : ''}
+            </motion.button>
+          ))}
+        </div>
+      </header>
 
       {/* Promotional banner */}
       <div className="px-4 md:px-6 lg:px-10 pt-4 pb-0">
