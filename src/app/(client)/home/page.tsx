@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Package, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -40,6 +40,13 @@ export default function HomePage() {
   const [activePriceRange, setActivePriceRange] = useState('all');
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    const t = setTimeout(() => searchInputRef.current?.focus(), 150);
+    return () => clearTimeout(t);
+  }, [searchOpen]);
 
   useEffect(() => {
     async function load() {
@@ -185,14 +192,14 @@ export default function HomePage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex flex-col md:hidden"
-            style={{ background: 'var(--nafa-white)' }}
+            style={{ background: 'var(--nafa-white)', overscrollBehavior: 'none' }}
           >
             <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: 'var(--nafa-gray-200)' }}>
               <div className="flex-1 flex items-center gap-2 px-4 py-2.5 rounded-full border"
                 style={{ borderColor: 'var(--nafa-orange)', background: 'var(--nafa-gray-100)' }}>
                 <Search size={15} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
                 <input
-                  autoFocus
+                  ref={searchInputRef}
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
