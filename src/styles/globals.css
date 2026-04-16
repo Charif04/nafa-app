@@ -173,16 +173,21 @@ button:disabled,
 }
 
 /* Sticky page headers in the client portal.
-   Mobile  : stick at the very top (top:0) so iOS never scrolls the page to
-             "reveal" the input — the header background covers the status bar.
-   Desktop : stick at 4rem (below the ClientTopNav which is 64px tall). */
+   top: 0  → header always sticks at the very top; iOS never scrolls to "reveal" it.
+   padding-top: max(0.75rem, safe-area-inset-top)
+     → in browser:  safe-area = 0, so padding = 0.75rem (normal py-3)
+     → in PWA mode: safe-area ≈ 44-59px, header background covers status bar
+        and its content (logo, search bar) starts below the status bar.
+   Desktop: top: 4rem (below ClientTopNav), padding-top reset to 0. */
 .nafa-client-header {
   position: sticky;
   top: 0;
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
 }
 @media (min-width: 768px) {
   .nafa-client-header {
     top: 4rem;
+    padding-top: 0;
   }
 }
 
