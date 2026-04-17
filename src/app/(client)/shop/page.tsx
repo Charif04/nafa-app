@@ -8,22 +8,8 @@ import { clientPrice } from '@/lib/utils';
 import { ProductCard } from '@/components/shared/ProductCard';
 import { ProductCardSkeleton } from '@/components/shared/SkeletonShimmer';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { useCategories } from '@/hooks/useCategories';
 import type { Product } from '@/types';
-
-// ── Constants ──────────────────────────────────────────────────────────────────
-
-const CATEGORIES = [
-  { id: 'all', label: 'Tous' },
-  { id: 'mode', label: 'Mode' },
-  { id: 'électronique', label: 'Électronique' },
-  { id: 'maison', label: 'Maison' },
-  { id: 'beauté', label: 'Beauté' },
-  { id: 'sport', label: 'Sport' },
-  { id: 'alimentation', label: 'Alimentation' },
-  { id: 'artisanat', label: 'Artisanat' },
-  { id: 'bijoux', label: 'Bijoux' },
-  { id: 'autre', label: 'Autre' },
-];
 
 const PRICE_RANGES = [
   { id: 'all', label: 'Tous les prix', min: 0, max: Infinity },
@@ -47,6 +33,7 @@ export default function ShopPage() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const categories = useCategories();
 
   // Filters state
   const [search, setSearch] = useState('');
@@ -179,14 +166,14 @@ export default function ShopPage() {
 
         {/* Category chips */}
         <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
+              key={cat.name}
+              onClick={() => setActiveCategory(cat.name)}
               className="flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors"
               style={{
-                background: activeCategory === cat.id ? 'var(--nafa-orange)' : 'var(--nafa-gray-100)',
-                color: activeCategory === cat.id ? 'white' : 'var(--nafa-gray-700)',
+                background: activeCategory === cat.name ? 'var(--nafa-orange)' : 'var(--nafa-gray-100)',
+                color: activeCategory === cat.name ? 'white' : 'var(--nafa-gray-700)',
               }}
             >
               {cat.label}

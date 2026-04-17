@@ -9,20 +9,8 @@ import { ProductCardSkeleton } from '@/components/shared/SkeletonShimmer';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { supabase } from '@/lib/supabase';
 import { clientPrice } from '@/lib/utils';
+import { useCategories } from '@/hooks/useCategories';
 import type { Product } from '@/types';
-
-const CATEGORIES = [
-  { id: 'all', label: 'Tous' },
-  { id: 'mode', label: 'Mode' },
-  { id: 'électronique', label: 'Électronique' },
-  { id: 'maison', label: 'Maison' },
-  { id: 'beauté', label: 'Beauté' },
-  { id: 'sport', label: 'Sport' },
-  { id: 'alimentation', label: 'Alimentation' },
-  { id: 'artisanat', label: 'Artisanat' },
-  { id: 'bijoux', label: 'Bijoux' },
-  { id: 'autre', label: 'Autre' },
-];
 
 const PRICE_RANGES = [
   { id: 'all', label: 'Tous les prix', min: 0, max: Infinity },
@@ -34,6 +22,7 @@ const PRICE_RANGES = [
 
 
 export default function HomePage() {
+  const categories = useCategories();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [activePriceRange, setActivePriceRange] = useState('all');
@@ -141,17 +130,17 @@ export default function HomePage() {
 
         {/* Category chips */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none" role="tablist" aria-label="Catégories">
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <motion.button
-              key={cat.id}
+              key={cat.name}
               role="tab"
-              aria-selected={activeCategory === cat.id}
+              aria-selected={activeCategory === cat.name}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setActiveCategory(cat.id)}
+              onClick={() => setActiveCategory(cat.name)}
               className="flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-medium transition-colors"
               style={{
-                background: activeCategory === cat.id ? 'var(--nafa-orange)' : 'var(--nafa-gray-200)',
-                color: activeCategory === cat.id ? 'var(--nafa-white)' : 'var(--nafa-gray-700)',
+                background: activeCategory === cat.name ? 'var(--nafa-orange)' : 'var(--nafa-gray-200)',
+                color: activeCategory === cat.name ? 'var(--nafa-white)' : 'var(--nafa-gray-700)',
               }}
             >
               {cat.label}

@@ -270,15 +270,9 @@ export default function VendorOrderDetailPage({ params }: { params: Promise<{ id
                   <div className="flex justify-between">
                     <span className="text-sm" style={{ color: 'var(--nafa-gray-700)' }}>Prix payé par le client</span>
                     <span className="text-sm font-medium nafa-mono" style={{ color: 'var(--nafa-black)' }}>
-                      {formatCurrency(order.subtotal + order.deliveryFee, order.currency)}
+                      {formatCurrency(order.subtotal, order.currency)}
                     </span>
                   </div>
-                  {order.deliveryFee > 0 && (
-                    <div className="flex justify-between text-xs" style={{ color: 'var(--nafa-gray-400)' }}>
-                      <span>dont frais de livraison</span>
-                      <span className="nafa-mono">{formatCurrency(order.deliveryFee, order.currency)}</span>
-                    </div>
-                  )}
                   <div className="flex justify-between pt-3" style={{ borderTop: '1px solid var(--nafa-gray-200)' }}>
                     <span className="text-base font-bold" style={{ color: 'var(--nafa-black)' }}>Vos revenus</span>
                     <span className="text-base font-black nafa-mono" style={{ color: 'var(--nafa-green)' }}>

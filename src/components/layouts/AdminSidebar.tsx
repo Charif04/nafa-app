@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Package, Users, CreditCard, AlertTriangle,
-  BarChart3, Settings, Menu, X, LogOut, ChevronRight
+  BarChart3, Settings, Menu, X, LogOut, ChevronRight, Tag
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/admin/orders', icon: Package, label: 'Commandes' },
   { href: '/admin/vendors', icon: Users, label: 'Vendeurs' },
+  { href: '/admin/categories', icon: Tag, label: 'Catégories' },
   { href: '/admin/payments', icon: CreditCard, label: 'Paiements' },
   { href: '/admin/alerts', icon: AlertTriangle, label: 'Alertes' },
   { href: '/admin/analytics', icon: BarChart3, label: 'Graphiques' },
