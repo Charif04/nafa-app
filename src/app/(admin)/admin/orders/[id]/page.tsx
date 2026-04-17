@@ -366,6 +366,7 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
             <div className="space-y-3">
               {[
                 { icon: Store, label: 'Boutique', value: order.vendorName ?? '—' },
+                { icon: Phone, label: 'Téléphone', value: order.vendorPhone ?? '—', mono: true },
                 { icon: Hash, label: 'ID vendeur', value: order.vendorId, mono: true },
               ].map(({ icon: Icon, label, value, mono }) => (
                 <div key={label} className="flex items-center gap-3">
@@ -520,6 +521,9 @@ function ShippingLabelModal({ order, onClose }: { order: Order; onClose: () => v
               <div style={{ marginBottom: '5mm' }}>
                 <div style={sty.sectionLabel}>BOUTIQUE VENDEUR</div>
                 <div style={{ fontSize: '9.5pt', fontWeight: 600 }}>{order.vendorName ?? '—'}</div>
+                {order.vendorPhone && (
+                  <div style={{ ...sty.mono, fontSize: '8.5pt', color: '#555', marginTop: '1mm' }}>{order.vendorPhone}</div>
+                )}
               </div>
 
               {/* Articles */}

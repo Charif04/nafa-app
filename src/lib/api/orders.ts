@@ -10,7 +10,7 @@ const ORDER_SELECT = `
   items:order_items(product_id, title, price, quantity, image),
   history:order_status_history(status, created_at, updated_by),
   client:profiles!orders_client_id_fkey(first_name, last_name, phone),
-  vendor:profiles!orders_vendor_id_fkey(vendor_profiles(shop_name))
+  vendor:profiles!orders_vendor_id_fkey(phone, vendor_profiles(shop_name))
 `;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -23,6 +23,7 @@ export function mapOrder(row: any): Order {
     ? `${row.client.first_name} ${row.client.last_name}`.trim()
     : undefined;
   const clientPhone = row.client?.phone ?? undefined;
+  const vendorPhone = row.vendor?.phone ?? undefined;
 
   return {
     id: row.id,
@@ -31,6 +32,7 @@ export function mapOrder(row: any): Order {
     clientPhone,
     vendorId: row.vendor_id,
     vendorName: shopName,
+    vendorPhone,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     items: (row.items ?? []).map((item: any) => ({
       productId: item.product_id ?? '',
