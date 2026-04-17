@@ -408,86 +408,56 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
   );
 }
 
+// ── Shipping label ─────────────────────────────────────────────────────────
 
 function ShippingLabelModal({ order, onClose }: { order: Order; onClose: () => void }) {
-  const labelRef = useRef<HTMLDivElement>(null);
+  const printRef = useRef<HTMLDivElement>(null);
 
-  function handlePrint() {
-    const content = labelRef.current?.innerHTML ?? '';
-    const win = window.open('', '_blank', 'width=800,height=600');
+  const handlePrint = () => {
+    const content = printRef.current;
+    if (!content) return;
+    const win = window.open('', '_blank', 'width=820,height=750');
     if (!win) return;
-    win.document.write(`
-      <!DOCTYPE html>
-      <html lang="fr">
-      <head>
-        <meta charset="UTF-8" />
-        <title>Étiquette ${formatOrderId(order.id)}</title>
-        <style>
-          * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: 'Arial', sans-serif; background: #fff; color: #111; }
-          .label { width: 148mm; min-height: 105mm; padding: 6mm; border: 2px solid #111; page-break-inside: avoid; }
-          .label-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #FF6B2C; padding-bottom: 3mm; margin-bottom: 3mm; }
-          .brand { font-size: 22pt; font-weight: 900; letter-spacing: 0.05em; color: #FF6B2C; }
-          .brand span { color: #111; }
-          .order-id { font-size: 14pt; font-weight: 700; font-family: monospace; color: #FF6B2C; }
-          .date { font-size: 8pt; color: #555; margin-top: 1mm; }
-          .section { margin-bottom: 3mm; }
-          .section-title { font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #888; border-bottom: 1px solid #eee; padding-bottom: 1mm; margin-bottom: 2mm; }
-          .recipient-name { font-size: 14pt; font-weight: 700; }
-          .recipient-phone { font-size: 11pt; font-weight: 600; color: #FF6B2C; }
-          .address { font-size: 9pt; color: #333; margin-top: 1mm; }
-          .items-list { font-size: 8pt; }
-          .item-row { display: flex; justify-content: space-between; padding: 0.5mm 0; border-bottom: 1px solid #f0f0f0; }
-          .total-row { display: flex; justify-content: space-between; font-weight: 700; font-size: 10pt; padding-top: 1.5mm; margin-top: 1mm; border-top: 2px solid #111; }
-          .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; }
-          .footer { margin-top: 3mm; padding-top: 2mm; border-top: 1px dashed #ccc; font-size: 7pt; color: #888; }
-          .return-box { border: 1px dashed #FF6B2C; padding: 2mm; border-radius: 2mm; margin-top: 2mm; }
-          .return-box-title { font-size: 7pt; font-weight: 700; color: #FF6B2C; text-transform: uppercase; margin-bottom: 1mm; }
-          .return-box p { font-size: 7pt; color: #555; }
-          .barcode-area { text-align: center; font-family: monospace; font-size: 18pt; letter-spacing: 0.15em; border: 1px solid #eee; padding: 2mm; border-radius: 2mm; background: #fafafa; }
-          .barcode-sub { font-size: 7pt; color: #999; margin-top: 0.5mm; }
-          @media print {
-            @page { size: A6 landscape; margin: 0; }
-            body { margin: 0; }
-          }
-        </style>
-      </head>
-      <body>${content}</body>
-      </html>
-    `);
+    win.document.write(`<!DOCTYPE html><html lang="fr"><head>
+      <meta charset="utf-8"/>
+      <title>Étiquette ${formatOrderId(order.id)}</title>
+      <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Arial,sans-serif;background:#fff;color:#111}
+        .label{width:148mm;min-height:210mm;padding:8mm;border:2px solid #111;margin:4mm auto}
+        @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+      </style>
+    </head><body>${content.innerHTML}</body></html>`);
     win.document.close();
     win.focus();
-    setTimeout(() => { win.print(); win.close(); }, 400);
-  }
+    setTimeout(() => { win.print(); }, 400);
+  };
 
   const addr = order.deliveryAddress;
   const printDate = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
-  const orderDate = new Date(order.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const orderDate = new Date(order.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  const totalQty = order.items.reduce((s, it) => s + it.quantity, 0);
+
+  const sty = {
+    label: { width: '148mm', minHeight: '210mm', padding: '8mm', border: '2px solid #111', margin: '0 auto', fontFamily: 'Arial, sans-serif', color: '#111', fontSize: '9pt' } as React.CSSProperties,
+    sectionLabel: { fontSize: '6.5pt', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em', color: '#888', marginBottom: '2mm', paddingBottom: '1mm', borderBottom: '1px solid #eee' },
+    mono: { fontFamily: '"Courier New", monospace' } as React.CSSProperties,
+  };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.55)' }}
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)' }} onClick={onClose}>
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[92vh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
         {/* Modal header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--nafa-gray-200)' }}>
+        <div className="flex items-center justify-between px-5 py-3.5 border-b flex-shrink-0" style={{ borderColor: 'var(--nafa-gray-200)' }}>
           <div>
-            <h2 className="text-base font-bold" style={{ color: 'var(--nafa-black)' }}>Étiquette d&apos;expédition</h2>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }}>{formatOrderId(order.id)}</p>
+            <h2 className="text-sm font-bold" style={{ color: 'var(--nafa-black)' }}>Étiquette d&apos;expédition</h2>
+            <p className="text-xs nafa-mono mt-0.5" style={{ color: 'var(--nafa-orange)' }}>{formatOrderId(order.id)}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white"
-              style={{ background: 'var(--nafa-orange)' }}
-            >
-              <Printer size={15} strokeWidth={1.75} />
-              Imprimer
+          <div className="flex items-center gap-2">
+            <button onClick={handlePrint}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+              style={{ background: 'var(--nafa-orange)' }}>
+              <Printer size={15} strokeWidth={1.75} />Imprimer
             </button>
             <button onClick={onClose} className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'var(--nafa-gray-100)' }}>
               <XIcon size={16} strokeWidth={2} style={{ color: 'var(--nafa-gray-700)' }} />
@@ -496,116 +466,107 @@ function ShippingLabelModal({ order, onClose }: { order: Order; onClose: () => v
         </div>
 
         {/* Label preview */}
-        <div className="p-6 overflow-y-auto max-h-[75vh]" style={{ background: 'var(--nafa-gray-100)' }}>
-          <div
-            ref={labelRef}
-            style={{
-              background: 'white',
-              border: '2px solid #111',
-              borderRadius: '8px',
-              padding: '20px',
-              maxWidth: '560px',
-              margin: '0 auto',
-              fontFamily: 'Arial, sans-serif',
-            }}
-            className="label"
-          >
-            {/* Header */}
-            <div className="label-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #FF6B2C', paddingBottom: '10px', marginBottom: '12px' }}>
-              <div>
-                <div className="brand" style={{ fontSize: '22pt', fontWeight: 900, letterSpacing: '0.05em', color: '#FF6B2C' }}>
-                  N<span style={{ color: '#111' }}>A</span>F<span style={{ color: '#111' }}>A</span>
-                </div>
-                <div style={{ fontSize: '7pt', color: '#888', marginTop: '2px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Marketplace Africaine</div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div className="order-id" style={{ fontSize: '14pt', fontWeight: 700, fontFamily: 'monospace', color: '#FF6B2C' }}>
-                  {formatOrderId(order.id)}
-                </div>
-                <div className="date" style={{ fontSize: '8pt', color: '#555', marginTop: '3px' }}>Commande du {orderDate}</div>
-                <div className="date" style={{ fontSize: '8pt', color: '#555' }}>Imprimé le {printDate}</div>
-              </div>
-            </div>
+        <div className="flex-1 overflow-y-auto p-5">
+          <div ref={printRef}>
+            <div style={sty.label}>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              {/* Left: Recipient + return */}
-              <div>
-                <div className="section" style={{ marginBottom: '10px' }}>
-                  <div className="section-title" style={{ fontSize: '7pt', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#888', borderBottom: '1px solid #eee', paddingBottom: '3px', marginBottom: '6px' }}>
-                    📦 DESTINATAIRE
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', paddingBottom: '5mm', borderBottom: '2px solid #111', marginBottom: '5mm' }}>
+                <div>
+                  <div style={{ fontSize: '24pt', fontWeight: 900, letterSpacing: '0.05em' }}>
+                    <span style={{ color: '#FF6B2C' }}>N</span><span style={{ color: '#111' }}>A</span>
+                    <span style={{ color: '#FF6B2C' }}>F</span><span style={{ color: '#111' }}>A</span>
                   </div>
-                  <div className="recipient-name" style={{ fontSize: '14pt', fontWeight: 700 }}>
-                    {order.clientName ?? '—'}
-                  </div>
-                  {order.clientPhone && (
-                    <div className="recipient-phone" style={{ fontSize: '11pt', fontWeight: 600, color: '#FF6B2C', marginTop: '2px' }}>
-                      {order.clientPhone}
-                    </div>
-                  )}
-                  <div className="address" style={{ fontSize: '9pt', color: '#333', marginTop: '4px', lineHeight: 1.5 }}>
+                  <div style={{ fontSize: '6.5pt', color: '#888', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Marketplace Africaine</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ ...sty.mono, fontSize: '13pt', fontWeight: 700, color: '#FF6B2C' }}>{formatOrderId(order.id)}</div>
+                  <div style={{ fontSize: '7pt', color: '#555', marginTop: '1mm' }}>Commande du {orderDate}</div>
+                  <div style={{ fontSize: '7pt', color: '#555' }}>Imprimé le {printDate}</div>
+                </div>
+              </div>
+
+              {/* Tracking barcode-like */}
+              <div style={{ textAlign: 'center', margin: '0 0 5mm', padding: '3mm', border: '1px solid #ddd', borderRadius: '2mm', background: '#fafafa' }}>
+                <div style={{ ...sty.mono, fontSize: '18pt', fontWeight: 700, letterSpacing: '0.3em', color: '#111' }}>
+                  {order.id.replace(/-/g, '').toUpperCase().slice(0, 16)}
+                </div>
+                <div style={{ fontSize: '6.5pt', color: '#888', marginTop: '1mm' }}>Code de suivi — Tracking code</div>
+              </div>
+
+              {/* Destinataire + Expéditeur */}
+              <div style={{ display: 'flex', gap: '5mm', marginBottom: '5mm' }}>
+                <div style={{ flex: 2 }}>
+                  <div style={sty.sectionLabel}>▼ DESTINATAIRE</div>
+                  <div style={{ fontSize: '14pt', fontWeight: 700 }}>{order.clientName ?? '—'}</div>
+                  {order.clientPhone && <div style={{ ...sty.mono, fontSize: '11pt', fontWeight: 600, color: '#FF6B2C', marginTop: '1mm' }}>{order.clientPhone}</div>}
+                  <div style={{ fontSize: '9pt', marginTop: '2mm', color: '#333', lineHeight: 1.5 }}>
                     {addr.street && <div>{addr.street}</div>}
-                    <div style={{ fontWeight: 600 }}>{addr.city}{addr.region ? `, ${addr.region}` : ''}</div>
-                    <div>{addr.country}</div>
+                    <div>{addr.city}{addr.region ? `, ${addr.region}` : ''}</div>
+                    <div style={{ fontWeight: 700 }}>{addr.country}</div>
                   </div>
                 </div>
-
-                <div className="return-box" style={{ border: '1px dashed #FF6B2C', padding: '6px', borderRadius: '4px', marginTop: '8px' }}>
-                  <div className="return-box-title" style={{ fontSize: '7pt', fontWeight: 700, color: '#FF6B2C', textTransform: 'uppercase', marginBottom: '3px' }}>
-                    ↩ Retour / Réclamation
-                  </div>
-                  <div style={{ fontSize: '7pt', color: '#555', lineHeight: 1.5 }}>
-                    <div>Conservez ce bon jusqu&apos;à réception.</div>
-                    <div>En cas de problème, contactez NAFA avec l&apos;ID commande.</div>
-                    <div style={{ marginTop: '2px', fontWeight: 600 }}>support@nafa.market</div>
+                <div style={{ flex: 1 }}>
+                  <div style={sty.sectionLabel}>EXPÉDITEUR</div>
+                  <div style={{ fontSize: '9pt', fontWeight: 700 }}>Entrepôt NAFA</div>
+                  <div style={{ fontSize: '8pt', color: '#555', marginTop: '1mm', lineHeight: 1.5 }}>
+                    <div>Ouagadougou</div><div>Burkina Faso</div>
+                    <div style={{ color: '#FF6B2C', fontWeight: 600, marginTop: '1mm' }}>nafa.bf</div>
                   </div>
                 </div>
               </div>
 
-              {/* Right: Items + totals + vendor */}
-              <div>
-                <div className="section" style={{ marginBottom: '10px' }}>
-                  <div className="section-title" style={{ fontSize: '7pt', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#888', borderBottom: '1px solid #eee', paddingBottom: '3px', marginBottom: '6px' }}>
-                    🛍 CONTENU ({order.items.reduce((s, it) => s + it.quantity, 0)} article{order.items.reduce((s, it) => s + it.quantity, 0) > 1 ? 's' : ''})
-                  </div>
-                  <div className="items-list" style={{ fontSize: '8pt' }}>
+              {/* Boutique */}
+              <div style={{ marginBottom: '5mm' }}>
+                <div style={sty.sectionLabel}>BOUTIQUE VENDEUR</div>
+                <div style={{ fontSize: '9.5pt', fontWeight: 600 }}>{order.vendorName ?? '—'}</div>
+              </div>
+
+              {/* Articles */}
+              <div style={{ marginBottom: '5mm' }}>
+                <div style={sty.sectionLabel}>CONTENU — {totalQty} article{totalQty > 1 ? 's' : ''}</div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '8.5pt' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #ddd' }}>
+                      <th style={{ textAlign: 'left', fontWeight: 700, paddingBottom: '1.5mm' }}>Produit</th>
+                      <th style={{ textAlign: 'center', fontWeight: 700, paddingBottom: '1.5mm', width: '8mm' }}>Qté</th>
+                      <th style={{ textAlign: 'right', fontWeight: 700, paddingBottom: '1.5mm' }}>Prix</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {order.items.map((item) => (
-                      <div key={item.productId} className="item-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', borderBottom: '1px solid #f0f0f0' }}>
-                        <span style={{ flex: 1, paddingRight: '6px', color: '#333' }}>{item.title} ×{item.quantity}</span>
-                        <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{formatCurrency(item.price * item.quantity, order.currency)}</span>
-                      </div>
+                      <tr key={item.productId} style={{ borderBottom: '1px dotted #eee' }}>
+                        <td style={{ padding: '1.5mm 0' }}>{item.title}</td>
+                        <td style={{ textAlign: 'center', padding: '1.5mm 0' }}>{item.quantity}</td>
+                        <td style={{ ...sty.mono, textAlign: 'right', padding: '1.5mm 0' }}>{formatCurrency(item.price * item.quantity, order.currency)}</td>
+                      </tr>
                     ))}
                     {order.deliveryFee > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0', color: '#888', fontSize: '7.5pt' }}>
-                        <span>Livraison</span>
-                        <span style={{ fontFamily: 'monospace' }}>{formatCurrency(order.deliveryFee, order.currency)}</span>
-                      </div>
+                      <tr style={{ borderBottom: '1px dotted #eee' }}>
+                        <td colSpan={2} style={{ padding: '1.5mm 0', color: '#555' }}>Livraison</td>
+                        <td style={{ ...sty.mono, textAlign: 'right', padding: '1.5mm 0' }}>{formatCurrency(order.deliveryFee, order.currency)}</td>
+                      </tr>
                     )}
-                    <div className="total-row" style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '10pt', paddingTop: '5px', marginTop: '4px', borderTop: '2px solid #111' }}>
-                      <span>TOTAL PAYÉ</span>
-                      <span style={{ fontFamily: 'monospace', color: '#FF6B2C' }}>{formatCurrency(order.total, order.currency)}</span>
-                    </div>
-                  </div>
-                </div>
+                    <tr style={{ borderTop: '2px solid #111' }}>
+                      <td colSpan={2} style={{ paddingTop: '2mm', fontWeight: 700, fontSize: '10pt' }}>TOTAL PAYÉ</td>
+                      <td style={{ ...sty.mono, textAlign: 'right', paddingTop: '2mm', fontWeight: 700, fontSize: '10pt' }}>{formatCurrency(order.total, order.currency)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
-                <div className="section" style={{ marginBottom: '8px' }}>
-                  <div className="section-title" style={{ fontSize: '7pt', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#888', borderBottom: '1px solid #eee', paddingBottom: '3px', marginBottom: '6px' }}>
-                    🏪 EXPÉDITEUR
-                  </div>
-                  <div style={{ fontSize: '9pt', fontWeight: 600 }}>{order.vendorName ?? 'Boutique NAFA'}</div>
-                  <div style={{ fontSize: '8pt', color: '#888' }}>via NAFA Marketplace</div>
+              {/* Footer */}
+              <div style={{ paddingTop: '4mm', borderTop: '2px dashed #bbb' }}>
+                <div style={{ fontSize: '8pt', fontWeight: 700, marginBottom: '1.5mm' }}>↩ POLITIQUE DE RETOUR — RETURN POLICY</div>
+                <div style={{ fontSize: '7pt', color: '#555', lineHeight: 1.6 }}>
+                  En cas de problème avec votre commande, conservez ce bon et contactez NAFA dans les 7 jours suivant la réception.
+                  Présentez ce document et le produit à retourner dans son emballage d&apos;origine.
                 </div>
-
-                <div className="barcode-area" style={{ textAlign: 'center', fontFamily: 'monospace', fontSize: '14pt', letterSpacing: '0.2em', border: '1px solid #eee', padding: '6px', borderRadius: '4px', background: '#fafafa' }}>
-                  {formatOrderId(order.id)}
-                  <div className="barcode-sub" style={{ fontSize: '7pt', color: '#999', marginTop: '2px', letterSpacing: '0' }}>Référence de suivi NAFA</div>
+                <div style={{ marginTop: '2mm', fontSize: '6.5pt', color: '#aaa' }}>
+                  Réf : {order.id} — nafa.bf
                 </div>
               </div>
-            </div>
 
-            {/* Footer */}
-            <div className="footer" style={{ marginTop: '12px', paddingTop: '8px', borderTop: '1px dashed #ccc', fontSize: '7pt', color: '#aaa', display: 'flex', justifyContent: 'space-between' }}>
-              <span>NAFA Marketplace — Burkina Faso</span>
-              <span>www.nafa.market</span>
             </div>
           </div>
         </div>
