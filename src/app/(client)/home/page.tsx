@@ -86,9 +86,10 @@ export default function HomePage() {
     <div className="min-h-dvh" style={{ background: 'var(--nafa-white)' }}>
       {/* Sticky header */}
       <header
-        className="nafa-client-header z-30 px-4 md:px-6 lg:px-10 py-3 w-full"
+        className="nafa-client-header z-30 w-full py-3"
         style={{ background: 'var(--nafa-white)', boxShadow: '0 1px 0 var(--nafa-gray-200)', overflowX: 'hidden' }}
       >
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-10">
         {/* Mobile: logo + inline search input */}
         <div className="flex items-center gap-3 mb-3 md:hidden">
           <Logo size="sm" className="flex-shrink-0" />
@@ -168,10 +169,12 @@ export default function HomePage() {
             </motion.button>
           ))}
         </div>
+      </div>
       </header>
 
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-10">
       {/* Promotional banner */}
-      <div className="px-4 md:px-6 lg:px-10 pt-4 pb-0">
+      <div className="pt-4 pb-0">
         <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -200,7 +203,7 @@ export default function HomePage() {
       </div>
 
       {/* Products grid */}
-      <main className="p-4 md:px-6 lg:px-10">
+      <main className="pt-4 pb-4">
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-bold" style={{ color: 'var(--nafa-black)' }}>
@@ -230,6 +233,7 @@ export default function HomePage() {
           )}
         </div>
       </main>
+      </div>
     </div>
   );
 }

@@ -42,6 +42,7 @@ export default function OrdersPage() {
 
   return (
     <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
+    <div className="max-w-2xl mx-auto">
       <header className="nafa-client-header z-10 px-4 md:px-6 lg:px-10 py-3"
         style={{ background: 'var(--nafa-white)', borderBottom: '1px solid var(--nafa-gray-200)' }}>
         <div className="flex items-center gap-3 mb-3">
@@ -133,6 +134,7 @@ export default function OrdersPage() {
           ))
         )}
       </div>
+    </div>
     </div>
   );
 }
