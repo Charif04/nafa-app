@@ -5,27 +5,27 @@ import { Bell, ShoppingBag, PackageCheck, X, AlertTriangle, BadgeCheck, Ban, Inf
 import Link from 'next/link';
 import { formatRelativeTime } from '@/lib/utils';
 import { useNotificationStore } from '@/stores/notificationStore';
-import type { NotificationType } from '@/types';
 
 const FALLBACK = { icon: Info, color: 'bg-gray-100', iconColor: 'text-gray-500', dot: 'bg-gray-400' };
 const CONFIG: Record<string, typeof FALLBACK> = {
-  new_order:        { icon: ShoppingBag,   color: 'bg-orange-100', iconColor: 'text-orange-600', dot: 'bg-orange-500' },
-  order_status:     { icon: PackageCheck,  color: 'bg-green-100',  iconColor: 'text-green-600',  dot: 'bg-green-500' },
-  order_delivered:  { icon: PackageCheck,  color: 'bg-green-100',  iconColor: 'text-green-600',  dot: 'bg-green-500' },
-  order_cancelled:  { icon: X,             color: 'bg-red-100',    iconColor: 'text-red-600',    dot: 'bg-red-500' },
-  low_stock:        { icon: AlertTriangle, color: 'bg-yellow-100', iconColor: 'text-yellow-600', dot: 'bg-yellow-500' },
-  account_verified: { icon: BadgeCheck,    color: 'bg-blue-100',   iconColor: 'text-blue-600',   dot: 'bg-blue-500' },
-  account_suspended:{ icon: Ban,           color: 'bg-red-100',    iconColor: 'text-red-600',    dot: 'bg-red-500' },
-  system:           { icon: Info,          color: 'bg-gray-100',   iconColor: 'text-gray-500',   dot: 'bg-gray-400' },
+  new_order:         { icon: ShoppingBag,   color: 'bg-orange-100', iconColor: 'text-orange-600', dot: 'bg-orange-500' },
+  order_status:      { icon: PackageCheck,  color: 'bg-green-100',  iconColor: 'text-green-600',  dot: 'bg-green-500' },
+  order_delivered:   { icon: PackageCheck,  color: 'bg-green-100',  iconColor: 'text-green-600',  dot: 'bg-green-500' },
+  order_cancelled:   { icon: X,             color: 'bg-red-100',    iconColor: 'text-red-600',    dot: 'bg-red-500' },
+  low_stock:         { icon: AlertTriangle, color: 'bg-yellow-100', iconColor: 'text-yellow-600', dot: 'bg-yellow-500' },
+  account_verified:  { icon: BadgeCheck,    color: 'bg-blue-100',   iconColor: 'text-blue-600',   dot: 'bg-blue-500' },
+  account_suspended: { icon: Ban,           color: 'bg-red-100',    iconColor: 'text-red-600',    dot: 'bg-red-500' },
+  system:            { icon: Info,          color: 'bg-gray-100',   iconColor: 'text-gray-500',   dot: 'bg-gray-400' },
 };
 
-export default function VendorNotificationsPage() {
+function cfg(type: string) { return CONFIG[type] ?? FALLBACK; }
+
+export default function AdminNotificationsPage() {
   const { notifications, markRead, markAllRead, getUnreadCount, fetchNotifications } = useNotificationStore();
   const [selected, setSelected] = useState<(typeof notifications)[0] | null>(null);
   const unreadCount = getUnreadCount();
   const now = Date.now();
 
-  // Re-fetch on every page visit so stale store data is refreshed
   useEffect(() => { void fetchNotifications(); }, [fetchNotifications]);
 
   const grouped = {
@@ -39,7 +39,11 @@ export default function VendorNotificationsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--nafa-black)' }}>Notifications</h1>
-          {unreadCount > 0 && <p className="text-sm mt-0.5" style={{ color: 'var(--nafa-gray-700)' }}>{unreadCount} non lue{unreadCount > 1 ? 's' : ''}</p>}
+          {unreadCount > 0 && (
+            <p className="text-sm mt-0.5" style={{ color: 'var(--nafa-gray-700)' }}>
+              {unreadCount} non lue{unreadCount > 1 ? 's' : ''}
+            </p>
+          )}
         </div>
         {unreadCount > 0 && (
           <button onClick={markAllRead} className="text-xs font-semibold px-3 py-1.5 rounded-full"
@@ -58,20 +62,20 @@ export default function VendorNotificationsPage() {
               <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--nafa-gray-400)' }}>{label}</p>
               <div className="space-y-2">
                 {list.map((n, i) => {
-                  const cfg = CONFIG[n.type] ?? FALLBACK;
-                  const Icon = cfg.icon;
+                  const c = cfg(n.type);
+                  const Icon = c.icon;
                   return (
                     <motion.div key={n.id} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
                       onClick={() => { markRead(n.id); setSelected(n); }}
-                      className="flex items-start gap-3 p-3 rounded-2xl cursor-pointer"
-                      style={{ background: n.isRead ? 'var(--nafa-white)' : 'rgba(255,107,44,0.04)', border: `1px solid ${n.isRead ? 'var(--nafa-gray-200)' : 'rgba(255,107,44,0.12)'}` }}>
-                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${cfg.color}`}>
-                        <Icon size={18} strokeWidth={1.75} className={cfg.iconColor} />
+                      className="flex items-start gap-3 p-3 rounded-2xl cursor-pointer bg-white"
+                      style={{ border: `1px solid ${n.isRead ? 'var(--nafa-gray-200)' : 'rgba(255,107,44,0.12)'}`, background: n.isRead ? 'var(--nafa-white)' : 'rgba(255,107,44,0.04)' }}>
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${c.color}`}>
+                        <Icon size={18} strokeWidth={1.75} className={c.iconColor} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <p className="text-sm font-semibold" style={{ color: 'var(--nafa-black)' }}>{n.title}</p>
-                          {!n.isRead && <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-1 ${cfg.dot}`} />}
+                          {!n.isRead && <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-1 ${c.dot}`} />}
                         </div>
                         <p className="text-xs mt-0.5 line-clamp-2" style={{ color: 'var(--nafa-gray-700)' }}>{n.body}</p>
                         <p className="text-xs mt-1" style={{ color: 'var(--nafa-gray-400)' }}>{formatRelativeTime(n.createdAt)}</p>
@@ -94,7 +98,6 @@ export default function VendorNotificationsPage() {
         )}
       </div>
 
-      {/* Detail modal */}
       <AnimatePresence>
         {selected && (
           <>
@@ -113,7 +116,7 @@ export default function VendorNotificationsPage() {
               </div>
               <p className="text-sm mb-5" style={{ color: 'var(--nafa-gray-700)' }}>{selected.body}</p>
               {selected.linkedOrderId && (
-                <Link href={`/vendor/orders/${selected.linkedOrderId}`} onClick={() => setSelected(null)}
+                <Link href={`/admin/orders/${selected.linkedOrderId}`} onClick={() => setSelected(null)}
                   className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-sm font-semibold text-white"
                   style={{ background: 'var(--nafa-orange)' }}>
                   Voir la commande
