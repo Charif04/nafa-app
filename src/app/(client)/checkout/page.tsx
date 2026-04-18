@@ -178,7 +178,7 @@ export default function CheckoutPage() {
         </div>
       )}
 
-      <div className="px-4 md:px-6 pb-32 max-w-2xl mx-auto">
+      <div className="px-4 md:px-6 max-w-2xl mx-auto" style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
         <AnimatePresence mode="wait">
 
           {/* ── Adresse ── */}
@@ -466,9 +466,12 @@ export default function CheckoutPage() {
 
       {/* CTA fixe */}
       {step !== 'success' && (
-        <div className="fixed bottom-16 md:bottom-0 left-0 right-0"
-          style={{ background: 'linear-gradient(to top, white 85%, transparent)' }}>
-          <div className="max-w-2xl mx-auto px-4 md:px-6 pb-6 pt-4">
+        <div className="fixed md:bottom-0 left-0 right-0"
+          style={{
+            bottom: 'calc(56px + env(safe-area-inset-bottom, 0px))',
+            background: 'linear-gradient(to top, white 85%, transparent)',
+          }}>
+          <div className="max-w-2xl mx-auto px-4 md:px-6 pb-4 pt-4">
             {orderError && (
               <div className="mb-3 px-4 py-3 rounded-xl text-sm font-medium"
                 style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--nafa-error)', border: '1px solid rgba(239,68,68,0.2)' }}>

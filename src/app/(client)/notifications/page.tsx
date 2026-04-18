@@ -193,8 +193,8 @@ export default function NotificationsPage() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-              className="fixed bottom-16 md:bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl p-6 max-w-2xl mx-auto"
-              style={{ boxShadow: '0 -8px 32px rgba(0,0,0,0.12)' }}
+              className="fixed md:bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl p-6 max-w-2xl mx-auto"
+              style={{ bottom: 'calc(56px + env(safe-area-inset-bottom, 0px))', boxShadow: '0 -8px 32px rgba(0,0,0,0.12)' }}
             >
               {/* Handle */}
               <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: 'var(--nafa-gray-200)' }} />
