@@ -86,13 +86,27 @@ export default function VendorStorefrontPage() {
         isVerified: vpRow.is_verified,
       };
       setVendor(vendorData);
-      setFollowerCount(vpRow.follower_count);
+
+      // Live follower count + follow status
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { count: liveFollowers } = await (supabase as any)
+        .from('follows').select('*', { count: 'exact', head: true }).eq('vendor_id', vendorId);
+      setFollowerCount(liveFollowers ?? vpRow.follower_count);
 
       if (currentUser?.uid) {
         const { data: followRow } = await supabase
           .from('follows').select('vendor_id')
           .eq('follower_id', currentUser.uid).eq('vendor_id', vendorId).maybeSingle();
         setIsFollowing(!!followRow);
+      }
+
+      // Live total sales (delivered orders)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { count: salesCount } = await (supabase as any)
+        .from('orders').select('*', { count: 'exact', head: true })
+        .eq('vendor_id', vendorId).eq('order_status', 'delivered');
+      if (salesCount !== null) {
+        setVendor((prev) => prev ? { ...prev, totalSales: salesCount } : prev);
       }
 
       const { data: productsData } = await supabase
@@ -120,10 +134,16 @@ export default function VendorStorefrontPage() {
 
       if (reviewsData) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setReviews(reviewsData.map((r: any) => {
+        const mapped = reviewsData.map((r: any) => {
           const name = r.reviewer ? `${r.reviewer.first_name} ${r.reviewer.last_name}`.trim() : 'Client';
           return { id: r.id, reviewerName: name, initials: getInitials(name), rating: r.rating, comment: r.comment ?? '', createdAt: r.created_at };
-        }));
+        });
+        setReviews(mapped);
+        // Update rating/reviewCount from live reviews
+        if (mapped.length > 0) {
+          const avg = Math.round((mapped.reduce((s: number, r: VendorReview) => s + r.rating, 0) / mapped.length) * 10) / 10;
+          setVendor((prev) => prev ? { ...prev, rating: avg, reviewCount: mapped.length } : prev);
+        }
       }
 
       setIsLoading(false);
@@ -320,18 +340,6 @@ export default function VendorStorefrontPage() {
   return (
     <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
 
-      {/* ── Back button (floating, always visible) ── */}
-      <div className="fixed top-4 left-4 z-50 md:hidden">
-        <button
-          onClick={() => router.back()}
-          className="w-9 h-9 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(255,255,255,0.92)', boxShadow: '0 2px 12px rgba(0,0,0,0.15)', backdropFilter: 'blur(8px)' }}
-          aria-label="Retour"
-        >
-          <ChevronLeft size={18} strokeWidth={2} style={{ color: 'var(--nafa-black)' }} />
-        </button>
-      </div>
-
       {/* ── Desktop sticky header ── */}
       <header className="hidden md:flex nafa-client-header z-30 items-center gap-3 px-6 lg:px-10 py-3"
         style={{ background: 'var(--nafa-white)', borderBottom: '1px solid var(--nafa-gray-200)' }}>
@@ -349,7 +357,7 @@ export default function VendorStorefrontPage() {
         </div>
       </header>
 
-      {/* ── Cover banner (mobile only) ── */}
+      {/* ── Cover banner (mobile only) — back button inside ── */}
       <div
         className="relative md:hidden"
         style={{ background: 'linear-gradient(135deg, var(--nafa-orange) 0%, #9a3412 100%)', height: 140 }}
@@ -357,6 +365,19 @@ export default function VendorStorefrontPage() {
         {/* Decorative blobs */}
         <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full" style={{ background: 'rgba(255,255,255,0.07)' }} />
         <div className="absolute left-12 -bottom-6 w-28 h-28 rounded-full" style={{ background: 'rgba(0,0,0,0.1)' }} />
+        {/* Back button — safe area aware */}
+        <button
+          onClick={() => router.back()}
+          className="absolute left-4 flex items-center justify-center w-9 h-9 rounded-full"
+          style={{
+            top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+            background: 'rgba(255,255,255,0.2)',
+            backdropFilter: 'blur(8px)',
+          }}
+          aria-label="Retour"
+        >
+          <ChevronLeft size={18} strokeWidth={2} className="text-white" />
+        </button>
       </div>
 
       {/* ─────────────────── MOBILE LAYOUT ─────────────────── */}

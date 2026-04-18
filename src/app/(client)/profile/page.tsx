@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LogOut, ChevronRight, Package, Star, Users, Camera,
+  LogOut, ChevronRight, Package, Star, Users,
   Store, ArrowRight, Settings, MapPin, Heart,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { useWishlistStore } from '@/stores/wishlistStore';
 import { BecomeVendorModal } from '@/components/shared/BecomeVendorModal';
+import { AvatarUpload } from '@/components/shared/AvatarUpload';
 
 // ─── Profile page ─────────────────────────────────────────────────────────────
 
@@ -41,20 +42,7 @@ export default function ProfilePage() {
           {/* Profile header */}
           <div className="px-4 pt-8 pb-6" style={{ background: 'var(--nafa-white)' }}>
             <div className="flex items-center gap-4">
-              <div className="relative">
-                {user?.avatarUrl ? (
-                  <img src={user.avatarUrl} alt={displayName} className="w-16 h-16 rounded-full object-cover" />
-                ) : (
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold"
-                    style={{ background: 'linear-gradient(135deg, var(--nafa-orange), #e55a00)' }}>
-                    {initial}
-                  </div>
-                )}
-                <button className="absolute -bottom-0.5 -right-0.5 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white"
-                  style={{ background: 'var(--nafa-orange)' }} aria-label="Changer la photo">
-                  <Camera size={12} strokeWidth={1.75} className="text-white" />
-                </button>
-              </div>
+              <AvatarUpload size="lg" />
               <div>
                 <h1 className="text-lg font-bold" style={{ color: 'var(--nafa-black)' }}>{displayName}</h1>
                 <p className="text-sm" style={{ color: 'var(--nafa-gray-700)' }}>{user?.email ?? '—'}</p>

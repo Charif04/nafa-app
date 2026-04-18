@@ -5,6 +5,7 @@ import { Store, Bell, BellOff, Shield, Save, Lock, CheckCircle } from 'lucide-re
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { Skeleton } from '@/components/shared/SkeletonShimmer';
+import { AvatarUpload } from '@/components/shared/AvatarUpload';
 import { subscribeToPush, unsubscribeFromPush } from '@/lib/pushNotifications';
 
 const NOTIFICATION_ITEMS = [
@@ -116,6 +117,30 @@ export default function VendorSettingsPage() {
       </motion.h1>
 
       <motion.div variants={sectionVariants} initial="hidden" animate="visible" className="space-y-6">
+
+        {/* Logo / Photo de profil */}
+        <motion.div variants={itemVariants} className="bg-white rounded-2xl border p-6" style={{ borderColor: 'var(--nafa-gray-200)' }}>
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'var(--nafa-gray-100)' }}>
+              <Store size={18} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
+            </div>
+            <h2 className="text-base font-semibold" style={{ color: 'var(--nafa-black)' }}>Logo de la boutique</h2>
+          </div>
+          <div className="flex items-center gap-4 mb-5 pb-5" style={{ borderBottom: '1px solid var(--nafa-gray-100)' }}>
+            <AvatarUpload size="xl" square />
+            <div>
+              <p className="text-sm font-semibold" style={{ color: 'var(--nafa-black)' }}>
+                {shopName || user?.firstName || '—'}
+              </p>
+              <p className="text-xs mt-1" style={{ color: 'var(--nafa-gray-400)' }}>
+                Appuyez sur le logo pour le remplacer
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }}>
+                JPG, PNG — max 5 Mo
+              </p>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Informations boutique */}
         <motion.div variants={itemVariants} className="bg-white rounded-2xl border p-6" style={{ borderColor: 'var(--nafa-gray-200)' }}>

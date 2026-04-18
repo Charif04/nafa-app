@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { supabase } from '@/lib/supabase';
+import { AvatarUpload } from '@/components/shared/AvatarUpload';
 
 const NOTIFICATION_ITEMS = [
   { id: 'new_order', label: 'Nouvelle commande', description: "Alerter à chaque commande reçue sur la plateforme" },
@@ -129,6 +130,14 @@ export default function AdminSettingsPage() {
         <motion.div variants={itemVariants} className="bg-white rounded-2xl border p-6" style={{ borderColor: 'var(--nafa-gray-200)' }}>
           <SectionHeader icon={User} title="Profil administrateur" />
           <div className="space-y-4">
+            {/* Avatar */}
+            <div className="flex items-center gap-4 pb-4" style={{ borderBottom: '1px solid var(--nafa-gray-100)' }}>
+              <AvatarUpload size="lg" />
+              <div>
+                <p className="text-sm font-semibold" style={{ color: 'var(--nafa-black)' }}>{adminName || '—'}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }}>Appuyez sur la photo pour la modifier</p>
+              </div>
+            </div>
             <div>
               <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--nafa-gray-900)' }}>
                 Nom complet

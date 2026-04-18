@@ -20,6 +20,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { useUiStore } from '@/stores/uiStore';
 import { BecomeVendorModal } from '@/components/shared/BecomeVendorModal';
+import { AvatarUpload } from '@/components/shared/AvatarUpload';
 import { subscribeToPush, unsubscribeFromPush } from '@/lib/pushNotifications';
 
 const ALL_LANGUAGES = [
@@ -101,6 +102,24 @@ export default function SettingsPage() {
           </header>
 
           <motion.div variants={containerVariants} initial="hidden" animate="visible" className="px-4 py-4 space-y-4">
+
+            {/* Photo de profil */}
+            <motion.section variants={sectionVariants}>
+              <p className="px-1 pb-2 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>
+                Photo de profil
+              </p>
+              <div className="rounded-2xl p-4 flex items-center gap-4" style={{ background: 'var(--nafa-white)' }}>
+                <AvatarUpload size="lg" />
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--nafa-black)' }}>
+                    {user ? `${user.firstName} ${user.lastName}`.trim() : '—'}
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }}>
+                    Appuyez sur la photo pour la modifier
+                  </p>
+                </div>
+              </div>
+            </motion.section>
 
             {/* Mon compte */}
             <motion.section variants={sectionVariants}>
