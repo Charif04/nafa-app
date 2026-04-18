@@ -152,6 +152,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
   const displayPrice = clientPrice(product.price);
   const images = product.images.length > 0 ? product.images : [''];
+  // Use live fetched reviews — don't rely on stale products.review_count column
+  const avgRating = reviews.length > 0
+    ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10
+    : 0;
 
   return (
     <div className="min-h-dvh bg-white" style={{ paddingBottom: 'calc(88px + env(safe-area-inset-bottom, 0px))' }}>
@@ -282,8 +286,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             {product.title}
           </h1>
           <div className="flex items-center justify-between mt-2">
-            {product.reviewCount > 0
-              ? <RatingStars rating={product.rating} showValue reviewCount={product.reviewCount} />
+            {reviews.length > 0
+              ? <RatingStars rating={avgRating} showValue reviewCount={reviews.length} />
               : <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>Pas encore d&apos;avis</span>
             }
             <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
@@ -370,18 +374,18 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-bold" style={{ color: 'var(--nafa-black)' }}>
               Avis clients
-              {product.reviewCount > 0 && (
+              {reviews.length > 0 && (
                 <span className="ml-1.5 text-xs font-semibold px-2 py-0.5 rounded-full"
                   style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>
-                  {product.reviewCount}
+                  {reviews.length}
                 </span>
               )}
             </h2>
-            {product.rating > 0 && (
+            {avgRating > 0 && (
               <div className="flex items-center gap-1">
                 <Star size={13} strokeWidth={0} className="fill-[var(--nafa-orange)]" />
                 <span className="text-sm font-bold" style={{ color: 'var(--nafa-black)' }}>
-                  {product.rating.toFixed(1)}
+                  {avgRating.toFixed(1)}
                 </span>
               </div>
             )}
