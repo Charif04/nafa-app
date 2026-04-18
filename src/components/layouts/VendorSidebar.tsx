@@ -3,12 +3,13 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Package, ShoppingBag, DollarSign,
-  Wallet, Settings, Menu, X, LogOut, ChevronRight
+  Wallet, Settings, Menu, X, LogOut, ChevronRight, Bell
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { Logo } from '@/components/shared/Logo';
 import { cn } from '@/lib/utils';
 
@@ -29,6 +30,7 @@ export function VendorSidebar() {
   const storeShopName = useAuthStore((s) => s.shopName);
   const shopName = storeShopName ?? (`${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || 'Ma boutique');
   const initial = shopName[0]?.toUpperCase() ?? '?';
+  const unreadCount = useNotificationStore((s) => s.getUnreadCount());
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -102,7 +104,15 @@ export function VendorSidebar() {
         >
           <Menu size={18} strokeWidth={1.75} className="text-white" />
         </button>
-        <span className="ml-3 text-white font-semibold text-sm truncate">{shopName}</span>
+        <span className="ml-3 text-white font-semibold text-sm truncate flex-1">{shopName}</span>
+        {unreadCount > 0 && (
+          <div className="relative ml-auto">
+            <Bell size={18} strokeWidth={1.75} className="text-white/80" />
+            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full text-white text-[10px] font-bold flex items-center justify-center" style={{ background: 'var(--nafa-orange)' }}>
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          </div>
+        )}
       </div>
 
       <AnimatePresence>

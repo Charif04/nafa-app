@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import webpush from 'web-push';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 
 webpush.setVapidDetails(
   'mailto:noreply@nafamarket.com',
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
   process.env.VAPID_PRIVATE_KEY!
+);
+
+// Use service role key to bypass RLS — anon key cannot read other users' subscriptions
+const adminSupabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 export async function POST(request: NextRequest) {
@@ -22,22 +27,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Use service-role key to bypass RLS for reading subscriptions
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-    const cookieStore = await cookies();
-    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-      cookies: {
-        getAll() { return cookieStore.getAll(); },
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-        setAll() {},
-      },
-    });
-
-    // Fetch all push subscriptions for the user
+    // Fetch all push subscriptions for the user (bypasses RLS with service role key)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: subs } = await (supabase as any)
+    const { data: subs } = await (adminSupabase as any)
       .from('push_subscriptions')
       .select('endpoint, p256dh, auth')
       .eq('user_id', userId);
@@ -46,16 +38,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ sent: 0 });
     }
 
-    const payload = JSON.stringify({ title, body, url });
+    const payload = JSON.stringify({ title, body, url, tag: 'nafa-notification', renotify: true });
 
     const results = await Promise.allSettled(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      subs.map((sub: any) =>
-        webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-          payload
-        )
-      )
+      subs.map(async (sub: any) => {
+        try {
+          await webpush.sendNotification(
+            { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+            payload
+          );
+        } catch (err: unknown) {
+          // Remove expired/invalid subscriptions (410 Gone)
+          if (err && typeof err === 'object' && 'statusCode' in err && (err as { statusCode: number }).statusCode === 410) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (adminSupabase as any)
+              .from('push_subscriptions')
+              .delete()
+              .eq('endpoint', sub.endpoint);
+          }
+          throw err;
+        }
+      })
     );
 
     const sent = results.filter((r) => r.status === 'fulfilled').length;

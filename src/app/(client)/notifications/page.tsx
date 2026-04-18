@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { formatRelativeTime } from '@/lib/utils';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAuthStore } from '@/stores/authStore';
+import { subscribeToPush, unsubscribeFromPush } from '@/lib/pushNotifications';
 import type { Notification } from '@/types';
 
 const NOTIF_CONFIG = {
@@ -17,17 +18,29 @@ const NOTIF_CONFIG = {
 
 
 export default function NotificationsPage() {
-  const { notifications, markRead, markAllRead, getUnreadCount, fetchNotifications, subscribeRealtime, unsubscribe } = useNotificationStore();
+  const { notifications, markRead, markAllRead, getUnreadCount } = useNotificationStore();
   const currentUser = useAuthStore((s) => s.user);
-  const [notifEnabled, setNotifEnabled] = useState(true);
+  // NotificationProvider in layout handles fetch + Realtime — no duplicate subscription needed
+  const [notifEnabled, setNotifEnabled] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null);
 
   useEffect(() => {
-    fetchNotifications();
-    if (currentUser?.uid) subscribeRealtime(currentUser.uid);
-    return () => unsubscribe();
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setNotifEnabled(Notification.permission === 'granted');
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.uid]);
+
+  const handleTogglePush = async () => {
+    if (!currentUser?.uid) return;
+    if (notifEnabled) {
+      await unsubscribeFromPush(currentUser.uid);
+      setNotifEnabled(false);
+    } else {
+      const ok = await subscribeToPush(currentUser.uid);
+      setNotifEnabled(ok);
+    }
+  };
 
   const unreadCount = getUnreadCount();
 
@@ -65,7 +78,7 @@ export default function NotificationsPage() {
               </button>
             )}
             <button
-              onClick={() => setNotifEnabled(!notifEnabled)}
+              onClick={() => void handleTogglePush()}
               className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border"
               style={{
                 borderColor: notifEnabled ? 'var(--nafa-orange)' : 'var(--nafa-gray-200)',

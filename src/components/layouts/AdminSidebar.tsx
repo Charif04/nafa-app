@@ -3,12 +3,13 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Package, Users, CreditCard, AlertTriangle,
-  BarChart3, Settings, Menu, X, LogOut, ChevronRight, Tag
+  BarChart3, Settings, Menu, X, LogOut, ChevronRight, Tag, Bell
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { Logo } from '@/components/shared/Logo';
 import { cn } from '@/lib/utils';
 
@@ -28,6 +29,7 @@ export function AdminSidebar() {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const user = useAuthStore((s) => s.user);
+  const unreadCount = useNotificationStore((s) => s.getUnreadCount());
   const adminName = user ? `${user.firstName} ${user.lastName}`.trim() || 'Admin' : 'Admin';
   const adminEmail = user?.email ?? 'admin@nafa.market';
   const initial = adminName[0]?.toUpperCase() ?? 'A';
@@ -117,7 +119,15 @@ export function AdminSidebar() {
         >
           <Menu size={18} strokeWidth={1.75} className="text-white" />
         </button>
-        <span className="ml-3 text-white font-semibold text-sm">Admin</span>
+        <span className="ml-3 text-white font-semibold text-sm flex-1">Admin</span>
+        {unreadCount > 0 && (
+          <div className="relative ml-auto">
+            <Bell size={18} strokeWidth={1.75} className="text-white/80" />
+            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full text-white text-[10px] font-bold flex items-center justify-center" style={{ background: 'var(--nafa-orange)' }}>
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Mobile drawer */}

@@ -110,6 +110,31 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   cancelled: 'Commande annulée',
 };
 
+// Helper: insert a notification row + fire push (non-blocking)
+async function sendNotification(userId: string, type: string, title: string, body: string, orderId?: string, pushUrl?: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any;
+  try {
+    await db.from('notifications').insert({
+      user_id: userId,
+      type,
+      title,
+      body,
+      linked_order_id: orderId ?? null,
+      is_read: false,
+    });
+  } catch { /* non-critical */ }
+
+  try {
+    const base = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SUPABASE_URL ? process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000' : '');
+    await fetch(`${base}/api/push`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, title, body, url: pushUrl ?? '/' }),
+    });
+  } catch { /* non-critical */ }
+}
+
 export async function updateOrderStatus(orderId: string, status: OrderStatus): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
@@ -118,34 +143,55 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
   const { error } = await db.from('orders').update({ order_status: status }).eq('id', orderId);
   if (error) throw error;
 
-  // 2. Fetch client_id for this order to send push notification
-  const { data: order } = await db.from('orders').select('client_id').eq('id', orderId).single();
-  if (!order?.client_id) return;
+  // 2. Fetch order details for notifications
+  const { data: order } = await db
+    .from('orders')
+    .select('client_id, vendor_id')
+    .eq('id', orderId)
+    .single();
+  if (!order) return;
 
-  // 3. Insert a notification row (Realtime will pick it up for in-app display)
-  await db.from('notifications').insert({
-    user_id: order.client_id,
-    type: 'order_status',
-    title: STATUS_LABELS[status] ?? 'Mise à jour de commande',
-    body: `Commande #${formatOrderId(orderId)} — ${STATUS_LABELS[status] ?? status}`,
-    linked_order_id: orderId,
-    is_read: false,
-  });
+  const label = STATUS_LABELS[status] ?? 'Mise à jour de commande';
+  const orderLabel = formatOrderId(orderId);
 
-  // 4. Send server-side push notification (works even when app is closed)
-  try {
-    await fetch('/api/push', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: order.client_id,
-        title: STATUS_LABELS[status] ?? 'Mise à jour de commande',
-        body: `Commande #${formatOrderId(orderId)} — ${STATUS_LABELS[status] ?? status}`,
-        url: `/profile/orders/${orderId}`,
-      }),
-    });
-  } catch {
-    // Non-critical — notification already in DB via Realtime
+  // 3. Notify client on every status change
+  void sendNotification(
+    order.client_id,
+    'order_status',
+    label,
+    `Commande ${orderLabel} — ${label}`,
+    orderId,
+    `/profile/orders/${orderId}`
+  );
+
+  // 4. Notify vendor when order is delivered or cancelled
+  if (status === 'delivered' || status === 'cancelled') {
+    void sendNotification(
+      order.vendor_id,
+      status === 'delivered' ? 'order_delivered' : 'order_cancelled',
+      status === 'delivered' ? `Commande livrée` : `Commande annulée`,
+      `Commande ${orderLabel} a été ${status === 'delivered' ? 'livrée au client' : 'annulée'}.`,
+      orderId,
+      `/vendor/orders/${orderId}`
+    );
+  }
+
+  // 5. Notify admin when parcel arrives at warehouse or is cancelled
+  if (status === 'at_warehouse' || status === 'cancelled') {
+    const { data: admins } = await db
+      .from('profiles')
+      .select('id')
+      .eq('role', 'admin');
+    for (const admin of admins ?? []) {
+      void sendNotification(
+        admin.id,
+        'order_status',
+        status === 'at_warehouse' ? `Colis à l'entrepôt` : `Commande annulée`,
+        `Commande ${orderLabel} — ${label}`,
+        orderId,
+        `/admin/orders/${orderId}`
+      );
+    }
   }
 }
 
@@ -204,6 +250,16 @@ export async function createOrder(payload: {
     );
 
   if (itemsError) throw itemsError;
+
+  // Notify vendor — new order received
+  void sendNotification(
+    payload.vendorId,
+    'new_order',
+    'Nouvelle commande !',
+    `Une nouvelle commande ${formatOrderId(order.id)} vient d'être passée.`,
+    order.id,
+    `/vendor/orders/${order.id}`
+  );
 
   return order.id;
 }
