@@ -110,27 +110,15 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   cancelled: 'Commande annulée',
 };
 
-// Helper: insert a notification row + fire push (non-blocking)
+// Helper: insert notification in DB + fire push via server-side API route
+// The API route uses service_role key — bypasses RLS for cross-user inserts
 async function sendNotification(userId: string, type: string, title: string, body: string, orderId?: string, pushUrl?: string) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
   try {
-    await db.from('notifications').insert({
-      user_id: userId,
-      type,
-      title,
-      body,
-      linked_order_id: orderId ?? null,
-      is_read: false,
-    });
-  } catch { /* non-critical */ }
-
-  try {
-    const base = typeof window !== 'undefined' ? '' : (process.env.NEXT_PUBLIC_SUPABASE_URL ? process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000' : '');
+    const base = typeof window !== 'undefined' ? '' : (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
     await fetch(`${base}/api/push`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, title, body, url: pushUrl ?? '/' }),
+      body: JSON.stringify({ userId, title, body, url: pushUrl ?? '/', type, linkedOrderId: orderId }),
     });
   } catch { /* non-critical */ }
 }

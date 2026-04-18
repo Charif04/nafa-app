@@ -16,15 +16,30 @@ const adminSupabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, title, body, url = '/home' } = await request.json() as {
+    const { userId, title, body, url = '/home', type, linkedOrderId } = await request.json() as {
       userId: string;
       title: string;
       body: string;
       url?: string;
+      type?: string;
+      linkedOrderId?: string;
     };
 
     if (!userId || !title || !body) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Insert notification into DB using service role (bypasses RLS)
+    if (type) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (adminSupabase as any).from('notifications').insert({
+        user_id: userId,
+        type,
+        title,
+        body,
+        linked_order_id: linkedOrderId ?? null,
+        is_read: false,
+      });
     }
 
     // Fetch all push subscriptions for the user (bypasses RLS with service role key)
