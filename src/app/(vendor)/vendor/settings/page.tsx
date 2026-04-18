@@ -1,10 +1,11 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Store, Bell, Shield, Save, Lock, CheckCircle } from 'lucide-react';
+import { Store, Bell, BellOff, Shield, Save, Lock, CheckCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { Skeleton } from '@/components/shared/SkeletonShimmer';
+import { subscribeToPush, unsubscribeFromPush } from '@/lib/pushNotifications';
 
 const NOTIFICATION_ITEMS = [
   { id: 'new_order', label: 'Nouvelle commande', description: 'Recevoir une alerte à chaque nouvelle commande' },
@@ -27,6 +28,26 @@ export default function VendorSettingsPage() {
   const [notifications, setNotifications] = useState<Record<string, boolean>>({
     new_order: true, payment: true, review: false,
   });
+  const [pushEnabled, setPushEnabled] = useState(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      return Notification.permission === 'granted';
+    }
+    return false;
+  });
+  const [pushLoading, setPushLoading] = useState(false);
+
+  const handleTogglePush = async () => {
+    if (!user?.uid || pushLoading) return;
+    setPushLoading(true);
+    if (pushEnabled) {
+      await unsubscribeFromPush(user.uid);
+      setPushEnabled(false);
+    } else {
+      const ok = await subscribeToPush(user.uid);
+      setPushEnabled(ok);
+    }
+    setPushLoading(false);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -159,9 +180,39 @@ export default function VendorSettingsPage() {
             <h2 className="text-base font-semibold" style={{ color: 'var(--nafa-black)' }}>Notifications</h2>
           </div>
           <div className="space-y-1">
-            {NOTIFICATION_ITEMS.map((item, i) => (
+            {/* Push toggle — must be user-gesture triggered (required on iOS) */}
+            <div className="flex items-center justify-between py-3.5">
+              <div className="flex items-center gap-3 flex-1 pr-4">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: pushEnabled ? 'rgba(255,107,44,0.08)' : 'var(--nafa-gray-100)' }}>
+                  {pushEnabled
+                    ? <Bell size={15} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
+                    : <BellOff size={15} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
+                  }
+                </div>
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--nafa-black)' }}>Notifications push</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }}>
+                    {pushEnabled ? 'Alertes en temps réel activées' : 'Appuyez pour activer sur cet appareil'}
+                  </p>
+                </div>
+              </div>
+              <button
+                role="switch"
+                aria-checked={pushEnabled}
+                aria-label="Notifications push"
+                onClick={() => void handleTogglePush()}
+                disabled={pushLoading}
+                className="relative flex-shrink-0 w-11 h-6 rounded-full transition-colors duration-200"
+                style={{ background: pushEnabled ? 'var(--nafa-orange)' : 'var(--nafa-gray-200)' }}
+              >
+                <motion.span layout transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                  className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm"
+                  style={{ left: pushEnabled ? '22px' : '2px' }} />
+              </button>
+            </div>
+            {NOTIFICATION_ITEMS.map((item) => (
               <div key={item.id} className="flex items-center justify-between py-3.5"
-                style={{ borderTop: i === 0 ? 'none' : '1px solid var(--nafa-gray-100)' }}>
+                style={{ borderTop: '1px solid var(--nafa-gray-100)' }}>
                 <div className="flex-1 pr-4">
                   <p className="text-sm font-medium" style={{ color: 'var(--nafa-black)' }}>{item.label}</p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }}>{item.description}</p>

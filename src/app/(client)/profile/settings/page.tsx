@@ -11,6 +11,8 @@ import {
   DollarSign,
   LogOut,
   Store,
+  Bell,
+  BellOff,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -18,6 +20,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { useUiStore } from '@/stores/uiStore';
 import { BecomeVendorModal } from '@/components/shared/BecomeVendorModal';
+import { subscribeToPush, unsubscribeFromPush } from '@/lib/pushNotifications';
 
 const ALL_LANGUAGES = [
   { label: 'Français', code: 'fr' as const, available: true },
@@ -55,6 +58,26 @@ export default function SettingsPage() {
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [showVendorModal, setShowVendorModal] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      return Notification.permission === 'granted';
+    }
+    return false;
+  });
+  const [pushLoading, setPushLoading] = useState(false);
+
+  const handleTogglePush = async () => {
+    if (!user?.uid || pushLoading) return;
+    setPushLoading(true);
+    if (pushEnabled) {
+      await unsubscribeFromPush(user.uid);
+      setPushEnabled(false);
+    } else {
+      const ok = await subscribeToPush(user.uid);
+      setPushEnabled(ok);
+    }
+    setPushLoading(false);
+  };
 
 
   const handleLogout = async () => {
@@ -226,6 +249,44 @@ export default function SettingsPage() {
                     </motion.div>
                   )}
                 </AnimatePresence>
+              </div>
+            </motion.section>
+
+            {/* Notifications */}
+            <motion.section variants={sectionVariants}>
+              <p className="px-1 pb-2 text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>
+                Notifications
+              </p>
+              <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--nafa-white)' }}>
+                <button
+                  onClick={() => void handleTogglePush()}
+                  disabled={pushLoading}
+                  className="flex items-center gap-3 px-4 py-3.5 w-full text-left"
+                >
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: pushEnabled ? 'rgba(255,107,44,0.08)' : 'var(--nafa-gray-100)' }}>
+                    {pushEnabled
+                      ? <Bell size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
+                      : <BellOff size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
+                    }
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium" style={{ color: 'var(--nafa-gray-900)' }}>Notifications push</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }}>
+                      {pushEnabled ? 'Activées — vous recevrez des alertes en temps réel' : 'Désactivées — appuyez pour activer'}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <div
+                      className="w-11 h-6 rounded-full transition-colors relative"
+                      style={{ background: pushEnabled ? 'var(--nafa-orange)' : 'var(--nafa-gray-200)' }}
+                    >
+                      <div
+                        className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
+                        style={{ transform: pushEnabled ? 'translateX(20px)' : 'translateX(2px)' }}
+                      />
+                    </div>
+                  </div>
+                </button>
               </div>
             </motion.section>
 
