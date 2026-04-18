@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Package, ShoppingBag, DollarSign,
-  Wallet, Settings, Menu, X, LogOut, ChevronRight, Bell
+  Wallet, Settings, Menu, X, LogOut, ChevronRight, Bell, BellDot
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -19,6 +19,7 @@ const NAV_ITEMS = [
   { href: '/vendor/orders', icon: ShoppingBag, label: 'Commandes' },
   { href: '/vendor/revenue', icon: DollarSign, label: 'Revenus' },
   { href: '/vendor/wallet', icon: Wallet, label: 'Portefeuille' },
+  { href: '/vendor/notifications', icon: Bell, label: 'Notifications', badge: true },
   { href: '/vendor/settings', icon: Settings, label: 'Paramètres' },
 ];
 
@@ -45,8 +46,9 @@ export function VendorSidebar() {
       </div>
 
       <nav className="flex-1 py-4 overflow-y-auto" aria-label="Navigation vendeur">
-        {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
+        {NAV_ITEMS.map(({ href, icon: Icon, label, badge }) => {
           const isActive = pathname.startsWith(href);
+          const showBadge = badge && unreadCount > 0;
           return (
             <Link
               key={href}
@@ -59,7 +61,14 @@ export function VendorSidebar() {
               style={isActive ? { background: 'rgba(255,107,44,0.25)', color: 'var(--nafa-orange-light)' } : {}}
               aria-current={isActive ? 'page' : undefined}
             >
-              <Icon size={18} strokeWidth={1.75} />
+              <div className="relative flex-shrink-0">
+                {showBadge ? <BellDot size={18} strokeWidth={1.75} style={{ color: 'var(--nafa-orange-light)' }} /> : <Icon size={18} strokeWidth={1.75} />}
+                {showBadge && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full text-white text-[9px] font-bold flex items-center justify-center" style={{ background: 'var(--nafa-orange)' }}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </div>
               <span className="text-sm font-medium">{label}</span>
               {isActive && <ChevronRight size={14} strokeWidth={1.75} className="ml-auto opacity-60" />}
             </Link>

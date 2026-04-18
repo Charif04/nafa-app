@@ -120,7 +120,10 @@ export interface Review {
   createdAt: string;
 }
 
-export type NotificationType = 'order_update' | 'promo' | 'review' | 'system';
+export type NotificationType =
+  | 'order_update' | 'order_status' | 'order_delivered' | 'order_cancelled'
+  | 'new_order' | 'low_stock' | 'account_verified' | 'account_suspended'
+  | 'promo' | 'review' | 'system';
 
 export interface Notification {
   id: string;

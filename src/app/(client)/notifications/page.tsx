@@ -1,20 +1,38 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Tag, PackageCheck, MessageSquare, Info, BellOff, X } from 'lucide-react';
+import { Bell, Tag, PackageCheck, MessageSquare, Info, BellOff, X, ShoppingBag, AlertTriangle, BadgeCheck, Ban } from 'lucide-react';
 import Link from 'next/link';
 import { formatRelativeTime } from '@/lib/utils';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAuthStore } from '@/stores/authStore';
 import { subscribeToPush, unsubscribeFromPush } from '@/lib/pushNotifications';
-import type { Notification } from '@/types';
+import type { Notification, NotificationType } from '@/types';
 
-const NOTIF_CONFIG = {
-  order_update: { icon: PackageCheck, color: 'bg-green-100', iconColor: 'text-green-600', dot: 'bg-green-500' },
-  promo: { icon: Tag, color: 'bg-orange-100', iconColor: 'text-orange-600', dot: 'bg-orange-500' },
-  review: { icon: MessageSquare, color: 'bg-blue-100', iconColor: 'text-blue-600', dot: 'bg-blue-500' },
-  system: { icon: Info, color: 'bg-gray-100', iconColor: 'text-gray-600', dot: 'bg-gray-400' },
+const FALLBACK_CONFIG = { icon: Info, color: 'bg-gray-100', iconColor: 'text-gray-500', dot: 'bg-gray-400' };
+
+const NOTIF_CONFIG: Record<NotificationType, typeof FALLBACK_CONFIG> = {
+  order_update:        { icon: PackageCheck,  color: 'bg-green-100',  iconColor: 'text-green-600',  dot: 'bg-green-500' },
+  order_status:        { icon: PackageCheck,  color: 'bg-green-100',  iconColor: 'text-green-600',  dot: 'bg-green-500' },
+  order_delivered:     { icon: PackageCheck,  color: 'bg-green-100',  iconColor: 'text-green-600',  dot: 'bg-green-500' },
+  order_cancelled:     { icon: X,             color: 'bg-red-100',    iconColor: 'text-red-600',    dot: 'bg-red-500' },
+  new_order:           { icon: ShoppingBag,   color: 'bg-orange-100', iconColor: 'text-orange-600', dot: 'bg-orange-500' },
+  low_stock:           { icon: AlertTriangle, color: 'bg-yellow-100', iconColor: 'text-yellow-600', dot: 'bg-yellow-500' },
+  account_verified:    { icon: BadgeCheck,    color: 'bg-blue-100',   iconColor: 'text-blue-600',   dot: 'bg-blue-500' },
+  account_suspended:   { icon: Ban,           color: 'bg-red-100',    iconColor: 'text-red-600',    dot: 'bg-red-500' },
+  promo:               { icon: Tag,           color: 'bg-orange-100', iconColor: 'text-orange-600', dot: 'bg-orange-500' },
+  review:              { icon: MessageSquare, color: 'bg-blue-100',   iconColor: 'text-blue-600',   dot: 'bg-blue-500' },
+  system:              { icon: Info,          color: 'bg-gray-100',   iconColor: 'text-gray-600',   dot: 'bg-gray-400' },
 };
+
+function getConfig(type: string) {
+  return (NOTIF_CONFIG as Record<string, typeof FALLBACK_CONFIG>)[type] ?? FALLBACK_CONFIG;
+}
+
+// Notifications pour vendeur/admin (ne pas afficher dans la page client)
+const HIDDEN_FOR_CLIENT: NotificationType[] = ['new_order', 'low_stock', 'account_verified', 'account_suspended'];
+const DELIVERY_URL_TYPES: NotificationType[] = ['order_update', 'order_status', 'order_delivered', 'order_cancelled'];
+
 
 
 export default function NotificationsPage() {
@@ -45,13 +63,15 @@ export default function NotificationsPage() {
   const unreadCount = getUnreadCount();
 
   const now = new Date().getTime();
+  // Filter out vendor/admin-only types from client view
+  const clientNotifs = notifications.filter((n) => !HIDDEN_FOR_CLIENT.includes(n.type as NotificationType));
   const grouped = {
-    today: notifications.filter((n) => now - new Date(n.createdAt).getTime() < 86400000),
-    yesterday: notifications.filter((n) => {
+    today: clientNotifs.filter((n) => now - new Date(n.createdAt).getTime() < 86400000),
+    yesterday: clientNotifs.filter((n) => {
       const diff = now - new Date(n.createdAt).getTime();
       return diff >= 86400000 && diff < 172800000;
     }),
-    older: notifications.filter((n) => now - new Date(n.createdAt).getTime() >= 172800000),
+    older: clientNotifs.filter((n) => now - new Date(n.createdAt).getTime() >= 172800000),
   };
 
   return (
@@ -107,7 +127,7 @@ export default function NotificationsPage() {
               <div className="space-y-2">
                 <AnimatePresence>
                   {groupNotifs.map((notif, i) => {
-                    const config = NOTIF_CONFIG[notif.type];
+                    const config = getConfig(notif.type);
                     const Icon = config.icon;
 
                     return (
@@ -183,7 +203,7 @@ export default function NotificationsPage() {
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div className="flex items-center gap-3">
                   {(() => {
-                    const config = NOTIF_CONFIG[selectedNotif.type];
+                    const config = getConfig(selectedNotif.type);
                     const Icon = config.icon;
                     return (
                       <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${config.color}`}>
@@ -205,7 +225,7 @@ export default function NotificationsPage() {
               <p className="text-sm mb-5" style={{ color: 'var(--nafa-gray-700)' }}>{selectedNotif.body}</p>
 
               {/* CTA */}
-              {selectedNotif.linkedOrderId && (
+              {selectedNotif.linkedOrderId && DELIVERY_URL_TYPES.includes(selectedNotif.type as NotificationType) && (
                 <Link
                   href={`/profile/orders/${selectedNotif.linkedOrderId}`}
                   onClick={() => setSelectedNotif(null)}
