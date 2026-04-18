@@ -140,74 +140,69 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     <div className="min-h-dvh lg:pb-8" style={{ background: 'var(--nafa-gray-100)', paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
 
       {/* ── Image section ── */}
-      <div className="relative" style={{ background: '#111' }}>
+      <div className="relative bg-white">
+        {/* Back + wishlist — float above image */}
+        <div className="absolute top-0 inset-x-0 flex items-center justify-between px-4 z-10"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}>
+          <motion.button whileTap={{ scale: 0.9 }} onClick={() => router.back()}
+            className="w-9 h-9 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.9)', boxShadow: '0 1px 6px rgba(0,0,0,0.12)' }}>
+            <ChevronLeft size={20} strokeWidth={2} style={{ color: 'var(--nafa-black)' }} />
+          </motion.button>
+          <motion.button whileTap={{ scale: 0.9 }}
+            onClick={() => { if (product) toggleWishlist(product); }}
+            className="w-9 h-9 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.9)', boxShadow: '0 1px 6px rgba(0,0,0,0.12)' }}>
+            <Heart size={18} strokeWidth={1.75}
+              className={isFav ? 'fill-red-500 text-red-500' : ''}
+              style={!isFav ? { color: 'var(--nafa-gray-700)' } : undefined} />
+          </motion.button>
+        </div>
+
         {/* Main image */}
-        <div className="relative overflow-hidden" style={{ aspectRatio: '1/1', maxHeight: 420 }}>
+        <div className="relative overflow-hidden bg-gray-50" style={{ aspectRatio: '1/1' }}>
           <AnimatePresence mode="wait">
             <motion.div key={activeImg} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }} className="absolute inset-0">
+              transition={{ duration: 0.2 }} className="absolute inset-0">
               {product.images[activeImg] ? (
                 <Image src={product.images[activeImg]} alt={product.title} fill
                   sizes="(max-width: 640px) 100vw, 640px" className="object-cover" priority={activeImg === 0} />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'var(--nafa-gray-100)' }}>
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
                   <Package size={64} strokeWidth={1} style={{ color: 'var(--nafa-gray-400)' }} />
                 </div>
               )}
             </motion.div>
           </AnimatePresence>
 
-          {/* Top gradient for header */}
-          <div className="absolute inset-x-0 top-0 h-20 pointer-events-none"
-            style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.45), transparent)' }} />
-
-          {/* Back + wishlist */}
-          <div className="absolute top-0 inset-x-0 flex items-center justify-between px-4"
-            style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}>
-            <motion.button whileTap={{ scale: 0.9 }} onClick={() => router.back()}
-              className="w-9 h-9 rounded-full flex items-center justify-center"
-              style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)' }}>
-              <ChevronLeft size={20} strokeWidth={2} className="text-white" />
-            </motion.button>
-            <motion.button whileTap={{ scale: 0.9 }}
-              onClick={() => { if (product) toggleWishlist(product); }}
-              className="w-9 h-9 rounded-full flex items-center justify-center"
-              style={{ background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(8px)' }}>
-              <Heart size={18} strokeWidth={1.75}
-                className={isFav ? 'fill-red-500 text-red-500' : 'text-white'} />
-            </motion.button>
-          </div>
-
           {/* Image counter */}
           {product.images.length > 1 && (
-            <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-white text-xs font-semibold"
-              style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(6px)' }}>
-              {activeImg + 1}/{product.images.length}
+            <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-xs font-semibold"
+              style={{ background: 'rgba(0,0,0,0.4)', color: 'white' }}>
+              {activeImg + 1} / {product.images.length}
             </div>
           )}
         </div>
 
-        {/* Thumbnail strip */}
+        {/* Thumbnail strip — white background */}
         {product.images.length > 1 && (
-          <div className="flex gap-2 px-4 py-3" style={{ background: '#111' }}>
+          <div className="flex gap-2 px-4 py-3 bg-white border-b" style={{ borderColor: 'var(--nafa-gray-100)' }}>
             {product.images.map((img, i) => (
               <button key={i} onClick={() => setActiveImg(i)}
                 className="flex-shrink-0 rounded-xl overflow-hidden transition-all"
                 style={{
-                  width: 56, height: 56,
-                  border: `2.5px solid ${i === activeImg ? 'var(--nafa-orange)' : 'rgba(255,255,255,0.15)'}`,
-                  opacity: i === activeImg ? 1 : 0.6,
+                  width: 58, height: 58,
+                  border: `2px solid ${i === activeImg ? 'var(--nafa-orange)' : 'var(--nafa-gray-200)'}`,
                 }}>
-                <Image src={img} alt="" width={56} height={56} className="object-cover w-full h-full" />
+                <Image src={img} alt="" width={58} height={58} className="object-cover w-full h-full" />
               </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* ── Content card ── */}
-      <div className="rounded-t-3xl -mt-4 relative z-10 px-4 pt-5 pb-4 space-y-5"
-        style={{ background: 'var(--nafa-white)' }}>
+      {/* ── Content ── */}
+      <div className="px-4 pt-5 pb-4 space-y-5 bg-white">
 
         {/* Title + stock */}
         <div>
