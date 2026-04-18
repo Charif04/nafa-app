@@ -366,27 +366,42 @@ export default function VendorStorefrontPage() {
         </div>
       </header>
 
-      {/* ── Cover banner (mobile only) — back button inside ── */}
+      {/* ── Cover banner (mobile only) — stats overlay like desktop ── */}
       <div
         className="relative md:hidden"
-        style={{ background: 'linear-gradient(135deg, var(--nafa-orange) 0%, #9a3412 100%)', height: 140 }}
+        style={{ background: 'linear-gradient(135deg, var(--nafa-orange) 0%, #7c2d12 100%)', height: 160 }}
       >
         {/* Decorative blobs */}
         <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full" style={{ background: 'rgba(255,255,255,0.07)' }} />
-        <div className="absolute left-12 -bottom-6 w-28 h-28 rounded-full" style={{ background: 'rgba(0,0,0,0.1)' }} />
+        <div className="absolute right-16 -bottom-8 w-32 h-32 rounded-full" style={{ background: 'rgba(0,0,0,0.08)' }} />
         {/* Back button — safe area aware */}
         <button
           onClick={() => router.back()}
           className="absolute left-4 flex items-center justify-center w-9 h-9 rounded-full"
-          style={{
-            top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
-            background: 'rgba(255,255,255,0.2)',
-            backdropFilter: 'blur(8px)',
-          }}
+          style={{ top: 'calc(env(safe-area-inset-top, 0px) + 12px)', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)' }}
           aria-label="Retour"
         >
           <ChevronLeft size={18} strokeWidth={2} className="text-white" />
         </button>
+        {/* Shop name + stats bottom-left like desktop */}
+        <div className="absolute bottom-5 left-5 right-5">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span className="text-[10px] font-bold tracking-widest uppercase text-white/60">Boutique</span>
+            {vendor.isVerified && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                Vérifié ✓
+              </span>
+            )}
+          </div>
+          <h2 className="text-lg font-black text-white leading-tight mb-1.5 truncate">{vendor.shopName}</h2>
+          <div className="flex items-center gap-2.5">
+            <StatPill value={products.length} label="produits" />
+            <span className="text-white/30 text-xs">|</span>
+            <StatPill value={vendor.totalSales.toLocaleString('fr-FR')} label="ventes" />
+            <span className="text-white/30 text-xs">|</span>
+            <StatPill value={followerCount.toLocaleString('fr-FR')} label="abonnés" />
+          </div>
+        </div>
       </div>
 
       {/* ─────────────────── MOBILE LAYOUT ─────────────────── */}
@@ -423,28 +438,10 @@ export default function VendorStorefrontPage() {
 
             {/* Description */}
             {vendor.shopDescription && (
-              <p className="px-5 pb-3 text-xs leading-relaxed" style={{ color: 'var(--nafa-gray-700)' }}>
+              <p className="px-5 pb-4 text-xs leading-relaxed" style={{ color: 'var(--nafa-gray-700)' }}>
                 {vendor.shopDescription}
               </p>
             )}
-
-            {/* Stats row */}
-            <div className="grid grid-cols-4 divide-x px-2 pb-4" style={{ borderTop: '1px solid var(--nafa-gray-100)' }}>
-              {[
-                { icon: Package, value: products.length, label: 'Produits' },
-                { icon: ShoppingBag, value: vendor.totalSales, label: 'Ventes' },
-                { icon: Users, value: followerCount, label: 'Abonnés' },
-                { icon: Star, value: vendor.rating.toFixed(1), label: 'Note' },
-              ].map(({ icon: Icon, value, label }, idx) => (
-                <div key={label} className={`flex flex-col items-center gap-0.5 pt-3 ${idx === 0 ? '' : ''}`}>
-                  <span className="text-sm font-black" style={{ color: 'var(--nafa-black)' }}>
-                    {typeof value === 'number' ? value.toLocaleString('fr-FR') : value}
-                  </span>
-                  <Icon size={11} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
-                  <span className="text-[10px]" style={{ color: 'var(--nafa-gray-400)' }}>{label}</span>
-                </div>
-              ))}
-            </div>
 
             {/* Follow button */}
             {currentUser?.uid && (

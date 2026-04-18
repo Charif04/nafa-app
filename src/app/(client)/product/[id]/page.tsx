@@ -33,6 +33,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const router = useRouter();
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [vendorAvatarUrl, setVendorAvatarUrl] = useState<string | null>(null);
   const [reviews, setReviews] = useState<ProductReview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeImg, setActiveImg] = useState(0);
@@ -54,13 +55,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: row } = await (supabase as any)
         .from('products')
-        .select(`*, vendor:profiles!products_vendor_id_fkey(vendor_profiles(shop_name))`)
+        .select(`*, vendor:profiles!products_vendor_id_fkey(avatar_url, vendor_profiles(shop_name))`)
         .eq('id', id).eq('is_active', true).maybeSingle();
 
       if (row) {
         const vp = Array.isArray(row.vendor?.vendor_profiles)
           ? row.vendor.vendor_profiles[0]
           : row.vendor?.vendor_profiles;
+        setVendorAvatarUrl(row.vendor?.avatar_url ?? null);
         setProduct({
           id: row.id, vendorId: row.vendor_id, vendorName: vp?.shop_name ?? '',
           title: row.title, description: row.description ?? '',
@@ -294,9 +296,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       <Link href={`/vendor/${product.vendorId}`}
         className="flex items-center justify-between p-4 rounded-2xl" style={{ background: 'var(--nafa-gray-100)' }}>
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-white font-bold text-base flex-shrink-0"
-            style={{ background: 'var(--nafa-orange)' }}>
-            {product.vendorName?.[0]?.toUpperCase() ?? 'V'}
+          <div className="w-11 h-11 rounded-2xl overflow-hidden flex-shrink-0">
+            {vendorAvatarUrl
+              ? <img src={vendorAvatarUrl} alt={product.vendorName} className="w-full h-full object-cover" />
+              : <div className="w-full h-full flex items-center justify-center text-white font-bold text-base"
+                  style={{ background: 'var(--nafa-orange)' }}>
+                  {product.vendorName?.[0]?.toUpperCase() ?? 'V'}
+                </div>
+            }
           </div>
           <div>
             <p className="text-sm font-bold" style={{ color: 'var(--nafa-black)' }}>{product.vendorName}</p>
