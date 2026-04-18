@@ -32,6 +32,7 @@ interface VendorData {
   totalSales: number;
   createdAt: string;
   isVerified: boolean;
+  avatarUrl: string | null;
 }
 
 function getInitials(name: string): string {
@@ -74,6 +75,10 @@ export default function VendorStorefrontPage() {
 
       if (!vpRow) { setIsLoading(false); return; }
 
+      // Fetch avatar_url from profiles (vendor_profiles doesn't store it)
+      const { data: profileRow } = await supabase
+        .from('profiles').select('avatar_url').eq('id', vendorId).maybeSingle();
+
       const vendorData: VendorData = {
         id: vpRow.id,
         shopName: vpRow.shop_name ?? '',
@@ -84,6 +89,8 @@ export default function VendorStorefrontPage() {
         totalSales: vpRow.total_sales,
         createdAt: vpRow.created_at,
         isVerified: vpRow.is_verified,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        avatarUrl: (profileRow as any)?.avatar_url ?? null,
       };
       setVendor(vendorData);
 
@@ -208,11 +215,13 @@ export default function VendorStorefrontPage() {
       {/* Card cover strip */}
       <div className="h-16 relative" style={{ background: 'linear-gradient(135deg, var(--nafa-orange) 0%, #c2410c 100%)' }}>
         <div className="absolute -bottom-8 left-5">
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-black text-xl border-4 border-white"
-            style={{ background: 'linear-gradient(135deg, #ea580c, #9a3412)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
-          >
-            {initials}
+          <div className="w-16 h-16 rounded-2xl overflow-hidden border-4 border-white flex-shrink-0"
+            style={{ boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+            {vendor.avatarUrl
+              ? <img src={vendor.avatarUrl} alt={vendor.shopName} className="w-full h-full object-cover" />
+              : <div className="w-full h-full flex items-center justify-center text-white font-black text-xl"
+                  style={{ background: 'linear-gradient(135deg, #ea580c, #9a3412)' }}>{initials}</div>
+            }
           </div>
         </div>
       </div>
@@ -394,14 +403,14 @@ export default function VendorStorefrontPage() {
             {/* Avatar row */}
             <div className="flex items-end gap-3 px-5 pt-5 pb-3">
               <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-black text-xl flex-shrink-0 border-4 border-white"
-                style={{
-                  background: 'linear-gradient(135deg, var(--nafa-orange), #9a3412)',
-                  boxShadow: '0 4px 16px rgba(255,107,44,0.3)',
-                  marginTop: -32,
-                }}
+                className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 border-4 border-white"
+                style={{ boxShadow: '0 4px 16px rgba(255,107,44,0.3)', marginTop: -32 }}
               >
-                {initials}
+                {vendor.avatarUrl
+                  ? <img src={vendor.avatarUrl} alt={vendor.shopName} className="w-full h-full object-cover" />
+                  : <div className="w-full h-full flex items-center justify-center text-white font-black text-xl"
+                      style={{ background: 'linear-gradient(135deg, var(--nafa-orange), #9a3412)' }}>{initials}</div>
+                }
               </div>
               <div className="flex-1 min-w-0 pb-1">
                 <div className="flex items-center gap-1.5">

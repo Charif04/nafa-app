@@ -29,6 +29,7 @@ interface VendorRow {
   phone: string | null;
   country: string;
   region: string | null;
+  avatarUrl: string | null;
 }
 
 type FilterTab = 'tous' | 'en_attente' | 'verifies' | 'suspendus';
@@ -54,7 +55,7 @@ export default function AdminVendorsPage() {
       db.from('vendor_profiles')
         .select('id, shop_name, shop_description, shop_type, shop_address, is_verified, is_suspended, is_pending, cnib_url, follower_count, created_at')
         .order('created_at', { ascending: false }),
-      db.from('profiles').select('id, first_name, last_name, phone, country, region'),
+      db.from('profiles').select('id, first_name, last_name, phone, country, region, avatar_url'),
       // Real order counts — total_sales/total_revenue columns are stale
       db.from('orders').select('vendor_id, subtotal').neq('order_status', 'cancelled'),
       // Real ratings from reviews — vendor_profiles.rating column is stale
@@ -112,6 +113,7 @@ export default function AdminVendorsPage() {
           phone: p.phone,
           country: p.country ?? '',
           region: p.region,
+          avatarUrl: p.avatar_url ?? null,
         };
       }));
     }
@@ -131,7 +133,7 @@ export default function AdminVendorsPage() {
         .select('id, shop_name, shop_description, shop_type, shop_address, is_verified, is_suspended, is_pending, cnib_url, follower_count, created_at')
         .eq('id', vendor.id).single(),
       db.from('profiles')
-        .select('first_name, last_name, phone, country, region')
+        .select('first_name, last_name, phone, country, region, avatar_url')
         .eq('id', vendor.id).single(),
       db.from('orders').select('subtotal').eq('vendor_id', vendor.id).neq('order_status', 'cancelled'),
       db.from('reviews').select('rating').eq('to_user_id', vendor.id).eq('type', 'client_to_vendor'),
@@ -158,6 +160,7 @@ export default function AdminVendorsPage() {
         rating, totalSales, totalRevenue, followerCount: vp.follower_count,
         createdAt: vp.created_at, firstName: p.first_name ?? '', lastName: p.last_name ?? '',
         email: '', phone: p.phone, country: p.country ?? '', region: p.region,
+        avatarUrl: p.avatar_url ?? null,
       });
       if (vp.cnib_url) {
         try {
@@ -296,9 +299,11 @@ export default function AdminVendorsPage() {
                     style={{ borderBottom: '1px solid var(--nafa-gray-100)' }}>
                     <td className="px-4 py-3">
                       <button onClick={() => openDetail(vendor)} className="flex items-center gap-3 text-left">
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-                          style={{ background: 'var(--nafa-orange)' }}>
-                          {vendor.shopName[0]?.toUpperCase()}
+                        <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
+                          {vendor.avatarUrl
+                            ? <img src={vendor.avatarUrl} alt={vendor.shopName} className="w-full h-full object-cover" />
+                            : <div className="w-full h-full flex items-center justify-center text-white text-sm font-bold" style={{ background: 'var(--nafa-orange)' }}>{vendor.shopName[0]?.toUpperCase()}</div>
+                          }
                         </div>
                         <div>
                           <div className="flex items-center gap-1.5">
@@ -381,9 +386,11 @@ export default function AdminVendorsPage() {
                 className="p-4 flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                      style={{ background: 'var(--nafa-orange)' }}>
-                      {vendor.shopName[0]?.toUpperCase()}
+                    <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                      {vendor.avatarUrl
+                        ? <img src={vendor.avatarUrl} alt={vendor.shopName} className="w-full h-full object-cover" />
+                        : <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold" style={{ background: 'var(--nafa-orange)' }}>{vendor.shopName[0]?.toUpperCase()}</div>
+                      }
                     </div>
                     <div className="flex items-center gap-1">
                       <span className="text-sm font-semibold" style={{ color: 'var(--nafa-black)' }}>{vendor.shopName}</span>
@@ -432,9 +439,11 @@ export default function AdminVendorsPage() {
               {/* Modal header */}
               <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'var(--nafa-gray-200)' }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
-                    style={{ background: 'var(--nafa-orange)' }}>
-                    {selected.shopName[0]?.toUpperCase()}
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                    {selected.avatarUrl
+                      ? <img src={selected.avatarUrl} alt={selected.shopName} className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center text-white font-bold" style={{ background: 'var(--nafa-orange)' }}>{selected.shopName[0]?.toUpperCase()}</div>
+                    }
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
