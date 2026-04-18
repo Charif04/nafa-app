@@ -137,7 +137,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const displayPrice = clientPrice(product.price);
 
   return (
-    <div className="min-h-dvh pb-36 lg:pb-8" style={{ background: 'var(--nafa-gray-100)' }}>
+    <div className="min-h-dvh lg:pb-8" style={{ background: 'var(--nafa-gray-100)', paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
 
       {/* ── Image section ── */}
       <div className="relative" style={{ background: '#111' }}>
@@ -358,8 +358,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       </div>
 
       {/* ── Mobile sticky CTA ── */}
-      <div className="fixed bottom-[4.5rem] left-0 right-0 px-4 pb-3 pt-4 lg:hidden"
-        style={{ background: 'linear-gradient(to top, var(--nafa-white) 75%, transparent)', zIndex: 30 }}>
+      <div className="fixed left-0 right-0 px-4 pt-4 pb-3 lg:hidden"
+        style={{
+          bottom: 'calc(56px + env(safe-area-inset-bottom, 0px))',
+          background: 'linear-gradient(to top, var(--nafa-white) 75%, transparent)',
+          zIndex: 30,
+        }}>
         <div className="flex gap-3">
           <motion.button whileTap={{ scale: 0.97 }} onClick={handleAddToCart}
             disabled={product.stock === 0 || addedToCart}

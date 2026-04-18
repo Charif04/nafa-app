@@ -40,22 +40,23 @@ export function ProductCard({ product, index = 0, className }: ProductCardProps)
       vendorName: product.vendorName,
       stock: product.stock,
     });
-    setTimeout(() => setAdding(false), 1200);
+    setTimeout(() => setAdding(false), 1400);
   };
 
   const displayPrice = formatCurrency(clientPrice(product.price), currency);
+  const outOfStock = product.stock === 0;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className={cn('group bg-white rounded-2xl overflow-hidden flex flex-col', className)}
-      style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06)' }}
+      className={cn('bg-white rounded-2xl overflow-hidden flex flex-col', className)}
+      style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}
     >
-      <Link href={`/product/${product.id}`} className="block relative">
-        {/* Image */}
-        <div className="relative overflow-hidden bg-gray-50" style={{ aspectRatio: '3/4' }}>
+      {/* Image */}
+      <Link href={`/product/${product.id}`} className="block relative flex-shrink-0">
+        <div className="relative aspect-square overflow-hidden bg-gray-50">
           {!imgLoaded && <Skeleton className="absolute inset-0 w-full h-full" rounded={false} />}
           {product.images[0] ? (
             <Image
@@ -71,100 +72,79 @@ export function ProductCard({ product, index = 0, className }: ProductCardProps)
               loading="lazy"
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'var(--nafa-gray-100)' }}>
-              <ShoppingCart size={32} strokeWidth={1} style={{ color: 'var(--nafa-gray-300)' }} />
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+              <ShoppingCart size={28} strokeWidth={1} className="text-gray-300" />
             </div>
           )}
 
-          {/* Gradient overlay bottom */}
-          <div className="absolute inset-x-0 bottom-0 h-16 pointer-events-none"
-            style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.22), transparent)' }} />
-
           {/* Wishlist */}
           <motion.button
-            whileTap={{ scale: 0.85 }}
+            whileTap={{ scale: 0.82 }}
             onClick={(e) => { e.preventDefault(); toggle(product); }}
-            className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(6px)' }}
-            aria-label={wishlisted ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center shadow-sm"
+            style={{ background: 'rgba(255,255,255,0.92)' }}
+            aria-label={wishlisted ? 'Retirer' : 'Favoris'}
           >
-            <Heart
-              size={14}
-              strokeWidth={2}
-              className={wishlisted ? 'fill-red-500 text-red-500' : 'text-gray-500'}
-            />
+            <Heart size={13} strokeWidth={2}
+              className={wishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400'} />
           </motion.button>
 
-          {/* Out of stock badge */}
-          {product.stock === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center"
-              style={{ background: 'rgba(0,0,0,0.45)' }}>
-              <span className="text-white text-xs font-bold px-3 py-1 rounded-full"
-                style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+          {/* Out of stock */}
+          {outOfStock && (
+            <div className="absolute inset-0 flex items-end justify-center pb-3"
+              style={{ background: 'rgba(0,0,0,0.3)' }}>
+              <span className="text-white text-[10px] font-bold px-2.5 py-1 rounded-full bg-black/60">
                 Rupture
               </span>
             </div>
           )}
-
-          {/* Price tag at bottom-left */}
-          <div className="absolute bottom-2.5 left-2.5">
-            <span className="text-white text-sm font-black nafa-mono px-2 py-0.5 rounded-lg"
-              style={{ background: 'var(--nafa-orange)', boxShadow: '0 2px 8px rgba(255,107,44,0.4)' }}>
-              {displayPrice}
-            </span>
-          </div>
-        </div>
-
-        {/* Info */}
-        <div className="px-3 pt-2.5 pb-1">
-          <h3 className="text-sm font-semibold leading-snug line-clamp-2"
-            style={{ color: 'var(--nafa-black)', minHeight: '2.5rem' }}>
-            {product.title}
-          </h3>
-          <div className="flex items-center justify-between mt-1.5">
-            <div className="flex items-center gap-1">
-              <Star size={11} strokeWidth={2} className="fill-[var(--nafa-orange)] text-[var(--nafa-orange)]" />
-              <span className="text-xs font-semibold" style={{ color: 'var(--nafa-gray-700)' }}>
-                {product.rating > 0 ? product.rating.toFixed(1) : '—'}
-              </span>
-              {product.reviewCount > 0 && (
-                <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>
-                  ({product.reviewCount})
-                </span>
-              )}
-            </div>
-            {product.vendorName && (
-              <span className="text-xs truncate max-w-[90px]" style={{ color: 'var(--nafa-gray-400)' }}>
-                {product.vendorName}
-              </span>
-            )}
-          </div>
         </div>
       </Link>
 
-      {/* Add to cart */}
-      <div className="px-3 pb-3 pt-1 mt-auto">
-        <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={handleAddToCart}
-          disabled={product.stock === 0}
-          className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
-          style={{
-            background: adding
-              ? '#22c55e'
-              : product.stock === 0
-              ? 'var(--nafa-gray-200)'
-              : 'var(--nafa-orange)',
-            color: product.stock === 0 ? 'var(--nafa-gray-400)' : 'white',
-          }}
-          aria-label={`Ajouter ${product.title} au panier`}
-        >
-          {adding ? (
-            <><Check size={14} strokeWidth={2.5} /> Ajouté</>
-          ) : (
-            <><ShoppingCart size={14} strokeWidth={1.75} /> {product.stock === 0 ? 'Indisponible' : 'Ajouter'}</>
-          )}
-        </motion.button>
+      {/* Info */}
+      <div className="flex flex-col flex-1 p-2.5 gap-1.5">
+        <Link href={`/product/${product.id}`}>
+          <h3 className="text-[13px] font-semibold leading-snug line-clamp-2"
+            style={{ color: 'var(--nafa-black)' }}>
+            {product.title}
+          </h3>
+        </Link>
+
+        {/* Rating */}
+        {product.reviewCount > 0 && (
+          <div className="flex items-center gap-1">
+            <Star size={11} strokeWidth={0} className="fill-[var(--nafa-orange)]" />
+            <span className="text-[11px] font-medium" style={{ color: 'var(--nafa-gray-700)' }}>
+              {product.rating.toFixed(1)}
+            </span>
+            <span className="text-[11px]" style={{ color: 'var(--nafa-gray-400)' }}>
+              ({product.reviewCount})
+            </span>
+          </div>
+        )}
+
+        {/* Price + cart button */}
+        <div className="flex items-center justify-between mt-auto pt-1">
+          <p className="text-sm font-black nafa-mono" style={{ color: 'var(--nafa-orange)' }}>
+            {displayPrice}
+          </p>
+
+          <motion.button
+            whileTap={{ scale: 0.88 }}
+            onClick={handleAddToCart}
+            disabled={outOfStock}
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+            style={{
+              background: adding ? '#22c55e' : outOfStock ? 'var(--nafa-gray-200)' : 'var(--nafa-orange)',
+            }}
+            aria-label="Ajouter au panier"
+          >
+            {adding
+              ? <Check size={13} strokeWidth={2.5} className="text-white" />
+              : <ShoppingCart size={13} strokeWidth={1.75} className="text-white" />
+            }
+          </motion.button>
+        </div>
       </div>
     </motion.div>
   );
