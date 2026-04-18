@@ -164,17 +164,21 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
     );
   }
 
-  // 5. Notify admin when parcel arrives at warehouse or is cancelled
-  if (status === 'at_warehouse' || status === 'cancelled') {
+  // 5. Notify admin for key logistics events
+  if (status === 'in_transit_warehouse' || status === 'at_warehouse' || status === 'cancelled') {
     const { data: admins } = await db
       .from('profiles')
       .select('id')
       .eq('role', 'admin');
+    const adminTitle =
+      status === 'in_transit_warehouse' ? `Colis en route` :
+      status === 'at_warehouse'         ? `Colis à l'entrepôt` :
+                                          `Commande annulée`;
     for (const admin of admins ?? []) {
       void sendNotification(
         admin.id,
         'order_status',
-        status === 'at_warehouse' ? `Colis à l'entrepôt` : `Commande annulée`,
+        adminTitle,
         `Commande ${orderLabel} — ${label}`,
         orderId,
         `/admin/orders/${orderId}`
