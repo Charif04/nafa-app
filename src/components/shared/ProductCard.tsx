@@ -110,18 +110,22 @@ export function ProductCard({ product, index = 0, className }: ProductCardProps)
           </h3>
         </Link>
 
-        {/* Rating */}
-        {product.reviewCount > 0 && (
-          <div className="flex items-center gap-1">
-            <Star size={11} strokeWidth={0} className="fill-[var(--nafa-orange)]" />
-            <span className="text-[11px] font-medium" style={{ color: 'var(--nafa-gray-700)' }}>
-              {product.rating.toFixed(1)}
-            </span>
-            <span className="text-[11px]" style={{ color: 'var(--nafa-gray-400)' }}>
-              ({product.reviewCount})
-            </span>
-          </div>
-        )}
+        {/* Rating — only show when there are real reviews */}
+        <div className="flex items-center gap-1" style={{ minHeight: 16 }}>
+          {product.reviewCount > 0 ? (
+            <>
+              <Star size={11} strokeWidth={0} className="fill-[var(--nafa-orange)]" />
+              <span className="text-[11px] font-medium" style={{ color: 'var(--nafa-gray-700)' }}>
+                {product.rating.toFixed(1)}
+              </span>
+              <span className="text-[11px]" style={{ color: 'var(--nafa-gray-400)' }}>
+                ({product.reviewCount})
+              </span>
+            </>
+          ) : (
+            <span className="text-[10px]" style={{ color: 'var(--nafa-gray-400)' }}>Nouveau</span>
+          )}
+        </div>
 
         {/* Price + cart button */}
         <div className="flex items-center justify-between mt-auto pt-1">

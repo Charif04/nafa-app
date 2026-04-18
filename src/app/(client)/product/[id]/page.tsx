@@ -159,24 +159,24 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       {/* ── Header — ABOVE image, never overlapping ── */}
       <header
         className="flex items-center justify-between px-4 bg-white border-b"
-        style={{ borderColor: 'var(--nafa-gray-100)', paddingTop: 'calc(env(safe-area-inset-top,0px) + 10px)', paddingBottom: 10 }}
+        style={{ borderColor: 'var(--nafa-gray-100)', paddingTop: 'calc(env(safe-area-inset-top,0px) + 6px)', paddingBottom: 6 }}
       >
         <motion.button whileTap={{ scale: 0.88 }} onClick={() => router.back()}
-          className="w-9 h-9 rounded-full flex items-center justify-center"
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
           style={{ background: 'var(--nafa-gray-100)' }}>
-          <ChevronLeft size={20} strokeWidth={2} style={{ color: 'var(--nafa-black)' }} />
+          <ChevronLeft size={18} strokeWidth={2} style={{ color: 'var(--nafa-black)' }} />
         </motion.button>
 
-        <span className="text-sm font-semibold truncate mx-4 flex-1 text-center"
+        <span className="text-xs font-semibold truncate mx-3 flex-1 text-center"
           style={{ color: 'var(--nafa-gray-400)' }}>
           {product.category || 'Produit'}
         </span>
 
         <motion.button whileTap={{ scale: 0.88 }}
           onClick={() => toggleWishlist(product)}
-          className="w-9 h-9 rounded-full flex items-center justify-center"
+          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
           style={{ background: isFav ? 'rgba(239,68,68,0.08)' : 'var(--nafa-gray-100)' }}>
-          <Heart size={18} strokeWidth={1.75}
+          <Heart size={16} strokeWidth={1.75}
             className={isFav ? 'fill-red-500 text-red-500' : ''}
             style={!isFav ? { color: 'var(--nafa-gray-700)' } : undefined} />
         </motion.button>
@@ -282,7 +282,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             {product.title}
           </h1>
           <div className="flex items-center justify-between mt-2">
-            <RatingStars rating={product.rating} showValue reviewCount={product.reviewCount} />
+            {product.reviewCount > 0
+              ? <RatingStars rating={product.rating} showValue reviewCount={product.reviewCount} />
+              : <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>Pas encore d&apos;avis</span>
+            }
             <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
               style={{
                 background: product.stock > 0 ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
