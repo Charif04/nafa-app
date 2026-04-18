@@ -30,22 +30,15 @@ export default function VendorProductsPage() {
 
   async function loadProducts(userId: string) {
     setIsLoading(true);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const db = supabase as any;
 
-    // Fetch products + real vendor rating from reviews in parallel
-    // (reviews table has no product_id — ratings are vendor-level only)
-    const [{ data }, { data: revRows }] = await Promise.all([
-      db.from('products').select('*').eq('vendor_id', userId).eq('is_active', true).order('created_at', { ascending: false }),
-      db.from('reviews').select('rating').eq('to_user_id', userId).eq('type', 'client_to_vendor'),
-    ]);
-
+    // products.rating and review_count are kept fresh by the trg_update_product_rating trigger
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const reviewCount = (revRows ?? []).length;
-    const vendorRating = reviewCount > 0
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ? (revRows as any[]).reduce((s: number, r: any) => s + Number(r.rating), 0) / reviewCount
-      : 0;
+    const { data } = await (supabase as any)
+      .from('products')
+      .select('*')
+      .eq('vendor_id', userId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
 
     if (data) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,8 +52,8 @@ export default function VendorProductsPage() {
         images: row.images ?? [],
         category: row.category ?? '',
         stock: row.stock,
-        rating: vendorRating,
-        reviewCount,
+        rating: Number(row.rating),
+        reviewCount: row.review_count,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
       })));
