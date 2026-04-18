@@ -48,36 +48,49 @@ export default function AdminVendorsPage() {
   async function loadVendors() {
     setIsLoading(true);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data } = await (supabase as any)
-      .from('vendor_profiles')
-      .select(`
-        id, shop_name, shop_description, shop_type, shop_address,
-        is_verified, is_suspended, is_pending, cnib_url,
-        rating, total_sales, total_revenue, follower_count, created_at,
-        profile:profiles!vendor_profiles_id_fkey(first_name, last_name, phone, country, region),
-        auth_user:profiles!vendor_profiles_id_fkey(id)
-      `)
-      .order('created_at', { ascending: false });
+    const db = supabase as any;
 
-    if (data) {
-      // fetch emails from profiles (email is in auth.users, not profiles)
-      // We'll fetch them separately
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const ids: string[] = data.map((r: any) => r.id);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: profilesData } = await (supabase as any)
-        .from('profiles')
-        .select('id, first_name, last_name, phone, country, region')
-        .in('id', ids);
+    const [vpRes, profilesRes, ordersRes, reviewsRes] = await Promise.all([
+      db.from('vendor_profiles')
+        .select('id, shop_name, shop_description, shop_type, shop_address, is_verified, is_suspended, is_pending, cnib_url, follower_count, created_at')
+        .order('created_at', { ascending: false }),
+      db.from('profiles').select('id, first_name, last_name, phone, country, region'),
+      // Real order counts — total_sales/total_revenue columns are stale
+      db.from('orders').select('vendor_id, subtotal').neq('order_status', 'cancelled'),
+      // Real ratings from reviews — vendor_profiles.rating column is stale
+      db.from('reviews').select('to_user_id, rating').eq('type', 'client_to_vendor'),
+    ]);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const profileMap: Record<string, any> = {};
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (profilesData ?? []).forEach((p: any) => { profileMap[p.id] = p; });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const profileMap: Record<string, any> = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (profilesRes.data ?? []).forEach((p: any) => { profileMap[p.id] = p; });
 
+    // Aggregate order counts + revenue per vendor
+    const orderStats: Record<string, { count: number; revenue: number }> = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (ordersRes.data ?? []).forEach((o: any) => {
+      if (!orderStats[o.vendor_id]) orderStats[o.vendor_id] = { count: 0, revenue: 0 };
+      orderStats[o.vendor_id].count += 1;
+      orderStats[o.vendor_id].revenue += Number(o.subtotal) || 0;
+    });
+
+    // Aggregate real average rating per vendor from reviews table
+    const ratingStats: Record<string, { sum: number; count: number }> = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (reviewsRes.data ?? []).forEach((rev: any) => {
+      if (!ratingStats[rev.to_user_id]) ratingStats[rev.to_user_id] = { sum: 0, count: 0 };
+      ratingStats[rev.to_user_id].sum += Number(rev.rating);
+      ratingStats[rev.to_user_id].count += 1;
+    });
+
+    if (vpRes.data) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setVendors(data.map((r: any) => {
+      setVendors(vpRes.data.map((r: any) => {
         const p = profileMap[r.id] ?? {};
+        const stats = orderStats[r.id] ?? { count: 0, revenue: 0 };
+        const rs = ratingStats[r.id];
+        const rating = rs && rs.count > 0 ? rs.sum / rs.count : 0;
         return {
           id: r.id,
           shopName: r.shop_name,
@@ -88,14 +101,14 @@ export default function AdminVendorsPage() {
           isSuspended: r.is_suspended,
           isPending: r.is_pending,
           cnibUrl: r.cnib_url,
-          rating: Number(r.rating),
-          totalSales: r.total_sales,
-          totalRevenue: Number(r.total_revenue),
+          rating,
+          totalSales: stats.count,
+          totalRevenue: stats.revenue,
           followerCount: r.follower_count,
           createdAt: r.created_at,
           firstName: p.first_name ?? '',
           lastName: p.last_name ?? '',
-          email: '',  // auth.users email not accessible via client
+          email: '',
           phone: p.phone,
           country: p.country ?? '',
           region: p.region,
@@ -106,16 +119,54 @@ export default function AdminVendorsPage() {
   }
 
   async function openDetail(vendor: VendorRow) {
+    // Show immediately from list data, then replace with fresh data
     setSelected(vendor);
     setCnibSignedUrl(null);
-    if (vendor.cnibUrl) {
-      setCnibLoading(true);
-      try {
-        const url = await getCnibSignedUrl(vendor.cnibUrl);
-        setCnibSignedUrl(url);
-      } catch { /* cnib unavailable */ }
-      setCnibLoading(false);
+    if (vendor.cnibUrl) setCnibLoading(true);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+    const [vpRes, profileRes, ordersRes, reviewsRes] = await Promise.all([
+      db.from('vendor_profiles')
+        .select('id, shop_name, shop_description, shop_type, shop_address, is_verified, is_suspended, is_pending, cnib_url, follower_count, created_at')
+        .eq('id', vendor.id).single(),
+      db.from('profiles')
+        .select('first_name, last_name, phone, country, region')
+        .eq('id', vendor.id).single(),
+      db.from('orders').select('subtotal').eq('vendor_id', vendor.id).neq('order_status', 'cancelled'),
+      db.from('reviews').select('rating').eq('to_user_id', vendor.id).eq('type', 'client_to_vendor'),
+    ]);
+
+    const vp = vpRes.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const p = profileRes.data ?? {} as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const orders: any[] = ordersRes.data ?? [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const revs: any[] = reviewsRes.data ?? [];
+    const totalSales = orders.length;
+    const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.subtotal) || 0), 0);
+    const rating = revs.length > 0
+      ? revs.reduce((sum, r) => sum + Number(r.rating), 0) / revs.length
+      : 0;
+
+    if (vp) {
+      setSelected({
+        id: vp.id, shopName: vp.shop_name, shopDescription: vp.shop_description,
+        shopType: vp.shop_type, shopAddress: vp.shop_address, isVerified: vp.is_verified,
+        isSuspended: vp.is_suspended, isPending: vp.is_pending, cnibUrl: vp.cnib_url,
+        rating, totalSales, totalRevenue, followerCount: vp.follower_count,
+        createdAt: vp.created_at, firstName: p.first_name ?? '', lastName: p.last_name ?? '',
+        email: '', phone: p.phone, country: p.country ?? '', region: p.region,
+      });
+      if (vp.cnib_url) {
+        try {
+          const url = await getCnibSignedUrl(vp.cnib_url);
+          setCnibSignedUrl(url);
+        } catch { /* cnib unavailable */ }
+      }
     }
+    setCnibLoading(false);
   }
 
   async function doAction(vendorId: string, action: 'certify' | 'suspend' | 'reactivate') {
