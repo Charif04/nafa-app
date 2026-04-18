@@ -42,6 +42,7 @@ export default function VendorDashboardPage() {
   const [stats, setStats] = useState<VendorStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [topVendors, setTopVendors] = useState<TopVendor[]>([]);
+  const [topLoading, setTopLoading] = useState(false);
   const [lowStock, setLowStock] = useState<{ name: string; stock: number }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -53,6 +54,14 @@ export default function VendorDashboardPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.uid]);
 
+  // Re-fetch top vendors whenever the period filter changes
+  useEffect(() => {
+    if (currentUser?.uid) {
+      void loadTopVendors(currentUser.uid, topPeriod);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topPeriod, currentUser?.uid]);
+
   async function loadDashboard(userId: string) {
     setIsLoading(true);
     const user = { id: userId };
@@ -60,12 +69,15 @@ export default function VendorDashboardPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
-    // Vendor profile (shop name, rating, followers)
-    const { data: vp } = await db
-      .from('vendor_profiles')
-      .select('shop_name, rating, follower_count')
-      .eq('id', user.id)
-      .single();
+    // Vendor profile + real rating from reviews
+    const [{ data: vp }, { data: revRows }] = await Promise.all([
+      db.from('vendor_profiles').select('shop_name, follower_count').eq('id', user.id).single(),
+      db.from('reviews').select('rating').eq('to_user_id', user.id).eq('type', 'client_to_vendor'),
+    ]);
+    const realRating = revRows && revRows.length > 0
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ? revRows.reduce((s: number, r: any) => s + Number(r.rating), 0) / revRows.length
+      : 0;
 
     // Revenue last 7 days (orders not cancelled)
     const since7d = new Date(Date.now() - 7 * 86400000).toISOString();
@@ -93,7 +105,7 @@ export default function VendorDashboardPage() {
       shopName: vp?.shop_name ?? 'Ma boutique',
       revenue7d,
       activeOrders: activeOrders ?? 0,
-      rating: Number(vp?.rating ?? 0),
+      rating: realRating,
       followerCount: vp?.follower_count ?? 0,
     });
 
@@ -103,58 +115,7 @@ export default function VendorDashboardPage() {
       setRecentOrders(orders.slice(0, 5));
     } catch { /* empty orders */ }
 
-    // Top 5 vendors ranked by actual order count (vendor_profiles.total_sales is never
-    // updated by a trigger, so we count from the orders table directly).
-    const { data: orderRows } = await db
-      .from('orders')
-      .select('vendor_id')
-      .neq('order_status', 'cancelled');
-
-    if (orderRows) {
-      // Count orders per vendor
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const countMap: Record<string, number> = (orderRows as any[]).reduce(
-        (acc: Record<string, number>, row: { vendor_id: string }) => {
-          acc[row.vendor_id] = (acc[row.vendor_id] ?? 0) + 1;
-          return acc;
-        },
-        {}
-      );
-
-      // Fetch vendor profiles for the vendors that have orders
-      const topIds = Object.entries(countMap)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([id]) => id);
-
-      const { data: vpRows } = await db
-        .from('vendor_profiles')
-        .select('id, shop_name')
-        .in('id', topIds.length > 0 ? topIds : ['00000000-0000-0000-0000-000000000000']);
-
-      if (vpRows) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const vpMap: Record<string, string> = (vpRows as any[]).reduce(
-          (acc: Record<string, string>, row: { id: string; shop_name: string }) => {
-            acc[row.id] = row.shop_name;
-            return acc;
-          },
-          {}
-        );
-
-        setTopVendors(
-          topIds
-            .filter((id) => vpMap[id])
-            .map((id, i) => ({
-              rank: i + 1,
-              vendorId: id,
-              name: vpMap[id],
-              sales: countMap[id],
-              isMe: id === user.id,
-            }))
-        );
-      }
-    }
+    // Top vendors handled by loadTopVendors (called via useEffect on topPeriod)
 
     // Low stock products (≤ 5 units)
     const { data: stockRows } = await db
@@ -172,6 +133,67 @@ export default function VendorDashboardPage() {
     }
 
     setIsLoading(false);
+  }
+
+  async function loadTopVendors(userId: string, period: 'jour' | 'semaine' | 'mois') {
+    setTopLoading(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+
+    const ms = period === 'jour' ? 86400000 : period === 'semaine' ? 7 * 86400000 : 30 * 86400000;
+    const since = new Date(Date.now() - ms).toISOString();
+
+    const { data: orderRows } = await db
+      .from('orders')
+      .select('vendor_id')
+      .neq('order_status', 'cancelled')
+      .gte('created_at', since);
+
+    if (orderRows && orderRows.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const countMap: Record<string, number> = (orderRows as any[]).reduce(
+        (acc: Record<string, number>, row: { vendor_id: string }) => {
+          acc[row.vendor_id] = (acc[row.vendor_id] ?? 0) + 1;
+          return acc;
+        },
+        {}
+      );
+
+      const topIds = Object.entries(countMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([id]) => id);
+
+      const { data: vpRows } = await db
+        .from('vendor_profiles')
+        .select('id, shop_name')
+        .in('id', topIds);
+
+      if (vpRows) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const vpMap: Record<string, string> = (vpRows as any[]).reduce(
+          (acc: Record<string, string>, row: { id: string; shop_name: string }) => {
+            acc[row.id] = row.shop_name;
+            return acc;
+          },
+          {}
+        );
+        setTopVendors(
+          topIds
+            .filter((id) => vpMap[id])
+            .map((id, i) => ({
+              rank: i + 1,
+              vendorId: id,
+              name: vpMap[id],
+              sales: countMap[id],
+              isMe: id === userId,
+            }))
+        );
+      }
+    } else {
+      setTopVendors([]);
+    }
+    setTopLoading(false);
   }
 
   const kpiCards = stats
@@ -427,7 +449,7 @@ export default function VendorDashboardPage() {
             ))}
           </div>
         </div>
-        {isLoading ? (
+        {isLoading || topLoading ? (
           <div className="divide-y" style={{ borderColor: 'var(--nafa-gray-100)' }}>
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="flex items-center gap-4 px-6 py-3">
@@ -438,7 +460,7 @@ export default function VendorDashboardPage() {
             ))}
           </div>
         ) : topVendors.length === 0 ? (
-          <p className="px-6 py-8 text-sm text-center" style={{ color: 'var(--nafa-gray-400)' }}>Aucun classement disponible</p>
+          <p className="px-6 py-8 text-sm text-center" style={{ color: 'var(--nafa-gray-400)' }}>Aucun classement pour cette période</p>
         ) : (
           <div>
             {topVendors.map((vendor, i) => (
