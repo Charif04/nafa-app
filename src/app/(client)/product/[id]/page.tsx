@@ -157,65 +157,26 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10
     : 0;
 
-  return (
-    <div className="min-h-dvh bg-white" style={{ paddingBottom: 'calc(88px + env(safe-area-inset-bottom, 0px))' }}>
-
-      {/* ── Header — ABOVE image, never overlapping ── */}
-      <header
-        className="flex items-center justify-between px-4 bg-white border-b"
-        style={{ borderColor: 'var(--nafa-gray-100)', paddingTop: 'calc(env(safe-area-inset-top,0px) + 6px)', paddingBottom: 6 }}
-      >
-        <motion.button whileTap={{ scale: 0.88 }} onClick={() => router.back()}
-          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ background: 'var(--nafa-gray-100)' }}>
-          <ChevronLeft size={18} strokeWidth={2} style={{ color: 'var(--nafa-black)' }} />
-        </motion.button>
-
-        <span className="text-xs font-semibold truncate mx-3 flex-1 text-center"
-          style={{ color: 'var(--nafa-gray-400)' }}>
-          {product.category || 'Produit'}
-        </span>
-
-        <motion.button whileTap={{ scale: 0.88 }}
-          onClick={() => toggleWishlist(product)}
-          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ background: isFav ? 'rgba(239,68,68,0.08)' : 'var(--nafa-gray-100)' }}>
-          <Heart size={16} strokeWidth={1.75}
-            className={isFav ? 'fill-red-500 text-red-500' : ''}
-            style={!isFav ? { color: 'var(--nafa-gray-700)' } : undefined} />
-        </motion.button>
-      </header>
-
-      {/* ── Image carousel — swipeable ── */}
-      <div className="relative overflow-hidden select-none" style={{ aspectRatio: '1/1', background: '#f8f8f8' }}>
+  // Reusable carousel block (shared between mobile and desktop)
+  const carousel = (
+    <div>
+      <div className="relative overflow-hidden select-none bg-gray-50" style={{ aspectRatio: '1/1' }}>
         <AnimatePresence initial={false} custom={direction} mode="popLayout">
           <motion.div
-            key={activeImg}
-            custom={direction}
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
+            key={activeImg} custom={direction} variants={slideVariants}
+            initial="enter" animate="center" exit="exit"
             transition={{ type: 'tween', duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
             style={{ opacity: dragOpacity }}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.15}
+            drag="x" dragConstraints={{ left: 0, right: 0 }} dragElastic={0.15}
             onDragStart={(_, info) => { dragStartX.current = info.point.x; }}
             onDragEnd={handleDragEnd}
             onDrag={(_, info) => dragX.set(info.offset.x)}
             className="absolute inset-0 cursor-grab active:cursor-grabbing"
           >
             {images[activeImg] ? (
-              <Image
-                src={images[activeImg]}
-                alt={`${product.title} ${activeImg + 1}`}
-                fill
-                sizes="(max-width: 640px) 100vw, 640px"
-                className="object-contain pointer-events-none"
-                priority={activeImg === 0}
-                draggable={false}
-              />
+              <Image src={images[activeImg]} alt={`${product.title} ${activeImg + 1}`} fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-contain pointer-events-none" priority={activeImg === 0} draggable={false} />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <Package size={72} strokeWidth={0.75} className="text-gray-200" />
@@ -223,246 +184,263 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             )}
           </motion.div>
         </AnimatePresence>
-
-        {/* Prev / Next tap zones (invisible) */}
         {activeImg > 0 && (
-          <button onClick={() => goTo(activeImg - 1)}
-            className="absolute left-0 top-0 bottom-0 w-12 z-10" aria-label="Image précédente" />
+          <button onClick={() => goTo(activeImg - 1)} className="absolute left-0 top-0 bottom-0 w-12 z-10" aria-label="Image précédente" />
         )}
         {activeImg < images.length - 1 && (
-          <button onClick={() => goTo(activeImg + 1)}
-            className="absolute right-0 top-0 bottom-0 w-12 z-10" aria-label="Image suivante" />
+          <button onClick={() => goTo(activeImg + 1)} className="absolute right-0 top-0 bottom-0 w-12 z-10" aria-label="Image suivante" />
         )}
-
-        {/* Dot indicators */}
         {images.length > 1 && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10">
             {images.map((_, i) => (
-              <motion.button
-                key={i}
-                onClick={() => goTo(i)}
-                animate={{ width: i === activeImg ? 20 : 6, opacity: i === activeImg ? 1 : 0.4 }}
+              <motion.button key={i} onClick={() => goTo(i)}
+                animate={{ width: i === activeImg ? 20 : 6, opacity: i === activeImg ? 1 : 0.35 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                className="h-1.5 rounded-full"
-                style={{ background: 'var(--nafa-orange)' }}
-                aria-label={`Image ${i + 1}`}
-              />
+                className="h-1.5 rounded-full" style={{ background: 'var(--nafa-orange)' }} aria-label={`Image ${i + 1}`} />
             ))}
           </div>
         )}
       </div>
-
-      {/* Thumbnails */}
       {images.length > 1 && (
-        <div className="flex gap-2 px-4 py-3 overflow-x-auto" style={{ borderBottom: '1px solid var(--nafa-gray-100)' }}>
+        <div className="flex gap-2 px-3 py-3 overflow-x-auto" style={{ borderTop: '1px solid var(--nafa-gray-100)' }}>
           {images.map((img, i) => (
-            <motion.button
-              key={i}
-              whileTap={{ scale: 0.93 }}
-              onClick={() => goTo(i)}
+            <motion.button key={i} whileTap={{ scale: 0.93 }} onClick={() => goTo(i)}
               className="flex-shrink-0 rounded-xl overflow-hidden"
               style={{
-                width: 56, height: 56,
+                width: 60, height: 60,
                 border: `2px solid ${i === activeImg ? 'var(--nafa-orange)' : 'transparent'}`,
                 outline: i === activeImg ? 'none' : '1px solid var(--nafa-gray-200)',
-                outlineOffset: i === activeImg ? 0 : -1,
-                opacity: i === activeImg ? 1 : 0.55,
+                opacity: i === activeImg ? 1 : 0.5,
                 transition: 'opacity 0.2s, border-color 0.2s',
-              }}
-              aria-label={`Image ${i + 1}`}
-            >
-              {img && <Image src={img} alt="" width={56} height={56} className="object-cover w-full h-full" draggable={false} />}
+              }} aria-label={`Image ${i + 1}`}>
+              {img && <Image src={img} alt="" width={60} height={60} className="object-cover w-full h-full" draggable={false} />}
             </motion.button>
           ))}
         </div>
       )}
+    </div>
+  );
 
-      {/* ── Product info ── */}
-      <div className="px-5 py-5 space-y-5">
+  // Reusable info block
+  const infoBlock = (
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-xl lg:text-2xl font-bold leading-snug" style={{ color: 'var(--nafa-black)' }}>
+          {product.title}
+        </h1>
+        <div className="flex items-center justify-between mt-2">
+          {reviews.length > 0
+            ? <RatingStars rating={avgRating} showValue reviewCount={reviews.length} />
+            : <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>Pas encore d&apos;avis</span>
+          }
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
+            style={{ background: product.stock > 0 ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', color: product.stock > 0 ? '#16a34a' : '#dc2626' }}>
+            {product.stock > 0 ? `${product.stock} en stock` : 'Rupture de stock'}
+          </span>
+        </div>
+      </div>
 
-        {/* Title */}
+      <div className="flex items-center justify-between rounded-2xl px-4 py-3.5"
+        style={{ background: 'rgba(255,107,44,0.06)', border: '1px solid rgba(255,107,44,0.12)' }}>
         <div>
-          <h1 className="text-xl font-bold leading-snug" style={{ color: 'var(--nafa-black)' }}>
-            {product.title}
-          </h1>
-          <div className="flex items-center justify-between mt-2">
-            {reviews.length > 0
-              ? <RatingStars rating={avgRating} showValue reviewCount={reviews.length} />
-              : <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>Pas encore d&apos;avis</span>
-            }
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
-              style={{
-                background: product.stock > 0 ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
-                color: product.stock > 0 ? '#16a34a' : '#dc2626',
-              }}>
-              {product.stock > 0 ? `${product.stock} en stock` : 'Rupture de stock'}
-            </span>
-          </div>
+          <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: 'var(--nafa-orange)', opacity: 0.7 }}>Prix</p>
+          <p className="text-3xl font-black nafa-mono leading-none" style={{ color: 'var(--nafa-orange)' }}>
+            {formatCurrency(displayPrice, currency)}
+          </p>
         </div>
+        <div className="flex items-center rounded-xl overflow-hidden"
+          style={{ border: '1px solid rgba(255,107,44,0.2)', background: 'white' }}>
+          <button onClick={() => setQuantity((q) => Math.max(1, q - 1))} disabled={quantity <= 1}
+            className="w-10 h-10 flex items-center justify-center text-xl font-bold disabled:opacity-25"
+            style={{ color: 'var(--nafa-orange)' }}>−</button>
+          <span className="w-8 text-center text-base font-bold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{quantity}</span>
+          <button onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))} disabled={quantity >= product.stock}
+            className="w-10 h-10 flex items-center justify-center text-xl font-bold text-white disabled:opacity-25"
+            style={{ background: 'var(--nafa-orange)' }}>+</button>
+        </div>
+      </div>
 
-        {/* Price + quantity */}
-        <div className="flex items-center justify-between rounded-2xl px-4 py-3.5"
-          style={{ background: 'rgba(255,107,44,0.06)', border: '1px solid rgba(255,107,44,0.12)' }}>
+      {/* Desktop CTA — inline in the right column */}
+      <div className="hidden lg:flex gap-3">
+        <motion.button whileTap={{ scale: 0.97 }} onClick={handleAddToCart} disabled={product.stock === 0}
+          className="flex-1 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border-2 transition-all"
+          style={{ borderColor: addedToCart ? '#22c55e' : 'var(--nafa-orange)', color: addedToCart ? 'white' : 'var(--nafa-orange)', background: addedToCart ? '#22c55e' : 'transparent' }}>
+          {addedToCart ? <><Check size={16} strokeWidth={2.5} /> Ajouté au panier</> : <><ShoppingCart size={16} strokeWidth={1.75} /> Ajouter au panier</>}
+        </motion.button>
+        <motion.button whileTap={{ scale: 0.97 }} onClick={handleBuyNow} disabled={product.stock === 0}
+          className="flex-1 py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2"
+          style={{ background: product.stock > 0 ? 'var(--nafa-orange)' : 'var(--nafa-gray-300)' }}>
+          <Zap size={16} strokeWidth={1.75} /> Acheter maintenant
+        </motion.button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className="flex items-center gap-2.5 p-3 rounded-xl" style={{ background: 'var(--nafa-gray-100)' }}>
+          <Truck size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5"
-              style={{ color: 'var(--nafa-orange)', opacity: 0.7 }}>Prix</p>
-            <p className="text-3xl font-black nafa-mono leading-none" style={{ color: 'var(--nafa-orange)' }}>
-              {formatCurrency(displayPrice, currency)}
-            </p>
-          </div>
-          <div className="flex items-center rounded-xl overflow-hidden"
-            style={{ border: '1px solid rgba(255,107,44,0.2)', background: 'white' }}>
-            <button onClick={() => setQuantity((q) => Math.max(1, q - 1))} disabled={quantity <= 1}
-              className="w-10 h-10 flex items-center justify-center text-xl font-bold disabled:opacity-25 transition-opacity"
-              style={{ color: 'var(--nafa-orange)' }}>−</button>
-            <span className="w-8 text-center text-base font-bold nafa-mono" style={{ color: 'var(--nafa-black)' }}>
-              {quantity}
-            </span>
-            <button onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))} disabled={quantity >= product.stock}
-              className="w-10 h-10 flex items-center justify-center text-xl font-bold text-white disabled:opacity-25 transition-opacity"
-              style={{ background: 'var(--nafa-orange)' }}>+</button>
+            <p className="text-xs font-semibold" style={{ color: 'var(--nafa-black)' }}>Livraison NAFA</p>
+            <p className="text-[10px]" style={{ color: 'var(--nafa-gray-400)' }}>Suivi en temps réel</p>
           </div>
         </div>
-
-        {/* Trust badges */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="flex items-center gap-2.5 p-3 rounded-xl" style={{ background: 'var(--nafa-gray-100)' }}>
-            <Truck size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
-            <div>
-              <p className="text-xs font-semibold" style={{ color: 'var(--nafa-black)' }}>Livraison NAFA</p>
-              <p className="text-[10px]" style={{ color: 'var(--nafa-gray-400)' }}>Suivi en temps réel</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2.5 p-3 rounded-xl" style={{ background: 'var(--nafa-gray-100)' }}>
-            <ShieldCheck size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
-            <div>
-              <p className="text-xs font-semibold" style={{ color: 'var(--nafa-black)' }}>Paiement sécurisé</p>
-              <p className="text-[10px]" style={{ color: 'var(--nafa-gray-400)' }}>100% protégé</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Vendor */}
-        <Link href={`/vendor/${product.vendorId}`}
-          className="flex items-center justify-between p-4 rounded-2xl transition-colors"
-          style={{ background: 'var(--nafa-gray-100)' }}>
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-white font-bold text-base flex-shrink-0"
-              style={{ background: 'var(--nafa-orange)' }}>
-              {product.vendorName?.[0]?.toUpperCase() ?? 'V'}
-            </div>
-            <div>
-              <p className="text-sm font-bold" style={{ color: 'var(--nafa-black)' }}>{product.vendorName}</p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-orange)' }}>Voir la boutique</p>
-            </div>
-          </div>
-          <ChevronRight size={16} strokeWidth={2} style={{ color: 'var(--nafa-gray-400)' }} />
-        </Link>
-
-        {/* Description */}
-        {product.description && (
+        <div className="flex items-center gap-2.5 p-3 rounded-xl" style={{ background: 'var(--nafa-gray-100)' }}>
+          <ShieldCheck size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
           <div>
-            <h2 className="text-sm font-bold mb-2.5" style={{ color: 'var(--nafa-black)' }}>À propos du produit</h2>
-            <p className="text-sm leading-relaxed" style={{ color: 'var(--nafa-gray-700)' }}>
-              {product.description}
-            </p>
+            <p className="text-xs font-semibold" style={{ color: 'var(--nafa-black)' }}>Paiement sécurisé</p>
+            <p className="text-[10px]" style={{ color: 'var(--nafa-gray-400)' }}>100% protégé</p>
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* Reviews */}
+      <Link href={`/vendor/${product.vendorId}`}
+        className="flex items-center justify-between p-4 rounded-2xl" style={{ background: 'var(--nafa-gray-100)' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-white font-bold text-base flex-shrink-0"
+            style={{ background: 'var(--nafa-orange)' }}>
+            {product.vendorName?.[0]?.toUpperCase() ?? 'V'}
+          </div>
+          <div>
+            <p className="text-sm font-bold" style={{ color: 'var(--nafa-black)' }}>{product.vendorName}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-orange)' }}>Voir la boutique</p>
+          </div>
+        </div>
+        <ChevronRight size={16} strokeWidth={2} style={{ color: 'var(--nafa-gray-400)' }} />
+      </Link>
+
+      {product.description && (
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold" style={{ color: 'var(--nafa-black)' }}>
+          <h2 className="text-sm font-bold mb-2" style={{ color: 'var(--nafa-black)' }}>À propos du produit</h2>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--nafa-gray-700)' }}>{product.description}</p>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="min-h-dvh bg-white" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
+
+      {/* ── Header ── */}
+      <header className="flex items-center justify-between px-4 lg:px-6 bg-white border-b"
+        style={{ borderColor: 'var(--nafa-gray-100)', paddingTop: 'calc(env(safe-area-inset-top,0px) + 6px)', paddingBottom: 6 }}>
+        <div className="max-w-7xl w-full mx-auto flex items-center justify-between">
+          <motion.button whileTap={{ scale: 0.88 }} onClick={() => router.back()}
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: 'var(--nafa-gray-100)' }}>
+            <ChevronLeft size={18} strokeWidth={2} style={{ color: 'var(--nafa-black)' }} />
+          </motion.button>
+          <span className="text-xs font-semibold truncate mx-3 flex-1 text-center" style={{ color: 'var(--nafa-gray-400)' }}>
+            {product.category || 'Produit'}
+          </span>
+          <motion.button whileTap={{ scale: 0.88 }} onClick={() => toggleWishlist(product)}
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: isFav ? 'rgba(239,68,68,0.08)' : 'var(--nafa-gray-100)' }}>
+            <Heart size={16} strokeWidth={1.75}
+              className={isFav ? 'fill-red-500 text-red-500' : ''}
+              style={!isFav ? { color: 'var(--nafa-gray-700)' } : undefined} />
+          </motion.button>
+        </div>
+      </header>
+
+      {/* ── Mobile: single column ── */}
+      <div className="lg:hidden">
+        {carousel}
+        <div className="px-4 py-5">{infoBlock}</div>
+      </div>
+
+      {/* ── Desktop: 2-column layout ── */}
+      <div className="hidden lg:block max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-2 gap-12 items-start">
+          {/* Left — sticky image */}
+          <div className="sticky top-6">{carousel}</div>
+          {/* Right — scrollable info */}
+          <div>{infoBlock}</div>
+        </div>
+
+        {/* Reviews — full width below */}
+        <div className="mt-12 pt-8" style={{ borderTop: '1px solid var(--nafa-gray-100)' }}>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold" style={{ color: 'var(--nafa-black)' }}>
               Avis clients
               {reviews.length > 0 && (
-                <span className="ml-1.5 text-xs font-semibold px-2 py-0.5 rounded-full"
+                <span className="ml-2 text-sm font-semibold px-2.5 py-0.5 rounded-full"
                   style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>
                   {reviews.length}
                 </span>
               )}
             </h2>
             {avgRating > 0 && (
-              <div className="flex items-center gap-1">
-                <Star size={13} strokeWidth={0} className="fill-[var(--nafa-orange)]" />
-                <span className="text-sm font-bold" style={{ color: 'var(--nafa-black)' }}>
-                  {avgRating.toFixed(1)}
-                </span>
+              <div className="flex items-center gap-1.5">
+                <Star size={16} strokeWidth={0} className="fill-[var(--nafa-orange)]" />
+                <span className="text-lg font-bold" style={{ color: 'var(--nafa-black)' }}>{avgRating.toFixed(1)}</span>
+                <span className="text-sm" style={{ color: 'var(--nafa-gray-400)' }}>/ 5</span>
               </div>
             )}
           </div>
-
           {reviews.length === 0 ? (
-            <p className="text-sm text-center py-6" style={{ color: 'var(--nafa-gray-400)' }}>
-              Soyez le premier à laisser un avis.
-            </p>
+            <p className="text-sm text-center py-8" style={{ color: 'var(--nafa-gray-400)' }}>Soyez le premier à laisser un avis.</p>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-4">
               {reviews.map((review) => (
                 <div key={review.id} className="p-4 rounded-2xl" style={{ background: 'var(--nafa-gray-100)' }}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold" style={{ color: 'var(--nafa-black)' }}>
-                      {review.reviewerName}
-                    </span>
-                    <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }} suppressHydrationWarning>
-                      {formatRelativeTime(review.createdAt)}
-                    </span>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--nafa-black)' }}>{review.reviewerName}</span>
+                    <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }} suppressHydrationWarning>{formatRelativeTime(review.createdAt)}</span>
                   </div>
                   <RatingStars rating={review.rating} size={12} />
-                  <p className="text-sm mt-2 leading-relaxed" style={{ color: 'var(--nafa-gray-700)' }}>
-                    {review.comment}
-                  </p>
+                  <p className="text-sm mt-2 leading-relaxed" style={{ color: 'var(--nafa-gray-700)' }}>{review.comment}</p>
                 </div>
               ))}
             </div>
           )}
         </div>
+      </div>
 
-        {/* Desktop CTA */}
-        <div className="hidden lg:flex gap-3 pt-2">
-          <motion.button whileTap={{ scale: 0.97 }} onClick={handleAddToCart}
-            disabled={product.stock === 0}
-            className="flex-1 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border-2 transition-all"
-            style={{
-              borderColor: addedToCart ? '#22c55e' : 'var(--nafa-orange)',
-              color: addedToCart ? 'white' : 'var(--nafa-orange)',
-              background: addedToCart ? '#22c55e' : 'transparent',
-            }}>
-            {addedToCart ? <><Check size={16} strokeWidth={2.5} /> Ajouté au panier</> : <><ShoppingCart size={16} strokeWidth={1.75} /> Ajouter au panier</>}
-          </motion.button>
-          <motion.button whileTap={{ scale: 0.97 }} onClick={handleBuyNow}
-            disabled={product.stock === 0}
-            className="flex-1 py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2"
-            style={{ background: product.stock > 0 ? 'var(--nafa-orange)' : 'var(--nafa-gray-300)' }}>
-            <Zap size={16} strokeWidth={1.75} /> Acheter maintenant
-          </motion.button>
+      {/* Mobile reviews */}
+      <div className="lg:hidden px-4 pb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-bold" style={{ color: 'var(--nafa-black)' }}>
+            Avis clients
+            {reviews.length > 0 && (
+              <span className="ml-1.5 text-xs font-semibold px-2 py-0.5 rounded-full"
+                style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>
+                {reviews.length}
+              </span>
+            )}
+          </h2>
+          {avgRating > 0 && (
+            <div className="flex items-center gap-1">
+              <Star size={13} strokeWidth={0} className="fill-[var(--nafa-orange)]" />
+              <span className="text-sm font-bold" style={{ color: 'var(--nafa-black)' }}>{avgRating.toFixed(1)}</span>
+            </div>
+          )}
         </div>
+        {reviews.length === 0 ? (
+          <p className="text-sm text-center py-6" style={{ color: 'var(--nafa-gray-400)' }}>Soyez le premier à laisser un avis.</p>
+        ) : (
+          <div className="space-y-3">
+            {reviews.map((review) => (
+              <div key={review.id} className="p-4 rounded-2xl" style={{ background: 'var(--nafa-gray-100)' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-semibold" style={{ color: 'var(--nafa-black)' }}>{review.reviewerName}</span>
+                  <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }} suppressHydrationWarning>{formatRelativeTime(review.createdAt)}</span>
+                </div>
+                <RatingStars rating={review.rating} size={12} />
+                <p className="text-sm mt-2 leading-relaxed" style={{ color: 'var(--nafa-gray-700)' }}>{review.comment}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Mobile sticky CTA ── */}
-      <div
-        className="fixed left-0 right-0 px-4 pt-3 pb-3 lg:hidden z-30"
-        style={{
-          bottom: 'calc(56px + env(safe-area-inset-bottom, 0px))',
-          background: 'rgba(255,255,255,0.96)',
-          backdropFilter: 'blur(12px)',
-          borderTop: '1px solid var(--nafa-gray-100)',
-        }}
-      >
+      <div className="fixed left-0 right-0 px-4 pt-3 pb-3 lg:hidden z-30"
+        style={{ bottom: 'calc(56px + env(safe-area-inset-bottom, 0px))', background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(12px)', borderTop: '1px solid var(--nafa-gray-100)' }}>
         <div className="flex gap-3">
-          <motion.button whileTap={{ scale: 0.96 }} onClick={handleAddToCart}
-            disabled={product.stock === 0}
+          <motion.button whileTap={{ scale: 0.96 }} onClick={handleAddToCart} disabled={product.stock === 0}
             className="flex-1 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 border-2 transition-all"
-            style={{
-              borderColor: addedToCart ? '#22c55e' : 'var(--nafa-orange)',
-              color: addedToCart ? 'white' : 'var(--nafa-orange)',
-              background: addedToCart ? '#22c55e' : 'transparent',
-            }}>
-            {addedToCart
-              ? <><Check size={16} strokeWidth={2.5} /> Ajouté !</>
-              : <><ShoppingCart size={16} strokeWidth={1.75} /> Panier</>}
+            style={{ borderColor: addedToCart ? '#22c55e' : 'var(--nafa-orange)', color: addedToCart ? 'white' : 'var(--nafa-orange)', background: addedToCart ? '#22c55e' : 'transparent' }}>
+            {addedToCart ? <><Check size={16} strokeWidth={2.5} /> Ajouté !</> : <><ShoppingCart size={16} strokeWidth={1.75} /> Panier</>}
           </motion.button>
-          <motion.button whileTap={{ scale: 0.96 }} onClick={handleBuyNow}
-            disabled={product.stock === 0}
+          <motion.button whileTap={{ scale: 0.96 }} onClick={handleBuyNow} disabled={product.stock === 0}
             className="flex-1 py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2"
             style={{ background: product.stock > 0 ? 'var(--nafa-orange)' : 'var(--nafa-gray-300)' }}>
             <Zap size={16} strokeWidth={1.75} /> Acheter
