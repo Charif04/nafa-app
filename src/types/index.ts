@@ -95,6 +95,7 @@ export interface Order {
   vendorId: string;
   vendorName?: string;
   vendorPhone?: string;
+  vendorAvatar?: string;
   items: OrderItem[];
   subtotal: number;
   deliveryFee: number;

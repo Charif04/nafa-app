@@ -227,10 +227,20 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               <Link href={`/vendor/${order.vendorId}`}
                 className="flex items-center gap-3 bg-white rounded-2xl p-4 border hover:shadow-sm transition-shadow"
                 style={{ borderColor: 'var(--nafa-gray-200)' }}>
-                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg, var(--nafa-orange), #e55a00)' }}>
-                  {order.vendorName?.[0] ?? 'V'}
-                </div>
+                {order.vendorAvatar ? (
+                  <Image
+                    src={order.vendorAvatar}
+                    alt={order.vendorName ?? 'Vendeur'}
+                    width={40}
+                    height={40}
+                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                    style={{ background: 'linear-gradient(135deg, var(--nafa-orange), #e55a00)' }}>
+                    {order.vendorName?.[0] ?? 'V'}
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>Vendu par</p>
                   <p className="text-sm font-semibold" style={{ color: 'var(--nafa-black)' }}>{order.vendorName}</p>
