@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Bell, Shield, Save, Lock, Percent,
-  Globe, CheckCircle, Mail, Phone,
+  Globe, CheckCircle, Mail, Phone, LogOut, Eye, EyeOff, Check,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { supabase } from '@/lib/supabase';
 import { AvatarUpload } from '@/components/shared/AvatarUpload';
@@ -46,30 +47,35 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: () =
 
 export default function AdminSettingsPage() {
   const user = useAuthStore((s) => s.user);
+  const router = useRouter();
 
-  // Profil — seeded from store, editable
   const [adminName, setAdminName] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPhone, setAdminPhone] = useState('');
-
-  // Platform config (local — no backend table)
   const [commission, setCommission] = useState('10');
   const [currency, setCurrency] = useState('FCFA');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
-
-  // Notifications (local preference — no backend table)
   const [notifications, setNotifications] = useState<Record<string, boolean>>({
-    new_order: true,
-    vendor_ship: true,
-    payment: false,
-    dispute: true,
+    new_order: true, vendor_ship: true, payment: false, dispute: true,
   });
-
   const [saved, setSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Populate fields when auth store loads
+  // Password change
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPwd, setShowNewPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordSaved, setPasswordSaved] = useState(false);
+
+  // Logout modal
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   useEffect(() => {
     if (user) {
       setAdminName(`${user.firstName ?? ''} ${user.lastName ?? ''}`.trim());
@@ -102,17 +108,60 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const handleChangePassword = async () => {
+    setPasswordError('');
+    if (newPassword.length < 8) {
+      setPasswordError('Le mot de passe doit contenir au moins 8 caractères.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Les mots de passe ne correspondent pas.');
+      return;
+    }
+    setPasswordSaving(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setPasswordSaving(false);
+    if (error) {
+      setPasswordError(error.message);
+    } else {
+      setPasswordSaved(true);
+      setTimeout(() => {
+        setPasswordSaved(false);
+        setShowPasswordForm(false);
+        setNewPassword('');
+        setConfirmPassword('');
+      }, 1800);
+    }
+  };
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await supabase.auth.signOut();
+    router.replace('/login');
+  };
+
   const toggleNotif = (id: string) => setNotifications((p) => ({ ...p, [id]: !p[id] }));
 
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-2xl mx-auto">
-      {/* Toast */}
+
+      {/* ── Success toast ── */}
       <AnimatePresence>
         {saved && (
-          <motion.div initial={{ opacity: 0, y: -16, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -16, scale: 0.95 }} transition={{ duration: 0.25 }}
-            className="fixed top-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-semibold"
-            style={{ left: '50%', transform: 'translateX(-50%)', background: '#22c55e', whiteSpace: 'nowrap' }}>
+          <motion.div
+            initial={{ opacity: 0, y: -16, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.95 }}
+            transition={{ duration: 0.25 }}
+            className="fixed z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-semibold"
+            style={{
+              top: 'calc(env(safe-area-inset-top, 0px) + 60px)',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: '#22c55e',
+              whiteSpace: 'nowrap',
+            }}
+          >
             <CheckCircle size={16} strokeWidth={1.75} />
             Paramètres sauvegardés
           </motion.div>
@@ -126,11 +175,10 @@ export default function AdminSettingsPage() {
 
       <motion.div variants={sectionVariants} initial="hidden" animate="visible" className="space-y-6">
 
-        {/* Profil administrateur */}
+        {/* ── Profil administrateur ── */}
         <motion.div variants={itemVariants} className="bg-white rounded-2xl border p-6" style={{ borderColor: 'var(--nafa-gray-200)' }}>
           <SectionHeader icon={User} title="Profil administrateur" />
           <div className="space-y-4">
-            {/* Avatar */}
             <div className="flex items-center gap-4 pb-4" style={{ borderBottom: '1px solid var(--nafa-gray-100)' }}>
               <AvatarUpload size="lg" />
               <div>
@@ -139,47 +187,34 @@ export default function AdminSettingsPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--nafa-gray-900)' }}>
-                Nom complet
-              </label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--nafa-gray-900)' }}>Nom complet</label>
               <div className="relative">
-                <User size={15} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2"
-                  style={{ color: 'var(--nafa-gray-400)' }} />
+                <User size={15} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--nafa-gray-400)' }} />
                 <input type="text" value={adminName} onChange={(e) => setAdminName(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl border text-sm outline-none"
                   style={{ borderColor: 'var(--nafa-gray-200)', background: 'var(--nafa-gray-100)', color: 'var(--nafa-black)' }} />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--nafa-gray-900)' }}>
-                Email
-              </label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--nafa-gray-900)' }}>Email</label>
               <div className="relative">
-                <Mail size={15} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2"
-                  style={{ color: 'var(--nafa-gray-400)' }} />
+                <Mail size={15} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--nafa-gray-400)' }} />
                 <input type="email" value={adminEmail} readOnly
                   className="w-full pl-10 pr-4 py-3 rounded-xl border text-sm outline-none opacity-60 cursor-not-allowed"
                   style={{ borderColor: 'var(--nafa-gray-200)', background: 'var(--nafa-gray-100)', color: 'var(--nafa-black)' }} />
               </div>
-              <p className="text-xs mt-1" style={{ color: 'var(--nafa-gray-400)' }}>
-                L&apos;email est lié au compte Supabase et ne peut pas être modifié ici.
-              </p>
+              <p className="text-xs mt-1" style={{ color: 'var(--nafa-gray-400)' }}>L&apos;email est lié au compte Supabase et ne peut pas être modifié ici.</p>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--nafa-gray-900)' }}>
-                Téléphone
-              </label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--nafa-gray-900)' }}>Téléphone</label>
               <div className="relative">
-                <Phone size={15} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2"
-                  style={{ color: 'var(--nafa-gray-400)' }} />
+                <Phone size={15} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--nafa-gray-400)' }} />
                 <input type="tel" value={adminPhone} onChange={(e) => setAdminPhone(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl border text-sm outline-none nafa-mono"
                   style={{ borderColor: 'var(--nafa-gray-200)', background: 'var(--nafa-gray-100)', color: 'var(--nafa-black)' }} />
               </div>
             </div>
-            {saveError && (
-              <p className="text-xs text-red-500">{saveError}</p>
-            )}
+            {saveError && <p className="text-xs text-red-500">{saveError}</p>}
             <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave} disabled={isSaving}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60"
               style={{ background: saved ? '#22c55e' : 'var(--nafa-orange)' }}>
@@ -191,29 +226,22 @@ export default function AdminSettingsPage() {
           </div>
         </motion.div>
 
-        {/* Configuration plateforme */}
+        {/* ── Configuration plateforme ── */}
         <motion.div variants={itemVariants} className="bg-white rounded-2xl border p-6" style={{ borderColor: 'var(--nafa-gray-200)' }}>
           <SectionHeader icon={Globe} title="Configuration plateforme" />
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--nafa-gray-900)' }}>
-                Commission NAFA (%)
-              </label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--nafa-gray-900)' }}>Commission NAFA (%)</label>
               <div className="relative max-w-xs">
-                <Percent size={15} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2"
-                  style={{ color: 'var(--nafa-gray-400)' }} />
+                <Percent size={15} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--nafa-gray-400)' }} />
                 <input type="number" min="0" max="100" value={commission} onChange={(e) => setCommission(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl border text-sm outline-none nafa-mono"
                   style={{ borderColor: 'var(--nafa-gray-200)', background: 'var(--nafa-gray-100)', color: 'var(--nafa-black)' }} />
               </div>
-              <p className="text-xs mt-1" style={{ color: 'var(--nafa-gray-400)' }}>
-                Prélevée sur le sous-total de chaque commande
-              </p>
+              <p className="text-xs mt-1" style={{ color: 'var(--nafa-gray-400)' }}>Prélevée sur le sous-total de chaque commande</p>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--nafa-gray-900)' }}>
-                Devise par défaut
-              </label>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--nafa-gray-900)' }}>Devise par défaut</label>
               <select value={currency} onChange={(e) => setCurrency(e.target.value)}
                 className="px-4 py-3 rounded-xl border text-sm outline-none"
                 style={{ borderColor: 'var(--nafa-gray-200)', background: 'var(--nafa-gray-100)', color: 'var(--nafa-black)' }}>
@@ -223,16 +251,14 @@ export default function AdminSettingsPage() {
             <div className="flex items-center justify-between py-3" style={{ borderTop: '1px solid var(--nafa-gray-100)' }}>
               <div>
                 <p className="text-sm font-medium" style={{ color: 'var(--nafa-black)' }}>Mode maintenance</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }}>
-                  Rend l&apos;app inaccessible aux clients et vendeurs
-                </p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }}>Rend l&apos;app inaccessible aux clients et vendeurs</p>
               </div>
               <Toggle checked={maintenanceMode} onChange={() => setMaintenanceMode((p) => !p)} label="Mode maintenance" />
             </div>
           </div>
         </motion.div>
 
-        {/* Notifications */}
+        {/* ── Notifications ── */}
         <motion.div variants={itemVariants} className="bg-white rounded-2xl border p-6" style={{ borderColor: 'var(--nafa-gray-200)' }}>
           <SectionHeader icon={Bell} title="Notifications" />
           <div className="space-y-1">
@@ -249,24 +275,142 @@ export default function AdminSettingsPage() {
           </div>
         </motion.div>
 
-        {/* Sécurité */}
+        {/* ── Sécurité (mot de passe) ── */}
         <motion.div variants={itemVariants} className="bg-white rounded-2xl border p-6" style={{ borderColor: 'var(--nafa-gray-200)' }}>
           <SectionHeader icon={Shield} title="Sécurité" />
-          <div className="flex items-center gap-3">
-            <button disabled
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium opacity-60 cursor-not-allowed"
+
+          {!showPasswordForm ? (
+            <button onClick={() => setShowPasswordForm(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors"
               style={{ borderColor: 'var(--nafa-gray-200)', color: 'var(--nafa-gray-700)' }}>
               <Lock size={15} strokeWidth={1.75} />
               Changer le mot de passe
             </button>
-            <span className="text-xs font-medium px-2.5 py-1 rounded-full"
-              style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-400)' }}>
-              Bientôt disponible
-            </span>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--nafa-gray-900)' }}>
+                  Nouveau mot de passe
+                </label>
+                <div className="relative">
+                  <input
+                    type={showNewPwd ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Min. 8 caractères"
+                    className="w-full pl-4 pr-11 py-3 rounded-xl border text-sm outline-none"
+                    style={{ borderColor: 'var(--nafa-gray-200)', background: 'var(--nafa-gray-100)', color: 'var(--nafa-black)' }}
+                  />
+                  <button type="button" onClick={() => setShowNewPwd((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    style={{ color: 'var(--nafa-gray-400)' }}>
+                    {showNewPwd ? <EyeOff size={16} strokeWidth={1.75} /> : <Eye size={16} strokeWidth={1.75} />}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--nafa-gray-900)' }}>
+                  Confirmer le mot de passe
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPwd ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Répétez le mot de passe"
+                    className="w-full pl-4 pr-11 py-3 rounded-xl border text-sm outline-none"
+                    style={{ borderColor: 'var(--nafa-gray-200)', background: 'var(--nafa-gray-100)', color: 'var(--nafa-black)' }}
+                  />
+                  <button type="button" onClick={() => setShowConfirmPwd((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                    style={{ color: 'var(--nafa-gray-400)' }}>
+                    {showConfirmPwd ? <EyeOff size={16} strokeWidth={1.75} /> : <Eye size={16} strokeWidth={1.75} />}
+                  </button>
+                </div>
+              </div>
+              {passwordError && <p className="text-xs text-red-500">{passwordError}</p>}
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => { setShowPasswordForm(false); setNewPassword(''); setConfirmPassword(''); setPasswordError(''); }}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold border"
+                  style={{ borderColor: 'var(--nafa-gray-200)', color: 'var(--nafa-gray-700)' }}>
+                  Annuler
+                </button>
+                <motion.button whileTap={{ scale: 0.97 }} onClick={handleChangePassword} disabled={passwordSaving}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60 flex items-center justify-center gap-2"
+                  style={{ background: passwordSaved ? '#22c55e' : 'var(--nafa-orange)' }}>
+                  {passwordSaving
+                    ? <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    : passwordSaved
+                    ? <><Check size={15} strokeWidth={2.5} /> Modifié !</>
+                    : <><Save size={15} strokeWidth={1.75} /> Enregistrer</>}
+                </motion.button>
+              </div>
+            </div>
+          )}
+        </motion.div>
+
+        {/* ── Déconnexion ── */}
+        <motion.div variants={itemVariants} className="bg-white rounded-2xl border p-6" style={{ borderColor: 'var(--nafa-gray-200)' }}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-red-50">
+              <LogOut size={18} strokeWidth={1.75} className="text-red-500" />
+            </div>
+            <h2 className="text-base font-semibold" style={{ color: 'var(--nafa-black)' }}>Déconnexion</h2>
           </div>
+          <p className="text-sm mb-4" style={{ color: 'var(--nafa-gray-400)' }}>
+            Vous serez redirigé vers la page de connexion.
+          </p>
+          <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowLogoutConfirm(true)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white"
+            style={{ background: '#ef4444' }}>
+            <LogOut size={15} strokeWidth={1.75} />
+            Se déconnecter
+          </motion.button>
         </motion.div>
 
       </motion.div>
+
+      {/* ── Logout confirmation modal ── */}
+      <AnimatePresence>
+        {showLogoutConfirm && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-6"
+            style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 16 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 16 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              className="bg-white rounded-2xl p-6 w-full max-w-xs shadow-2xl"
+            >
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 bg-red-50">
+                <LogOut size={24} strokeWidth={1.75} className="text-red-500" />
+              </div>
+              <h3 className="text-base font-bold text-center mb-1" style={{ color: 'var(--nafa-black)' }}>
+                Se déconnecter ?
+              </h3>
+              <p className="text-sm text-center mb-6" style={{ color: 'var(--nafa-gray-400)' }}>
+                Vous serez redirigé vers la page de connexion.
+              </p>
+              <div className="flex gap-3">
+                <button onClick={() => setShowLogoutConfirm(false)} disabled={isLoggingOut}
+                  className="flex-1 py-3 rounded-xl text-sm font-semibold border"
+                  style={{ borderColor: 'var(--nafa-gray-200)', color: 'var(--nafa-gray-700)' }}>
+                  Annuler
+                </button>
+                <button onClick={handleLogout} disabled={isLoggingOut}
+                  className="flex-1 py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
+                  style={{ background: '#ef4444', opacity: isLoggingOut ? 0.7 : 1 }}>
+                  {isLoggingOut
+                    ? <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    : 'Déconnecter'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

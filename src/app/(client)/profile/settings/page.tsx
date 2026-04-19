@@ -13,6 +13,11 @@ import {
   Store,
   Bell,
   BellOff,
+  Eye,
+  EyeOff,
+  Save,
+  Check,
+  Shield,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -67,6 +72,20 @@ export default function SettingsPage() {
   });
   const [pushLoading, setPushLoading] = useState(false);
 
+  // Password change
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPwd, setShowNewPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordSaved, setPasswordSaved] = useState(false);
+
+  // Logout modal
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   const handleTogglePush = async () => {
     if (!user?.uid || pushLoading) return;
     setPushLoading(true);
@@ -81,9 +100,34 @@ export default function SettingsPage() {
   };
 
 
+  const handleChangePassword = async () => {
+    setPasswordError('');
+    if (newPassword.length < 8) {
+      setPasswordError('Le mot de passe doit contenir au moins 8 caractères.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Les mots de passe ne correspondent pas.');
+      return;
+    }
+    setPasswordSaving(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setPasswordSaving(false);
+    if (error) {
+      setPasswordError(error.message);
+    } else {
+      setPasswordSaved(true);
+      setTimeout(() => {
+        setPasswordSaved(false);
+        setShowPasswordForm(false);
+        setNewPassword('');
+        setConfirmPassword('');
+      }, 1800);
+    }
+  };
+
   const handleLogout = async () => {
-    const confirmed = window.confirm('Voulez-vous vraiment vous déconnecter ?');
-    if (!confirmed) return;
+    setIsLoggingOut(true);
     await supabase.auth.signOut();
     router.replace('/login');
   };
@@ -315,18 +359,72 @@ export default function SettingsPage() {
                 Sécurité
               </p>
               <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--nafa-white)' }}>
-                <div className="flex items-center gap-3 px-4 py-3.5 opacity-60">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--nafa-gray-100)' }}>
-                    <Lock size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
+                {!showPasswordForm ? (
+                  <button onClick={() => setShowPasswordForm(true)} className="flex items-center gap-3 px-4 py-3.5 w-full text-left">
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'var(--nafa-gray-100)' }}>
+                      <Shield size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
+                    </div>
+                    <span className="flex-1 text-sm font-medium" style={{ color: 'var(--nafa-gray-900)' }}>Modifier le mot de passe</span>
+                    <ChevronRight size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
+                  </button>
+                ) : (
+                  <div className="px-4 py-4 space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--nafa-gray-400)' }}>Nouveau mot de passe</label>
+                      <div className="relative">
+                        <input
+                          type={showNewPwd ? 'text' : 'password'}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Min. 8 caractères"
+                          className="w-full pl-4 pr-11 py-3 rounded-xl border text-sm outline-none"
+                          style={{ borderColor: 'var(--nafa-gray-200)', background: 'var(--nafa-gray-100)', color: 'var(--nafa-black)' }}
+                        />
+                        <button type="button" onClick={() => setShowNewPwd((v) => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--nafa-gray-400)' }}>
+                          {showNewPwd ? <EyeOff size={16} strokeWidth={1.75} /> : <Eye size={16} strokeWidth={1.75} />}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--nafa-gray-400)' }}>Confirmer le mot de passe</label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPwd ? 'text' : 'password'}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Répétez le mot de passe"
+                          className="w-full pl-4 pr-11 py-3 rounded-xl border text-sm outline-none"
+                          style={{ borderColor: 'var(--nafa-gray-200)', background: 'var(--nafa-gray-100)', color: 'var(--nafa-black)' }}
+                        />
+                        <button type="button" onClick={() => setShowConfirmPwd((v) => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--nafa-gray-400)' }}>
+                          {showConfirmPwd ? <EyeOff size={16} strokeWidth={1.75} /> : <Eye size={16} strokeWidth={1.75} />}
+                        </button>
+                      </div>
+                    </div>
+                    {passwordError && <p className="text-xs text-red-500">{passwordError}</p>}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setShowPasswordForm(false); setNewPassword(''); setConfirmPassword(''); setPasswordError(''); }}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold border"
+                        style={{ borderColor: 'var(--nafa-gray-200)', color: 'var(--nafa-gray-700)' }}>
+                        Annuler
+                      </button>
+                      <motion.button whileTap={{ scale: 0.97 }} onClick={handleChangePassword} disabled={passwordSaving}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60 flex items-center justify-center gap-2"
+                        style={{ background: passwordSaved ? '#22c55e' : 'var(--nafa-orange)' }}>
+                        {passwordSaving
+                          ? <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                          : passwordSaved
+                          ? <><Check size={15} strokeWidth={2.5} /> Modifié !</>
+                          : <><Save size={15} strokeWidth={1.75} /> Enregistrer</>}
+                      </motion.button>
+                    </div>
                   </div>
-                  <span className="flex-1 text-sm font-medium" style={{ color: 'var(--nafa-gray-900)' }}>Modifier le mot de passe</span>
-                  <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-400)' }}>
-                    Bientôt disponible
-                  </span>
-                  <ChevronRight size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
-                </div>
+                )}
                 <div style={{ height: '1px', background: 'var(--nafa-gray-100)', margin: '0 16px' }} />
-                <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3.5 w-full text-left">
+                <button onClick={() => setShowLogoutConfirm(true)} className="flex items-center gap-3 px-4 py-3.5 w-full text-left">
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-red-50">
                     <LogOut size={16} strokeWidth={1.75} className="text-red-500" />
                   </div>
@@ -341,6 +439,47 @@ export default function SettingsPage() {
       {/* Vendor upgrade modal */}
       <AnimatePresence>
         {showVendorModal && <BecomeVendorModal onClose={() => setShowVendorModal(false)} />}
+      </AnimatePresence>
+
+      {/* Logout confirmation modal */}
+      <AnimatePresence>
+        {showLogoutConfirm && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-6"
+            style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 16 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 16 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              className="bg-white rounded-2xl p-6 w-full max-w-xs shadow-2xl"
+            >
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 bg-red-50">
+                <LogOut size={24} strokeWidth={1.75} className="text-red-500" />
+              </div>
+              <h3 className="text-base font-bold text-center mb-1" style={{ color: 'var(--nafa-black)' }}>
+                Se déconnecter ?
+              </h3>
+              <p className="text-sm text-center mb-6" style={{ color: 'var(--nafa-gray-400)' }}>
+                Vous serez redirigé vers la page de connexion.
+              </p>
+              <div className="flex gap-3">
+                <button onClick={() => setShowLogoutConfirm(false)} disabled={isLoggingOut}
+                  className="flex-1 py-3 rounded-xl text-sm font-semibold border"
+                  style={{ borderColor: 'var(--nafa-gray-200)', color: 'var(--nafa-gray-700)' }}>
+                  Annuler
+                </button>
+                <button onClick={handleLogout} disabled={isLoggingOut}
+                  className="flex-1 py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
+                  style={{ background: '#ef4444', opacity: isLoggingOut ? 0.7 : 1 }}>
+                  {isLoggingOut
+                    ? <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    : 'Déconnecter'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </>
   );
