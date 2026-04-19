@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, ChevronRight, Trash2, CheckSquare, Square, X, AlertTriangle } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { formatCurrency, formatOrderId } from '@/lib/utils';
 import { useAdminOrdersStore } from '@/stores/adminOrdersStore';
@@ -22,6 +22,7 @@ const STATUS_FILTERS: { label: string; value: OrderStatus | 'all' }[] = [
 ];
 
 export default function AdminOrdersPage() {
+  const router = useRouter();
   const { orders, isLoading, fetchOrders } = useAdminOrdersStore();
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<OrderStatus | 'all'>('all');
@@ -151,11 +152,11 @@ export default function AdminOrdersPage() {
                 const isSelected = selected.has(order.id);
                 return (
                   <motion.tr key={order.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
-                    onClick={selectMode ? () => toggleSelect(order.id) : undefined}
+                    onClick={selectMode ? () => toggleSelect(order.id) : () => router.push(`/admin/orders/${order.id}`)}
                     style={{
                       borderBottom: '1px solid var(--nafa-gray-100)',
                       background: isSelected ? 'rgba(255,107,44,0.04)' : undefined,
-                      cursor: selectMode ? 'pointer' : undefined,
+                      cursor: 'pointer',
                     }}>
                     {selectMode && (
                       <td className="px-4 py-3">
@@ -178,11 +179,9 @@ export default function AdminOrdersPage() {
                     <td className="px-4 py-3 text-xs" style={{ color: 'var(--nafa-gray-700)' }}>{new Date(order.createdAt).toLocaleDateString('fr-FR')}</td>
                     <td className="px-4 py-3">
                       {!selectMode && (
-                        <Link href={`/admin/orders/${order.id}`}>
-                          <button className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--nafa-gray-100)' }} aria-label="Voir les détails">
-                            <ChevronRight size={14} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-700)' }} />
-                          </button>
-                        </Link>
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--nafa-gray-100)' }}>
+                          <ChevronRight size={14} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-700)' }} />
+                        </div>
                       )}
                     </td>
                   </motion.tr>
@@ -198,9 +197,9 @@ export default function AdminOrdersPage() {
             const isSelected = selected.has(order.id);
             return (
               <motion.div key={order.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
-                onClick={selectMode ? () => toggleSelect(order.id) : undefined}
+                onClick={selectMode ? () => toggleSelect(order.id) : () => router.push(`/admin/orders/${order.id}`)}
                 className="p-4 flex flex-col gap-2"
-                style={{ background: isSelected ? 'rgba(255,107,44,0.04)' : undefined, cursor: selectMode ? 'pointer' : undefined }}>
+                style={{ background: isSelected ? 'rgba(255,107,44,0.04)' : undefined, cursor: 'pointer' }}>
                 <div className="flex items-center justify-between">
                   {selectMode && (
                     <div className="w-5 h-5 rounded-md border-2 flex items-center justify-center mr-2 flex-shrink-0 transition-colors"
@@ -218,7 +217,7 @@ export default function AdminOrdersPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{formatCurrency(order.total, order.currency)}</span>
                   {!selectMode && (
-                    <Link href={`/admin/orders/${order.id}`} className="text-xs font-semibold" style={{ color: 'var(--nafa-orange)' }}>Détails →</Link>
+                    <ChevronRight size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
                   )}
                 </div>
               </motion.div>

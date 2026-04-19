@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Package, ChevronRight, Search, X, EyeOff, Eye, CheckSquare } from 'lucide-react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -188,9 +187,9 @@ export default function OrdersPage() {
                   style={{
                     borderColor: isSelected ? 'var(--nafa-orange)' : 'var(--nafa-gray-200)',
                     boxShadow: isSelected ? '0 0 0 2px var(--nafa-orange)' : undefined,
-                    cursor: selectMode ? 'pointer' : undefined,
+                    cursor: 'pointer',
                   }}
-                  onClick={selectMode ? () => toggleSelect(order.id) : undefined}>
+                  onClick={selectMode ? () => toggleSelect(order.id) : () => router.push(`/profile/orders/${order.id}`)}>
                   <div className="flex items-start gap-3">
                     {selectMode ? (
                       <div className="w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 mt-1 transition-colors"
@@ -234,9 +233,7 @@ export default function OrdersPage() {
                       )}
                     </div>
                     {!selectMode && (
-                      <Link href={`/profile/orders/${order.id}`} onClick={(e) => e.stopPropagation()}>
-                        <ChevronRight size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)', alignSelf: 'center' }} />
-                      </Link>
+                      <ChevronRight size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)', alignSelf: 'center' }} />
                     )}
                   </div>
                 </div>

@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Truck, ChevronRight, Search, X, EyeOff, Eye, CheckSquare } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { formatCurrency, formatOrderId } from '@/lib/utils';
@@ -25,6 +25,7 @@ const FILTERS: { label: string; value: OrderStatus | 'all' }[] = [
 ];
 
 export default function VendorOrdersPage() {
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const { orders, isLoading, error, fetchOrders, subscribeRealtime, unsubscribe } = useVendorOrdersStore();
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
@@ -226,10 +227,10 @@ export default function VendorOrdersPage() {
                   style={{
                     borderColor: isSelected ? 'var(--nafa-orange)' : 'var(--nafa-gray-200)',
                     background: isSelected ? 'rgba(255,107,44,0.03)' : undefined,
-                    cursor: selectMode ? 'pointer' : undefined,
+                    cursor: 'pointer',
                     boxShadow: isSelected ? '0 0 0 2px var(--nafa-orange)' : undefined,
                   }}
-                  onClick={selectMode ? () => toggleSelect(order.id) : undefined}>
+                  onClick={selectMode ? () => toggleSelect(order.id) : () => router.push(`/vendor/orders/${order.id}`)}>
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
                       {selectMode && (
@@ -264,9 +265,7 @@ export default function VendorOrdersPage() {
                         </div>
                       </div>
                       {!selectMode && (
-                        <Link href={`/vendor/orders/${order.id}`} onClick={(e) => e.stopPropagation()}>
-                          <ChevronRight size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)', flexShrink: 0 }} />
-                        </Link>
+                        <ChevronRight size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)', flexShrink: 0 }} />
                       )}
                     </div>
                   </div>
