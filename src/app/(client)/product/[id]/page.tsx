@@ -159,6 +159,108 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10
     : 0;
 
+  // ── Mobile info block (optimised for small screens)
+  const mobileInfo = (
+    <div className="px-4 pt-4 pb-2">
+      {/* Category + stock badge */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[11px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full"
+          style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-500)' }}>
+          {product.category || 'Produit'}
+        </span>
+        <span className="text-xs font-semibold px-2.5 py-1 rounded-full"
+          style={{
+            background: product.stock > 0 ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+            color: product.stock > 0 ? '#16a34a' : '#dc2626',
+          }}>
+          {product.stock > 0 ? `${product.stock} en stock` : 'Rupture de stock'}
+        </span>
+      </div>
+
+      {/* Title */}
+      <h1 className="text-[22px] font-bold leading-snug mb-2" style={{ color: 'var(--nafa-black)' }}>
+        {product.title}
+      </h1>
+
+      {/* Price + qty stepper on same row */}
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <p className="text-3xl font-black nafa-mono leading-none" style={{ color: 'var(--nafa-orange)' }}>
+            {formatCurrency(displayPrice, currency)}
+          </p>
+          <div className="mt-1.5">
+            {reviews.length > 0
+              ? <RatingStars rating={avgRating} showValue reviewCount={reviews.length} size={12} />
+              : <span className="text-[11px]" style={{ color: 'var(--nafa-gray-400)' }}>Pas encore d&apos;avis</span>
+            }
+          </div>
+        </div>
+        {/* Qty stepper */}
+        <div className="flex items-center rounded-2xl overflow-hidden"
+          style={{ border: '1.5px solid rgba(255,107,44,0.25)' }}>
+          <button onClick={() => setQuantity((q) => Math.max(1, q - 1))} disabled={quantity <= 1}
+            className="w-11 h-11 flex items-center justify-center text-xl font-bold disabled:opacity-25"
+            style={{ color: 'var(--nafa-orange)' }}>−</button>
+          <span className="w-8 text-center text-base font-bold nafa-mono" style={{ color: 'var(--nafa-black)' }}>{quantity}</span>
+          <button onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))} disabled={quantity >= product.stock}
+            className="w-11 h-11 flex items-center justify-center text-xl font-bold text-white disabled:opacity-25"
+            style={{ background: 'var(--nafa-orange)' }}>+</button>
+        </div>
+      </div>
+
+      {/* Separator */}
+      <div className="mb-4" style={{ height: 1, background: 'var(--nafa-gray-100)' }} />
+
+      {/* Vendor */}
+      <Link href={`/vendor/${product.vendorId}`}
+        className="flex items-center justify-between p-3.5 rounded-2xl mb-3"
+        style={{ background: 'var(--nafa-gray-100)' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0">
+            {vendorAvatarUrl
+              ? <img src={vendorAvatarUrl} alt={product.vendorName} className="w-full h-full object-cover" />
+              : <div className="w-full h-full flex items-center justify-center text-white font-bold"
+                  style={{ background: 'var(--nafa-orange)' }}>
+                  {product.vendorName?.[0]?.toUpperCase() ?? 'V'}
+                </div>
+            }
+          </div>
+          <div>
+            <p className="text-sm font-bold" style={{ color: 'var(--nafa-black)' }}>{product.vendorName}</p>
+            <p className="text-[11px] mt-0.5" style={{ color: 'var(--nafa-orange)' }}>Voir la boutique →</p>
+          </div>
+        </div>
+        <ChevronRight size={16} strokeWidth={2} style={{ color: 'var(--nafa-gray-300)' }} />
+      </Link>
+
+      {/* Guarantees */}
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: 'var(--nafa-gray-100)' }}>
+          <Truck size={15} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
+          <div>
+            <p className="text-[11px] font-semibold" style={{ color: 'var(--nafa-black)' }}>Livraison NAFA</p>
+            <p className="text-[10px]" style={{ color: 'var(--nafa-gray-400)' }}>Suivi temps réel</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: 'var(--nafa-gray-100)' }}>
+          <ShieldCheck size={15} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
+          <div>
+            <p className="text-[11px] font-semibold" style={{ color: 'var(--nafa-black)' }}>Paiement sécurisé</p>
+            <p className="text-[10px]" style={{ color: 'var(--nafa-gray-400)' }}>100% protégé</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Description */}
+      {product.description && (
+        <div className="pb-2">
+          <h2 className="text-sm font-bold mb-2" style={{ color: 'var(--nafa-black)' }}>Description</h2>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--nafa-gray-700)' }}>{product.description}</p>
+        </div>
+      )}
+    </div>
+  );
+
   // Reusable carousel block (shared between mobile and desktop)
   const carousel = (
     <div>
@@ -350,7 +452,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       {/* ── Mobile: single column ── */}
       <div className="lg:hidden">
         {carousel}
-        <div className="px-4 py-5">{infoBlock}</div>
+        {mobileInfo}
       </div>
 
       {/* ── Desktop: 2-column layout ── */}
