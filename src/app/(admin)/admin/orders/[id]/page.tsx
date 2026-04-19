@@ -448,10 +448,10 @@ function ShippingLabelModal({ order, onClose }: { order: Order; onClose: () => v
       <title>Étiquette ${formatOrderId(order.id)}</title>
       <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        html,body{width:210mm;height:297mm;overflow:hidden}
-        body{font-family:Arial,sans-serif;color:#111}
         @page{size:A4 portrait;margin:0}
-        @media print{html,body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+        html{width:210mm;height:297mm;overflow:hidden}
+        body{width:210mm;height:297mm;overflow:hidden;font-family:Arial,sans-serif;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+        .nafa-pw{width:210mm;height:297mm;overflow:hidden;display:block}
       </style>
     </head><body>${content.innerHTML}</body></html>`);
     doc.close();
@@ -468,14 +468,14 @@ function ShippingLabelModal({ order, onClose }: { order: Order; onClose: () => v
   const totalQty = order.items.reduce((s, it) => s + it.quantity, 0);
 
   const sty = {
-    // A4 exact — padding 12mm chaque côté → zone utile 186×273mm
+    // A4 exact — padding 12mm → zone utile 186×273mm — flex column pour remplir la feuille
     label: {
       width: '210mm', height: '297mm', padding: '12mm',
       fontFamily: 'Arial, sans-serif', color: '#111', fontSize: '10pt',
       overflow: 'hidden', boxSizing: 'border-box' as const,
-      display: 'flex', flexDirection: 'column' as const,
+      display: 'flex', flexDirection: 'column' as const, gap: '0',
     } as React.CSSProperties,
-    section: { fontSize: '7pt', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em', color: '#999', marginBottom: '2mm', paddingBottom: '1mm', borderBottom: '1px solid #e5e5e5' },
+    section: { fontSize: '7.5pt', fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.12em', color: '#bbb', marginBottom: '2.5mm' },
     mono: { fontFamily: '"Courier New", monospace' } as React.CSSProperties,
   };
 
@@ -503,109 +503,106 @@ function ShippingLabelModal({ order, onClose }: { order: Order; onClose: () => v
 
         {/* Preview — scale to fit container */}
         <div ref={wrapRef} className="flex-1 overflow-y-auto p-4 flex justify-center">
-          {/* Clip container matches scaled dimensions */}
-          <div style={{
-            overflow: 'hidden',
-            ...(scale < 1 && scaledH ? { height: scaledH } : {}),
-          }}>
+          <div style={{ overflow: 'hidden', ...(scale < 1 && scaledH ? { height: scaledH } : {}) }}>
             <div style={scale < 1 ? { transform: `scale(${scale})`, transformOrigin: 'top left' } : {}}>
-              <div ref={printRef}>
+              <div ref={printRef} className="nafa-pw">
                 <div style={sty.label}>
 
-                  {/* Header */}
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', paddingBottom: '5mm', borderBottom: '2.5px solid #111', marginBottom: '5mm', flexShrink: 0 }}>
+                  {/* ── En-tête ── */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '6mm', borderBottom: '3px solid #111', marginBottom: '6mm', flexShrink: 0 }}>
                     <div>
-                      <div style={{ fontSize: '30pt', fontWeight: 900, letterSpacing: '0.04em', lineHeight: 1 }}>
-                        <span style={{ color: '#FF6B2C' }}>N</span><span style={{ color: '#111' }}>A</span>
-                        <span style={{ color: '#FF6B2C' }}>F</span><span style={{ color: '#111' }}>A</span>
+                      <div style={{ fontSize: '38pt', fontWeight: 900, letterSpacing: '0.04em', lineHeight: 1 }}>
+                        <span style={{ color: '#FF6B2C' }}>N</span><span>A</span>
+                        <span style={{ color: '#FF6B2C' }}>F</span><span>A</span>
                       </div>
-                      <div style={{ fontSize: '7pt', color: '#999', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '1mm' }}>Marketplace Africaine</div>
+                      <div style={{ fontSize: '8pt', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.12em', marginTop: '1mm' }}>Marketplace Africaine</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ ...sty.mono, fontSize: '14pt', fontWeight: 700, color: '#FF6B2C' }}>{formatOrderId(order.id)}</div>
-                      <div style={{ fontSize: '8pt', color: '#666', marginTop: '1mm' }}>Commande du {orderDate}</div>
-                      <div style={{ fontSize: '8pt', color: '#666' }}>Imprimé le {printDate}</div>
+                      <div style={{ ...sty.mono, fontSize: '15pt', fontWeight: 700, color: '#FF6B2C' }}>{formatOrderId(order.id)}</div>
+                      <div style={{ fontSize: '8.5pt', color: '#777', marginTop: '1.5mm' }}>Commande du {orderDate}</div>
+                      <div style={{ fontSize: '8.5pt', color: '#777' }}>Imprimé le {printDate}</div>
                     </div>
                   </div>
 
-                  {/* Tracking code */}
-                  <div style={{ textAlign: 'center', marginBottom: '5mm', padding: '3.5mm', border: '1px solid #ddd', borderRadius: '2mm', background: '#fafafa', flexShrink: 0 }}>
-                    <div style={{ ...sty.mono, fontSize: '20pt', fontWeight: 700, letterSpacing: '0.3em', color: '#111' }}>
+                  {/* ── Code de suivi ── */}
+                  <div style={{ textAlign: 'center', padding: '7mm 4mm', background: '#f7f7f7', border: '1px solid #e0e0e0', borderRadius: '3mm', marginBottom: '6mm', flexShrink: 0 }}>
+                    <div style={{ ...sty.mono, fontSize: '24pt', fontWeight: 900, letterSpacing: '0.4em', color: '#111', wordBreak: 'break-all' }}>
                       {order.id.replace(/-/g, '').toUpperCase().slice(0, 16)}
                     </div>
-                    <div style={{ fontSize: '7.5pt', color: '#999', marginTop: '1.5mm' }}>Code de suivi — Tracking code</div>
+                    <div style={{ fontSize: '8pt', color: '#aaa', marginTop: '2mm', letterSpacing: '0.05em' }}>Code de suivi — Tracking code</div>
                   </div>
 
-                  {/* Destinataire + Expéditeur */}
-                  <div style={{ display: 'flex', gap: '5mm', marginBottom: '5mm', flexShrink: 0 }}>
-                    <div style={{ flex: 2 }}>
+                  {/* ── Destinataire + Expéditeur ── */}
+                  <div style={{ display: 'flex', gap: '0', marginBottom: '6mm', border: '1px solid #e0e0e0', borderRadius: '3mm', overflow: 'hidden', flexShrink: 0 }}>
+                    <div style={{ flex: 3, padding: '6mm' }}>
                       <div style={sty.section}>▼ Destinataire</div>
-                      <div style={{ fontSize: '16pt', fontWeight: 700, lineHeight: 1.1, marginBottom: '1.5mm' }}>{order.clientName ?? '—'}</div>
-                      {order.clientPhone && <div style={{ ...sty.mono, fontSize: '12pt', fontWeight: 600, color: '#FF6B2C', marginBottom: '1.5mm' }}>{order.clientPhone}</div>}
-                      <div style={{ fontSize: '10pt', color: '#333', lineHeight: 1.5 }}>
+                      <div style={{ fontSize: '20pt', fontWeight: 800, lineHeight: 1.1, marginBottom: '2mm' }}>{order.clientName ?? '—'}</div>
+                      {order.clientPhone && <div style={{ ...sty.mono, fontSize: '14pt', fontWeight: 700, color: '#FF6B2C', marginBottom: '2.5mm' }}>{order.clientPhone}</div>}
+                      <div style={{ fontSize: '11pt', color: '#333', lineHeight: 1.6 }}>
                         {addr.street && <div>{addr.street}</div>}
                         <div>{addr.city}{addr.region ? `, ${addr.region}` : ''}</div>
-                        <div style={{ fontWeight: 700 }}>{addr.country}</div>
+                        <div style={{ fontWeight: 800, fontSize: '12pt' }}>{addr.country}</div>
                       </div>
                     </div>
-                    <div style={{ flex: 1, borderLeft: '1px solid #eee', paddingLeft: '5mm' }}>
+                    <div style={{ flex: 1.5, padding: '6mm', background: '#f9f9f9', borderLeft: '1px solid #e0e0e0' }}>
                       <div style={sty.section}>Expéditeur</div>
-                      <div style={{ fontSize: '10pt', fontWeight: 700 }}>Entrepôt NAFA</div>
-                      <div style={{ fontSize: '9pt', color: '#555', marginTop: '1.5mm', lineHeight: 1.5 }}>
+                      <div style={{ fontSize: '11pt', fontWeight: 800 }}>Entrepôt NAFA</div>
+                      <div style={{ fontSize: '10pt', color: '#555', marginTop: '2mm', lineHeight: 1.6 }}>
                         <div>Ouagadougou</div>
                         <div>Burkina Faso</div>
-                        <div style={{ color: '#FF6B2C', fontWeight: 600, marginTop: '1.5mm' }}>nafa.bf</div>
+                        <div style={{ color: '#FF6B2C', fontWeight: 700, marginTop: '2mm' }}>nafa.bf</div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Boutique */}
-                  <div style={{ marginBottom: '5mm', paddingBottom: '4mm', borderBottom: '1px solid #eee', flexShrink: 0 }}>
+                  {/* ── Boutique vendeur ── */}
+                  <div style={{ marginBottom: '6mm', padding: '5mm 6mm', background: '#fff8f5', border: '1px solid #ffe0d0', borderRadius: '3mm', flexShrink: 0 }}>
                     <div style={sty.section}>Boutique vendeur</div>
-                    <div style={{ fontSize: '11pt', fontWeight: 600 }}>{order.vendorName ?? '—'}</div>
-                    {order.vendorPhone && <div style={{ ...sty.mono, fontSize: '9.5pt', color: '#666', marginTop: '1mm' }}>{order.vendorPhone}</div>}
+                    <div style={{ fontSize: '13pt', fontWeight: 700 }}>{order.vendorName ?? '—'}</div>
+                    {order.vendorPhone && <div style={{ ...sty.mono, fontSize: '10pt', color: '#777', marginTop: '1mm' }}>{order.vendorPhone}</div>}
                   </div>
 
-                  {/* Articles */}
-                  <div style={{ flex: 1, marginBottom: '5mm' }}>
+                  {/* ── Articles (flex:1 pour remplir l'espace restant) ── */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', marginBottom: '6mm' }}>
                     <div style={sty.section}>Contenu — {totalQty} article{totalQty > 1 ? 's' : ''}</div>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9.5pt' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5pt', flex: 1 }}>
                       <thead>
-                        <tr style={{ borderBottom: '1px solid #ddd' }}>
-                          <th style={{ textAlign: 'left', fontWeight: 700, paddingBottom: '1.5mm' }}>Produit</th>
-                          <th style={{ textAlign: 'center', fontWeight: 700, paddingBottom: '1.5mm', width: '10mm' }}>Qté</th>
-                          <th style={{ textAlign: 'right', fontWeight: 700, paddingBottom: '1.5mm' }}>Prix</th>
+                        <tr style={{ borderBottom: '2px solid #111' }}>
+                          <th style={{ textAlign: 'left', fontWeight: 700, paddingBottom: '2mm', fontSize: '10pt' }}>Produit</th>
+                          <th style={{ textAlign: 'center', fontWeight: 700, paddingBottom: '2mm', width: '12mm', fontSize: '10pt' }}>Qté</th>
+                          <th style={{ textAlign: 'right', fontWeight: 700, paddingBottom: '2mm', fontSize: '10pt' }}>Prix</th>
                         </tr>
                       </thead>
                       <tbody>
                         {order.items.map((item) => (
-                          <tr key={item.productId} style={{ borderBottom: '1px dotted #eee' }}>
-                            <td style={{ padding: '1.5mm 0' }}>{item.title}</td>
-                            <td style={{ textAlign: 'center', padding: '1.5mm 0' }}>{item.quantity}</td>
-                            <td style={{ ...sty.mono, textAlign: 'right', padding: '1.5mm 0' }}>{formatCurrency(item.price * item.quantity, order.currency)}</td>
+                          <tr key={item.productId} style={{ borderBottom: '1px solid #eee' }}>
+                            <td style={{ padding: '2.5mm 0', fontSize: '10.5pt' }}>{item.title}</td>
+                            <td style={{ textAlign: 'center', padding: '2.5mm 0' }}>{item.quantity}</td>
+                            <td style={{ ...sty.mono, textAlign: 'right', padding: '2.5mm 0' }}>{formatCurrency(item.price * item.quantity, order.currency)}</td>
                           </tr>
                         ))}
                         {order.deliveryFee > 0 && (
-                          <tr style={{ borderBottom: '1px dotted #eee' }}>
-                            <td colSpan={2} style={{ padding: '1.5mm 0', color: '#666' }}>Livraison</td>
-                            <td style={{ ...sty.mono, textAlign: 'right', padding: '1.5mm 0' }}>{formatCurrency(order.deliveryFee, order.currency)}</td>
+                          <tr style={{ borderBottom: '1px solid #eee' }}>
+                            <td colSpan={2} style={{ padding: '2.5mm 0', color: '#777' }}>Frais de livraison</td>
+                            <td style={{ ...sty.mono, textAlign: 'right', padding: '2.5mm 0' }}>{formatCurrency(order.deliveryFee, order.currency)}</td>
                           </tr>
                         )}
-                        <tr style={{ borderTop: '2px solid #111' }}>
-                          <td colSpan={2} style={{ paddingTop: '2.5mm', fontWeight: 700, fontSize: '12pt' }}>TOTAL PAYÉ</td>
-                          <td style={{ ...sty.mono, textAlign: 'right', paddingTop: '2.5mm', fontWeight: 700, fontSize: '12pt' }}>{formatCurrency(order.total, order.currency)}</td>
+                        <tr style={{ borderTop: '2.5px solid #111', background: '#f7f7f7' }}>
+                          <td colSpan={2} style={{ paddingTop: '3mm', paddingBottom: '3mm', paddingLeft: '2mm', fontWeight: 800, fontSize: '13pt' }}>TOTAL PAYÉ</td>
+                          <td style={{ ...sty.mono, textAlign: 'right', paddingTop: '3mm', paddingBottom: '3mm', paddingRight: '2mm', fontWeight: 800, fontSize: '13pt', color: '#FF6B2C' }}>{formatCurrency(order.total, order.currency)}</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
 
-                  {/* Footer */}
-                  <div style={{ paddingTop: '4mm', borderTop: '1.5px dashed #ccc', flexShrink: 0 }}>
-                    <div style={{ fontSize: '8.5pt', fontWeight: 700, marginBottom: '1.5mm' }}>↩ Politique de retour — Return policy</div>
-                    <div style={{ fontSize: '8pt', color: '#666', lineHeight: 1.6 }}>
-                      En cas de problème, conservez ce bon et contactez NAFA dans les 7 jours suivant la réception. Présentez ce document et le produit dans son emballage d&apos;origine.
+                  {/* ── Footer ── */}
+                  <div style={{ paddingTop: '5mm', borderTop: '2px dashed #ccc', flexShrink: 0 }}>
+                    <div style={{ fontSize: '9pt', fontWeight: 700, marginBottom: '2mm' }}>↩ Politique de retour — Return policy</div>
+                    <div style={{ fontSize: '8.5pt', color: '#777', lineHeight: 1.7 }}>
+                      En cas de problème avec votre commande, conservez ce bon et contactez NAFA dans les 7 jours suivant la réception.
+                      Présentez ce document et le produit à retourner dans son emballage d&apos;origine.
                     </div>
-                    <div style={{ marginTop: '2mm', fontSize: '7.5pt', color: '#bbb' }}>
+                    <div style={{ marginTop: '3mm', fontSize: '8pt', color: '#ccc' }}>
                       Réf : {order.id} — nafa.bf
                     </div>
                   </div>

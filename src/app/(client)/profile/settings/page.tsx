@@ -445,7 +445,7 @@ export default function SettingsPage() {
                   Conçu &amp; développé par{' '}
                   <span className="font-nitro" style={{ color: 'var(--nafa-orange)', fontSize: '1.05em', letterSpacing: '0.02em' }}>Kim_San</span>
                 </p>
-                <p className="text-xs" style={{ color: 'var(--nafa-gray-300)' }}>© 2025 NAFA · Tous droits réservés</p>
+                <p className="text-xs" style={{ color: 'var(--nafa-gray-300)' }}>© 2026 NAFA · Tous droits réservés</p>
               </div>
             </motion.section>
 
