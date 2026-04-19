@@ -15,6 +15,8 @@ interface NotificationStore {
   getUnreadCount: () => number;
   markRead: (id: string) => Promise<void>;
   markAllRead: () => Promise<void>;
+  deleteNotification: (id: string) => Promise<void>;
+  deleteAllNotifications: () => Promise<void>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -138,5 +140,21 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
       .update({ is_read: true })
       .eq('user_id', userId)
       .eq('is_read', false);
+  },
+
+  deleteNotification: async (id) => {
+    set((state) => ({
+      notifications: state.notifications.filter((n) => n.id !== id),
+    }));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('notifications').delete().eq('id', id);
+  },
+
+  deleteAllNotifications: async () => {
+    const userId = useAuthStore.getState().user?.uid;
+    if (!userId) return;
+    set({ notifications: [] });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('notifications').delete().eq('user_id', userId);
   },
 }));

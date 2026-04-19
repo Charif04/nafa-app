@@ -114,16 +114,16 @@ export default function AdminOrdersPage() {
         )}
       </div>
 
-      <div className="flex flex-col sm:flex-row flex-wrap gap-3 mb-6">
-        <div className="relative flex-1 max-w-sm">
+      <div className="space-y-3 mb-6">
+        <div className="relative max-w-sm">
           <Search size={16} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--nafa-gray-400)' }} />
           <input type="search" value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="ID, client, vendeur ou produit…" aria-label="Rechercher une commande"
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border text-sm outline-none bg-white"
             style={{ borderColor: 'var(--nafa-gray-200)' }} />
         </div>
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-          <Filter size={14} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)', flexShrink: 0 }} />
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1 w-full">
+          <Filter size={14} strokeWidth={1.75} className="flex-shrink-0" style={{ color: 'var(--nafa-gray-400)' }} />
           {STATUS_FILTERS.map((f) => (
             <button key={f.value} onClick={() => setActiveFilter(f.value)}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors"

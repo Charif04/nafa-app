@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserX, AlertTriangle, XCircle, AlertOctagon,
   CheckCircle2, Clock, X, Store, User, ShoppingBag,
-  Phone,
+  Phone, Trash2,
 } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
@@ -24,10 +24,11 @@ const ALERT_META: Record<Alert['type'], { icon: React.ElementType; label: string
   high_cancellation: { icon: AlertOctagon, label: "Taux d'annulation élevé" },
 };
 
-function AlertDetailModal({ alert, onClose, onResolve }: {
+function AlertDetailModal({ alert, onClose, onResolve, onDelete }: {
   alert: AlertRow;
   onClose: () => void;
   onResolve: (id: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const meta = ALERT_META[alert.type];
   const Icon = meta.icon;
@@ -136,13 +137,20 @@ function AlertDetailModal({ alert, onClose, onResolve }: {
               style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>
               Fermer
             </button>
+            <motion.button whileTap={{ scale: 0.97 }}
+              onClick={() => { onDelete(alert.id); onClose(); }}
+              className="py-3 px-4 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5"
+              style={{ background: 'rgba(255,23,68,0.08)', color: 'var(--nafa-error)' }}>
+              <Trash2 size={14} strokeWidth={1.75} />
+              Supprimer
+            </motion.button>
             {!alert.isResolved && (
               <motion.button whileTap={{ scale: 0.97 }}
                 onClick={() => { onResolve(alert.id); onClose(); }}
                 className="flex-1 py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
                 style={{ background: 'var(--nafa-green)' }}>
                 <CheckCircle2 size={15} strokeWidth={1.75} />
-                Marquer résolu
+                Résolu
               </motion.button>
             )}
           </div>
@@ -157,6 +165,7 @@ export default function AdminAlertsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'active' | 'all' | 'resolved'>('active');
   const [selectedAlert, setSelectedAlert] = useState<AlertRow | null>(null);
+  const [isDeletingResolved, setIsDeletingResolved] = useState(false);
 
   useEffect(() => { loadAlerts(); }, []); // eslint-disable-line react-hooks/immutability
 
@@ -208,6 +217,21 @@ export default function AdminAlertsPage() {
     setAlerts((prev) => prev.map((a) => a.id === id ? { ...a, isResolved: true } : a));
   }
 
+  async function deleteAlert(id: string) {
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('alerts').delete().eq('id', id);
+  }
+
+  async function deleteResolvedAlerts() {
+    setIsDeletingResolved(true);
+    const resolvedIds = alerts.filter((a) => a.isResolved).map((a) => a.id);
+    setAlerts((prev) => prev.filter((a) => !a.isResolved));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any).from('alerts').delete().in('id', resolvedIds);
+    setIsDeletingResolved(false);
+  }
+
   const filtered = alerts.filter((a) =>
     filter === 'all' || (filter === 'active' ? !a.isResolved : a.isResolved)
   );
@@ -248,7 +272,7 @@ export default function AdminAlertsPage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap items-center gap-2 mb-6">
           {(['active', 'all', 'resolved'] as const).map((f) => (
             <button key={f} onClick={() => setFilter(f)}
               className="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
@@ -260,6 +284,18 @@ export default function AdminAlertsPage() {
               {f === 'active' ? 'Actives' : f === 'all' ? 'Toutes' : 'Résolues'}
             </button>
           ))}
+          {alerts.some((a) => a.isResolved) && (
+            <button
+              onClick={() => void deleteResolvedAlerts()}
+              disabled={isDeletingResolved}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+              style={{ background: 'rgba(255,23,68,0.07)', color: 'var(--nafa-error)', border: '1px solid rgba(255,23,68,0.15)' }}>
+              {isDeletingResolved
+                ? <div className="w-3 h-3 rounded-full border border-red-300 border-t-red-600 animate-spin" />
+                : <Trash2 size={13} strokeWidth={1.75} />}
+              Supprimer les résolues
+            </button>
+          )}
         </div>
 
         {isLoading ? (
@@ -323,14 +359,23 @@ export default function AdminAlertsPage() {
                           <span className="text-xs ml-1" style={{ color: 'var(--nafa-orange)' }}>· Voir le détail →</span>
                         </div>
                       </div>
-                      {!alert.isResolved && (
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {!alert.isResolved && (
+                          <motion.button whileTap={{ scale: 0.95 }}
+                            onClick={(e) => { e.stopPropagation(); resolveAlert(alert.id); }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium"
+                            style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>
+                            <CheckCircle2 size={13} strokeWidth={1.75} />Résoudre
+                          </motion.button>
+                        )}
                         <motion.button whileTap={{ scale: 0.95 }}
-                          onClick={(e) => { e.stopPropagation(); resolveAlert(alert.id); }}
-                          className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium"
-                          style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>
-                          <CheckCircle2 size={13} strokeWidth={1.75} />Résoudre
+                          onClick={(e) => { e.stopPropagation(); void deleteAlert(alert.id); }}
+                          className="w-8 h-8 rounded-xl flex items-center justify-center"
+                          style={{ background: 'rgba(255,23,68,0.07)' }}
+                          aria-label="Supprimer">
+                          <Trash2 size={13} strokeWidth={1.75} style={{ color: 'var(--nafa-error)' }} />
                         </motion.button>
-                      )}
+                      </div>
                     </div>
                   </motion.div>
                 );
@@ -352,6 +397,7 @@ export default function AdminAlertsPage() {
             alert={selectedAlert}
             onClose={() => setSelectedAlert(null)}
             onResolve={resolveAlert}
+            onDelete={deleteAlert}
           />
         )}
       </AnimatePresence>

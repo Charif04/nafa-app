@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Tag, PackageCheck, MessageSquare, Info, BellOff, X, ShoppingBag, AlertTriangle, BadgeCheck, Ban } from 'lucide-react';
+import { Bell, Tag, PackageCheck, MessageSquare, Info, BellOff, X, ShoppingBag, AlertTriangle, BadgeCheck, Ban, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { formatRelativeTime } from '@/lib/utils';
 import { useNotificationStore } from '@/stores/notificationStore';
@@ -36,7 +36,7 @@ const DELIVERY_URL_TYPES: NotificationType[] = ['order_update', 'order_status', 
 
 
 export default function NotificationsPage() {
-  const { notifications, markRead, markAllRead, getUnreadCount } = useNotificationStore();
+  const { notifications, markRead, markAllRead, getUnreadCount, deleteNotification, deleteAllNotifications } = useNotificationStore();
   const currentUser = useAuthStore((s) => s.user);
   // NotificationProvider in layout handles fetch + Realtime — no duplicate subscription needed
   const [notifEnabled, setNotifEnabled] = useState(false);
@@ -98,6 +98,16 @@ export default function NotificationsPage() {
                 Tout lire
               </button>
             )}
+            {clientNotifs.length > 0 && (
+              <button
+                onClick={() => void deleteAllNotifications()}
+                className="text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1"
+                style={{ color: 'var(--nafa-error)', background: 'rgba(255,23,68,0.07)' }}
+              >
+                <Trash2 size={11} strokeWidth={2} />
+                Tout supprimer
+              </button>
+            )}
             <button
               onClick={() => void handleTogglePush()}
               className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border"
@@ -154,9 +164,18 @@ export default function NotificationsPage() {
                             <p className="text-sm font-semibold leading-tight" style={{ color: 'var(--nafa-black)' }}>
                               {notif.title}
                             </p>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
                             {!notif.isRead && (
-                              <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-1 ${config.dot}`} />
+                              <span className={`w-2 h-2 rounded-full ${config.dot}`} />
                             )}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); void deleteNotification(notif.id); }}
+                              className="w-6 h-6 rounded-full flex items-center justify-center"
+                              style={{ background: 'var(--nafa-gray-100)' }}
+                              aria-label="Supprimer">
+                              <Trash2 size={11} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
+                            </button>
+                          </div>
                           </div>
                           <p className="text-xs mt-0.5 line-clamp-2" style={{ color: 'var(--nafa-gray-700)' }}>
                             {notif.body}

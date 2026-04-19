@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, ShoppingBag, PackageCheck, X, AlertTriangle, BadgeCheck, Ban, Info } from 'lucide-react';
+import { Bell, ShoppingBag, PackageCheck, X, AlertTriangle, BadgeCheck, Ban, Info, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { formatRelativeTime } from '@/lib/utils';
 import { useNotificationStore } from '@/stores/notificationStore';
@@ -20,7 +20,7 @@ const CONFIG: Record<string, typeof FALLBACK> = {
 };
 
 export default function VendorNotificationsPage() {
-  const { notifications, markRead, markAllRead, getUnreadCount, fetchNotifications } = useNotificationStore();
+  const { notifications, markRead, markAllRead, getUnreadCount, fetchNotifications, deleteNotification, deleteAllNotifications } = useNotificationStore();
   const [selected, setSelected] = useState<(typeof notifications)[0] | null>(null);
   const unreadCount = getUnreadCount();
   const now = Date.now();
@@ -41,12 +41,22 @@ export default function VendorNotificationsPage() {
           <h1 className="text-2xl font-bold" style={{ color: 'var(--nafa-black)' }}>Notifications</h1>
           {unreadCount > 0 && <p className="text-sm mt-0.5" style={{ color: 'var(--nafa-gray-700)' }}>{unreadCount} non lue{unreadCount > 1 ? 's' : ''}</p>}
         </div>
-        {unreadCount > 0 && (
-          <button onClick={markAllRead} className="text-xs font-semibold px-3 py-1.5 rounded-full"
-            style={{ background: 'rgba(255,107,44,0.1)', color: 'var(--nafa-orange)' }}>
-            Tout lire
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <button onClick={markAllRead} className="text-xs font-semibold px-3 py-1.5 rounded-full"
+              style={{ background: 'rgba(255,107,44,0.1)', color: 'var(--nafa-orange)' }}>
+              Tout lire
+            </button>
+          )}
+          {notifications.length > 0 && (
+            <button onClick={() => void deleteAllNotifications()}
+              className="text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1"
+              style={{ background: 'rgba(255,23,68,0.07)', color: 'var(--nafa-error)' }}>
+              <Trash2 size={11} strokeWidth={2} />
+              Tout supprimer
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -71,7 +81,16 @@ export default function VendorNotificationsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <p className="text-sm font-semibold" style={{ color: 'var(--nafa-black)' }}>{n.title}</p>
-                          {!n.isRead && <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-1 ${cfg.dot}`} />}
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            {!n.isRead && <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); void deleteNotification(n.id); }}
+                              className="w-6 h-6 rounded-full flex items-center justify-center"
+                              style={{ background: 'var(--nafa-gray-100)' }}
+                              aria-label="Supprimer">
+                              <Trash2 size={11} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
+                            </button>
+                          </div>
                         </div>
                         <p className="text-xs mt-0.5 line-clamp-2" style={{ color: 'var(--nafa-gray-700)' }}>{n.body}</p>
                         <p className="text-xs mt-1" style={{ color: 'var(--nafa-gray-400)' }}>{formatRelativeTime(n.createdAt)}</p>
