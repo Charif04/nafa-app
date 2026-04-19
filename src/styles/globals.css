@@ -207,13 +207,16 @@ button:disabled,
 
 /* Admin & Vendor portal main content area.
    Mobile  : padding-top = safe-area + 52px (height of the mobile top bar)
+             padding-bottom = safe-area + 60px (height of the mobile bottom nav)
    Desktop : padding-top = 0 (sidebar is on the left, no top bar needed) */
 .admin-vendor-main {
   padding-top: calc(env(safe-area-inset-top, 0px) + 52px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 60px);
 }
 @media (min-width: 1024px) {
   .admin-vendor-main {
     padding-top: 0;
+    padding-bottom: 0;
   }
 }
 

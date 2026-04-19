@@ -123,7 +123,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   if (isLoading) {
     return (
       <div className="min-h-dvh bg-white">
-        <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--nafa-gray-100)', paddingTop: 'calc(env(safe-area-inset-top,0px) + 12px)' }}>
+        <div className="nafa-client-header flex items-center justify-between px-4 py-3 border-b bg-white" style={{ borderColor: 'var(--nafa-gray-100)' }}>
           <div className="w-9 h-9 rounded-full animate-pulse bg-gray-100" />
           <div className="w-24 h-4 rounded animate-pulse bg-gray-100" />
           <div className="w-9 h-9 rounded-full animate-pulse bg-gray-100" />
@@ -428,8 +428,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     <div className="min-h-dvh bg-white" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
 
       {/* ── Header ── */}
-      <header className="flex items-center justify-between px-4 lg:px-6 bg-white border-b"
-        style={{ borderColor: 'var(--nafa-gray-100)', paddingTop: 'calc(env(safe-area-inset-top,0px) + 6px)', paddingBottom: 6 }}>
+      <header className="nafa-client-header flex items-center justify-between px-4 lg:px-6 bg-white border-b z-20"
+        style={{ borderColor: 'var(--nafa-gray-100)', paddingBottom: 6 }}>
         <div className="max-w-7xl w-full mx-auto flex items-center justify-between">
           <motion.button whileTap={{ scale: 0.88 }} onClick={() => router.back()}
             className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"

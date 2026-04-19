@@ -23,6 +23,15 @@ const NAV_ITEMS = [
   { href: '/vendor/settings', icon: Settings, label: 'Paramètres' },
 ];
 
+// 5 primary items shown in the mobile bottom nav
+const BOTTOM_NAV = [
+  { href: '/vendor/dashboard', icon: LayoutDashboard, label: 'Accueil' },
+  { href: '/vendor/products', icon: Package, label: 'Produits' },
+  { href: '/vendor/orders', icon: ShoppingBag, label: 'Commandes' },
+  { href: '/vendor/wallet', icon: Wallet, label: 'Portefeuille' },
+  { href: '/vendor/settings', icon: Settings, label: 'Paramètres' },
+];
+
 export function VendorSidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -96,11 +105,12 @@ export function VendorSidebar() {
 
   return (
     <>
+      {/* ── Desktop sidebar ── */}
       <aside className="hidden lg:flex flex-col fixed left-0 top-0 bottom-0 w-64 z-40" style={{ background: 'var(--nafa-dark)' }}>
         {sidebarContent}
       </aside>
 
-      {/* Mobile top bar — covers iOS status bar + provides hamburger */}
+      {/* ── Mobile: dark top bar ── */}
       <div
         className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-end px-4 pb-2"
         style={{ background: 'var(--nafa-dark)', height: 'calc(env(safe-area-inset-top, 0px) + 52px)' }}
@@ -124,6 +134,42 @@ export function VendorSidebar() {
         )}
       </div>
 
+      {/* ── Mobile: bottom navigation bar ── */}
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 flex"
+        style={{
+          background: 'var(--nafa-dark)',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        }}
+        aria-label="Navigation mobile vendeur"
+      >
+        {BOTTOM_NAV.map(({ href, icon: Icon, label }) => {
+          const isActive = pathname.startsWith(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              className="flex-1 flex flex-col items-center gap-1 pt-3 pb-2 transition-colors relative"
+              style={{ color: isActive ? 'var(--nafa-orange-light)' : 'rgba(255,255,255,0.45)' }}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId="vendor-bottom-indicator"
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full"
+                  style={{ background: 'var(--nafa-orange)' }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                />
+              )}
+              <Icon size={20} strokeWidth={isActive ? 2 : 1.75} />
+              <span className="text-[10px] font-medium leading-none">{label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* ── Mobile: full-menu drawer (accessed via hamburger) ── */}
       <AnimatePresence>
         {mobileOpen && (
           <>
