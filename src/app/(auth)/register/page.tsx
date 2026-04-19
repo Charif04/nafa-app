@@ -31,6 +31,8 @@ export default function RegisterPage() {
   const [phonePrefix, setPhonePrefix] = useState('+226');
 
   const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     password: '',
@@ -61,8 +63,8 @@ export default function RegisterPage() {
         options: {
           data: {
             role: 'client',
-            first_name: '',
-            last_name: '',
+            first_name: form.firstName.trim(),
+            last_name: form.lastName.trim(),
             phone: `${phonePrefix}${form.phone.trim()}`,
             country: form.country || 'Burkina Faso',
           },
@@ -114,6 +116,20 @@ export default function RegisterPage() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-3">
+
+            {/* Prénom + Nom */}
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="Prénom" required>
+                <input type="text" required value={form.firstName ?? ''} onChange={(e) => updateForm('firstName', e.target.value)}
+                  placeholder="" className={inputClass} autoComplete="given-name"
+                  onFocus={onFocusInput} onBlur={onBlurInput} />
+              </FormField>
+              <FormField label="Nom" required>
+                <input type="text" required value={form.lastName ?? ''} onChange={(e) => updateForm('lastName', e.target.value)}
+                  placeholder="" className={inputClass} autoComplete="family-name"
+                  onFocus={onFocusInput} onBlur={onBlurInput} />
+              </FormField>
+            </div>
 
             {/* Email */}
             <FormField label="Email" required>
