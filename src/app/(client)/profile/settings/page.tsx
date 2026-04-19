@@ -129,7 +129,7 @@ export default function SettingsPage() {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     await supabase.auth.signOut();
-    router.replace('/login');
+    router.replace('/');
   };
 
   return (
@@ -430,6 +430,22 @@ export default function SettingsPage() {
                   </div>
                   <span className="flex-1 text-sm font-medium text-red-500">Se déconnecter</span>
                 </button>
+              </div>
+            </motion.section>
+
+            {/* À propos */}
+            <motion.section variants={sectionVariants}>
+              <div className="flex flex-col items-center gap-2 py-6">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--nafa-orange) 0%, var(--nafa-orange-dark, #e55a1c) 100%)' }}>
+                  <span className="text-white font-black text-xl">N</span>
+                </div>
+                <p className="text-sm font-bold" style={{ color: 'var(--nafa-black)' }}>NAFA</p>
+                <p className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>Version 1.0.0</p>
+                <p className="text-xs text-center" style={{ color: 'var(--nafa-gray-400)' }}>
+                  Conçu &amp; développé par{' '}
+                  <span className="font-semibold" style={{ color: 'var(--nafa-orange)' }}>Charif</span>
+                </p>
+                <p className="text-xs" style={{ color: 'var(--nafa-gray-300)' }}>© 2025 NAFA · Tous droits réservés</p>
               </div>
             </motion.section>
 
