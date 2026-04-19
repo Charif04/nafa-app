@@ -76,8 +76,16 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
           set((state) => ({
             notifications: [newNotif, ...state.notifications],
           }));
-          // Show push notification (works even if tab is backgrounded)
-          showLocalNotification(newNotif.title, newNotif.body, newNotif.linkedOrderId ? `/profile/orders/${newNotif.linkedOrderId}` : '/notifications');
+          // Show push notification — URL depends on user role
+          const role = useAuthStore.getState().user?.role;
+          const orderUrl = newNotif.linkedOrderId
+            ? role === 'admin'  ? `/admin/orders/${newNotif.linkedOrderId}`
+            : role === 'vendor' ? `/vendor/orders/${newNotif.linkedOrderId}`
+            :                     `/profile/orders/${newNotif.linkedOrderId}`
+            : role === 'admin'  ? '/admin/notifications'
+            : role === 'vendor' ? '/vendor/notifications'
+            :                     '/notifications';
+          showLocalNotification(newNotif.title, newNotif.body, orderUrl);
         }
       )
       .on(

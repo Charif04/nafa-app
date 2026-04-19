@@ -16,28 +16,6 @@ const CANCELLATION_THRESHOLD = 3;
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-async function getAdminIds(): Promise<string[]> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (db as any).from('profiles').select('id').eq('role', 'admin');
-  return (data ?? []).map((r: { id: string }) => r.id);
-}
-
-async function notifyAdmins(type: string, title: string, body: string, orderId?: string) {
-  const adminIds = await getAdminIds();
-  if (!adminIds.length) return;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (db as any).from('notifications').insert(
-    adminIds.map((id) => ({
-      user_id: id,
-      type,
-      title,
-      body,
-      linked_order_id: orderId ?? null,
-      is_read: false,
-    }))
-  );
-}
-
 async function notifyUser(userId: string, type: string, title: string, body: string, orderId?: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (db as any).from('notifications').insert({
@@ -99,21 +77,13 @@ export async function POST() {
       .lt('created_at', oneHourAgo);
 
     for (const order of stalePlaced ?? []) {
-      const isNew = await createAlertIfNew(
+      await createAlertIfNew(
         'vendor_inactive',
         'warning',
         `La commande ${formatOrderId(order.id)} n'a pas été confirmée par le vendeur depuis plus d'1 heure.`,
         order.id,
         order.vendor_id
       );
-      if (isNew) {
-        await notifyAdmins(
-          'system',
-          '⚠️ Vendeur inactif',
-          `La commande ${formatOrderId(order.id)} attend une confirmation depuis plus d'1 heure. Vérifiez le vendeur.`,
-          order.id
-        );
-      }
     }
 
     // ── 2. Delivery late: order in 'in_transit_warehouse' > 1 hour ──────────
@@ -134,21 +104,13 @@ export async function POST() {
         .maybeSingle();
 
       if (currentOrder) {
-        const isNew = await createAlertIfNew(
+        await createAlertIfNew(
           'delivery_late',
           'critical',
           `La commande ${formatOrderId(currentOrder.id)} est en route vers l'entrepôt depuis plus d'1 heure sans être arrivée.`,
           currentOrder.id,
           currentOrder.vendor_id
         );
-        if (isNew) {
-          await notifyAdmins(
-            'system',
-            '🚨 Livraison en retard',
-            `La commande ${formatOrderId(currentOrder.id)} est en transit depuis plus d'1 heure. Contactez le transporteur.`,
-            currentOrder.id
-          );
-        }
       }
     }
 
