@@ -129,7 +129,19 @@ export default function ProfilePage() {
               </button>
             </motion.div>
 
-            <p className="text-center text-xs py-2" style={{ color: 'var(--nafa-gray-400)' }}>NAFA Market v1.0.0</p>
+            {/* À propos */}
+            <motion.div variants={itemVariants} className="flex flex-col items-center gap-2 py-6">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--nafa-orange) 0%, #e55a1c 100%)' }}>
+                <span className="text-white font-black text-xl">N</span>
+              </div>
+              <p className="text-sm font-bold" style={{ color: 'var(--nafa-black)' }}>NAFA</p>
+              <p className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>Version 1.0.0</p>
+              <p className="text-xs text-center" style={{ color: 'var(--nafa-gray-400)' }}>
+                Conçu &amp; développé par{' '}
+                <span className="font-nitro" style={{ color: 'var(--nafa-orange)', fontSize: '1.05em', letterSpacing: '0.02em' }}>Kim_San</span>
+              </p>
+              <p className="text-xs" style={{ color: 'var(--nafa-gray-300)' }}>© 2026 NAFA · Tous droits réservés</p>
+            </motion.div>
           </motion.div>
       </div>
       </div>
