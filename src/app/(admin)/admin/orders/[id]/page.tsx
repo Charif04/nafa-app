@@ -413,6 +413,15 @@ export default function AdminOrderDetailPage({ params }: { params: Promise<{ id:
 
 function ShippingLabelModal({ order, onClose }: { order: Order; onClose: () => void }) {
   const printRef = useRef<HTMLDivElement>(null);
+  const previewWrapRef = useRef<HTMLDivElement>(null);
+  const [labelScale, setLabelScale] = useState(1);
+
+  useEffect(() => {
+    if (!previewWrapRef.current) return;
+    const LABEL_WIDTH_PX = 148 * (96 / 25.4); // 148mm at 96dpi ≈ 559px
+    const available = previewWrapRef.current.clientWidth - 40;
+    if (available < LABEL_WIDTH_PX) setLabelScale(available / LABEL_WIDTH_PX);
+  }, []);
 
   const handlePrint = () => {
     const content = printRef.current;
@@ -467,8 +476,8 @@ function ShippingLabelModal({ order, onClose }: { order: Order; onClose: () => v
         </div>
 
         {/* Label preview */}
-        <div className="flex-1 overflow-auto p-5">
-          <div style={{ minWidth: 'min-content' }}>
+        <div ref={previewWrapRef} className="flex-1 overflow-y-auto p-5">
+          <div style={labelScale < 1 ? { zoom: labelScale } as React.CSSProperties : {}}>
           <div ref={printRef}>
             <div style={sty.label}>
 

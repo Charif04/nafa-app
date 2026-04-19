@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   UserX, AlertTriangle, XCircle, AlertOctagon,
   CheckCircle2, Clock, X, Store, User, ShoppingBag,
-  Phone, Trash2,
+  Phone, Trash2, AlertCircle,
 } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
@@ -14,35 +14,50 @@ interface AlertRow extends Alert {
   vendorShop?: string;
   vendorName?: string;
   vendorPhone?: string;
-  orderAmount?: number;
 }
 
-const ALERT_META: Record<Alert['type'], { icon: React.ElementType; label: string }> = {
-  vendor_inactive: { icon: UserX, label: 'Vendeur inactif' },
-  delivery_late: { icon: AlertTriangle, label: 'Livraison en retard' },
-  payment_failed: { icon: XCircle, label: 'Paiement échoué' },
-  high_cancellation: { icon: AlertOctagon, label: "Taux d'annulation élevé" },
+// ── Config visuel par type (style notifications) ─────────────────────────────
+const ALERT_CONFIG: Record<Alert['type'], {
+  icon: React.ElementType;
+  label: string;
+  color: string;
+  iconColor: string;
+  dot: string;
+}> = {
+  vendor_inactive:  { icon: UserX,         label: 'Vendeur inactif',           color: 'bg-orange-100', iconColor: 'text-orange-600', dot: 'bg-orange-500' },
+  delivery_late:    { icon: AlertTriangle,  label: 'Livraison en retard',       color: 'bg-red-100',    iconColor: 'text-red-600',    dot: 'bg-red-500'    },
+  payment_failed:   { icon: XCircle,        label: 'Paiement échoué',           color: 'bg-red-100',    iconColor: 'text-red-600',    dot: 'bg-red-500'    },
+  high_cancellation:{ icon: AlertOctagon,   label: "Taux d'annulation élevé",   color: 'bg-orange-100', iconColor: 'text-orange-600', dot: 'bg-orange-500' },
 };
 
+const RESOLVED_CONFIG = { color: 'bg-green-100', iconColor: 'text-green-500', dot: 'bg-green-500' };
+
+function cfg(alert: AlertRow) {
+  const base = ALERT_CONFIG[alert.type];
+  if (alert.isResolved) return { ...base, ...RESOLVED_CONFIG, icon: CheckCircle2 };
+  return base;
+}
+
+// ── Modal détail ─────────────────────────────────────────────────────────────
 function AlertDetailModal({ alert, onClose, onResolve, onDelete }: {
   alert: AlertRow;
   onClose: () => void;
   onResolve: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
-  const meta = ALERT_META[alert.type];
-  const Icon = meta.icon;
+  const c = cfg(alert);
+  const Icon = c.icon;
   const isCritical = alert.severity === 'critical' && !alert.isResolved;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.5)' }}
         onClick={onClose} />
       <motion.div
         initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }}
         exit={{ y: '100%', opacity: 0 }}
-        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ type: 'spring', stiffness: 420, damping: 38 }}
         className="relative w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl bg-white overflow-hidden"
         style={{ maxHeight: '90dvh', overflowY: 'auto' }}>
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
@@ -52,12 +67,8 @@ function AlertDetailModal({ alert, onClose, onResolve, onDelete }: {
         <div className="p-6">
           <div className="flex items-start justify-between mb-5">
             <div className="flex items-center gap-3">
-              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 ${
-                alert.isResolved ? 'bg-gray-100' : isCritical ? 'bg-red-50' : 'bg-orange-50'
-              }`}>
-                {alert.isResolved
-                  ? <CheckCircle2 size={20} strokeWidth={1.75} className="text-green-500" />
-                  : <Icon size={20} strokeWidth={1.75} className={isCritical ? 'text-red-500' : 'text-orange-500'} />}
+              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 ${c.color}`}>
+                <Icon size={20} strokeWidth={1.75} className={c.iconColor} />
               </div>
               <div>
                 <p className={`text-xs font-semibold uppercase tracking-wide ${
@@ -65,7 +76,9 @@ function AlertDetailModal({ alert, onClose, onResolve, onDelete }: {
                 }`}>
                   {alert.isResolved ? 'Résolu' : alert.severity === 'critical' ? 'Critique' : 'Avertissement'}
                 </p>
-                <p className="text-base font-bold" style={{ color: 'var(--nafa-black)' }}>{meta.label}</p>
+                <p className="text-base font-bold" style={{ color: 'var(--nafa-black)' }}>
+                  {ALERT_CONFIG[alert.type].label}
+                </p>
               </div>
             </div>
             <button onClick={onClose}
@@ -108,10 +121,9 @@ function AlertDetailModal({ alert, onClose, onResolve, onDelete }: {
                 </div>
               </div>
             )}
-
             {alert.relatedOrderId && (
               <div className="p-4 rounded-2xl" style={{ background: 'var(--nafa-gray-100)' }}>
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-2">
                   <ShoppingBag size={14} strokeWidth={1.75} style={{ color: 'var(--nafa-green)' }} />
                   <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>
                     Commande
@@ -124,7 +136,7 @@ function AlertDetailModal({ alert, onClose, onResolve, onDelete }: {
             )}
           </div>
 
-          <div className="flex items-center gap-2 mb-5">
+          <div className="flex items-center gap-1.5 mb-5">
             <Clock size={12} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
             <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>
               {formatRelativeTime(alert.createdAt)}
@@ -160,14 +172,16 @@ function AlertDetailModal({ alert, onClose, onResolve, onDelete }: {
   );
 }
 
+// ── Page principale ──────────────────────────────────────────────────────────
 export default function AdminAlertsPage() {
   const [alerts, setAlerts] = useState<AlertRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'active' | 'all' | 'resolved'>('active');
   const [selectedAlert, setSelectedAlert] = useState<AlertRow | null>(null);
   const [isDeletingResolved, setIsDeletingResolved] = useState(false);
+  const now = Date.now();
 
-  useEffect(() => { loadAlerts(); }, []); // eslint-disable-line react-hooks/immutability
+  useEffect(() => { void loadAlerts(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadAlerts() {
     setIsLoading(true);
@@ -238,18 +252,25 @@ export default function AdminAlertsPage() {
   const activeCount = alerts.filter((a) => !a.isResolved).length;
   const criticalCount = alerts.filter((a) => !a.isResolved && a.severity === 'critical').length;
 
+  // Groupement par date (même logique que notifications)
+  const grouped = {
+    today:     filtered.filter((a) => now - new Date(a.createdAt).getTime() < 86400000),
+    yesterday: filtered.filter((a) => { const d = now - new Date(a.createdAt).getTime(); return d >= 86400000 && d < 172800000; }),
+    older:     filtered.filter((a) => now - new Date(a.createdAt).getTime() >= 172800000),
+  };
+
   return (
     <>
-      <div className="p-4 md:p-6 lg:p-8 w-full">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--nafa-black)' }}>Alertes système</h1>
-          <div className="flex items-center gap-4 mt-2">
-            {isLoading ? (
-              <div className="h-4 w-32 rounded animate-pulse" style={{ background: 'var(--nafa-gray-200)' }} />
-            ) : (
-              <>
+      <div className="p-4 md:p-6 lg:p-8 w-full max-w-2xl">
+
+        {/* En-tête */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--nafa-black)' }}>Alertes système</h1>
+            {!isLoading && (
+              <div className="flex items-center gap-3 mt-1">
                 {criticalCount > 0 && (
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-red-500" />
                     <span className="text-sm font-medium text-red-600">
                       {criticalCount} critique{criticalCount > 1 ? 's' : ''}
@@ -257,7 +278,7 @@ export default function AdminAlertsPage() {
                   </div>
                 )}
                 {activeCount > criticalCount && (
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-orange-500" />
                     <span className="text-sm font-medium" style={{ color: 'var(--nafa-orange)' }}>
                       {activeCount - criticalCount} avertissement{activeCount - criticalCount > 1 ? 's' : ''}
@@ -267,15 +288,28 @@ export default function AdminAlertsPage() {
                 {activeCount === 0 && (
                   <span className="text-sm text-green-600 font-medium">Aucune alerte active</span>
                 )}
-              </>
+              </div>
             )}
           </div>
+          {alerts.some((a) => a.isResolved) && (
+            <button
+              onClick={() => void deleteResolvedAlerts()}
+              disabled={isDeletingResolved}
+              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
+              style={{ background: 'rgba(255,23,68,0.07)', color: 'var(--nafa-error)' }}>
+              {isDeletingResolved
+                ? <div className="w-3 h-3 rounded-full border border-red-300 border-t-red-600 animate-spin" />
+                : <Trash2 size={11} strokeWidth={2} />}
+              Supprimer les résolues
+            </button>
+          )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 mb-6">
+        {/* Filtres */}
+        <div className="flex items-center gap-2 mb-6">
           {(['active', 'all', 'resolved'] as const).map((f) => (
             <button key={f} onClick={() => setFilter(f)}
-              className="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+              className="px-4 py-1.5 rounded-full text-xs font-semibold transition-colors"
               style={{
                 background: filter === f ? 'var(--nafa-black)' : 'white',
                 color: filter === f ? 'white' : 'var(--nafa-gray-700)',
@@ -284,109 +318,85 @@ export default function AdminAlertsPage() {
               {f === 'active' ? 'Actives' : f === 'all' ? 'Toutes' : 'Résolues'}
             </button>
           ))}
-          {alerts.some((a) => a.isResolved) && (
-            <button
-              onClick={() => void deleteResolvedAlerts()}
-              disabled={isDeletingResolved}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-              style={{ background: 'rgba(255,23,68,0.07)', color: 'var(--nafa-error)', border: '1px solid rgba(255,23,68,0.15)' }}>
-              {isDeletingResolved
-                ? <div className="w-3 h-3 rounded-full border border-red-300 border-t-red-600 animate-spin" />
-                : <Trash2 size={13} strokeWidth={1.75} />}
-              Supprimer les résolues
-            </button>
-          )}
         </div>
 
+        {/* Contenu */}
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white rounded-2xl p-5 border" style={{ borderColor: 'var(--nafa-gray-200)' }}>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-2xl animate-pulse" style={{ background: 'var(--nafa-gray-100)' }} />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3 w-24 rounded animate-pulse" style={{ background: 'var(--nafa-gray-200)' }} />
-                    <div className="h-4 w-full rounded animate-pulse" style={{ background: 'var(--nafa-gray-100)' }} />
-                    <div className="h-3 w-20 rounded animate-pulse" style={{ background: 'var(--nafa-gray-100)' }} />
-                  </div>
+              <div key={i} className="flex items-start gap-3 p-3 rounded-2xl bg-white border" style={{ borderColor: 'var(--nafa-gray-200)' }}>
+                <div className="w-10 h-10 rounded-2xl animate-pulse flex-shrink-0" style={{ background: 'var(--nafa-gray-100)' }} />
+                <div className="flex-1 space-y-2 py-1">
+                  <div className="h-3 w-28 rounded animate-pulse" style={{ background: 'var(--nafa-gray-200)' }} />
+                  <div className="h-3 w-full rounded animate-pulse" style={{ background: 'var(--nafa-gray-100)' }} />
+                  <div className="h-2.5 w-16 rounded animate-pulse" style={{ background: 'var(--nafa-gray-100)' }} />
                 </div>
               </div>
             ))}
           </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'var(--nafa-gray-100)' }}>
+              <AlertCircle size={24} strokeWidth={1.5} style={{ color: 'var(--nafa-gray-400)' }} />
+            </div>
+            <p className="text-sm" style={{ color: 'var(--nafa-gray-400)' }}>Aucune alerte</p>
+          </div>
         ) : (
-          <div className="space-y-4">
-            <AnimatePresence>
-              {filtered.map((alert, i) => {
-                const meta = ALERT_META[alert.type];
-                const Icon = meta.icon;
-                return (
-                  <motion.div key={alert.id} layout
-                    initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: 20 }} transition={{ delay: i * 0.06 }}
-                    className="bg-white rounded-2xl p-5 border-l-4 cursor-pointer hover:shadow-md transition-shadow"
-                    style={{
-                      borderColor: alert.isResolved ? 'var(--nafa-gray-200)' : alert.severity === 'critical' ? '#EF4444' : '#F97316',
-                      borderTopWidth: 1, borderRightWidth: 1, borderBottomWidth: 1,
-                      borderTopColor: 'var(--nafa-gray-200)', borderRightColor: 'var(--nafa-gray-200)', borderBottomColor: 'var(--nafa-gray-200)',
-                    }}
-                    onClick={() => setSelectedAlert(alert)}>
-                    <div className="flex items-start gap-4">
-                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${
-                        alert.isResolved ? 'bg-gray-100' : alert.severity === 'critical' ? 'bg-red-50' : 'bg-orange-50'
-                      }`}>
-                        {alert.isResolved
-                          ? <CheckCircle2 size={20} strokeWidth={1.75} className="text-green-500" />
-                          : <Icon size={20} strokeWidth={1.75} className={alert.severity === 'critical' ? 'text-red-500' : 'text-orange-500'} />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`text-xs font-semibold uppercase tracking-wide ${
-                            alert.severity === 'critical' && !alert.isResolved ? 'text-red-600' : 'text-orange-600'
-                          }`}>
-                            {alert.isResolved ? 'Résolu' : alert.severity === 'critical' ? 'Critique' : 'Avertissement'}
-                          </span>
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-full"
-                            style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>
-                            {meta.label}
-                          </span>
-                        </div>
-                        <p className="text-sm" style={{ color: 'var(--nafa-gray-700)' }}>{alert.description}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Clock size={12} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
-                          <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>
-                            {formatRelativeTime(alert.createdAt)}
-                          </span>
-                          <span className="text-xs ml-1" style={{ color: 'var(--nafa-orange)' }}>· Voir le détail →</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        {!alert.isResolved && (
-                          <motion.button whileTap={{ scale: 0.95 }}
-                            onClick={(e) => { e.stopPropagation(); resolveAlert(alert.id); }}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium"
-                            style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>
-                            <CheckCircle2 size={13} strokeWidth={1.75} />Résoudre
-                          </motion.button>
-                        )}
-                        <motion.button whileTap={{ scale: 0.95 }}
-                          onClick={(e) => { e.stopPropagation(); void deleteAlert(alert.id); }}
-                          className="w-8 h-8 rounded-xl flex items-center justify-center"
-                          style={{ background: 'rgba(255,23,68,0.07)' }}
-                          aria-label="Supprimer">
-                          <Trash2 size={13} strokeWidth={1.75} style={{ color: 'var(--nafa-error)' }} />
-                        </motion.button>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-            {filtered.length === 0 && (
-              <div className="py-16 text-center">
-                <CheckCircle2 size={36} strokeWidth={1.5} className="mx-auto mb-3 text-green-500" />
-                <p className="text-sm font-medium" style={{ color: 'var(--nafa-gray-700)' }}>Aucune alerte</p>
-              </div>
-            )}
+          <div className="space-y-6">
+            {Object.entries(grouped).map(([key, list]) => {
+              if (!list.length) return null;
+              const label = key === 'today' ? "Aujourd'hui" : key === 'yesterday' ? 'Hier' : 'Plus tôt';
+              return (
+                <div key={key}>
+                  <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--nafa-gray-400)' }}>{label}</p>
+                  <div className="space-y-2">
+                    {list.map((alert, i) => {
+                      const c = cfg(alert);
+                      const Icon = c.icon;
+                      const unread = !alert.isResolved;
+                      return (
+                        <motion.div key={alert.id}
+                          initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.04 }}
+                          onClick={() => setSelectedAlert(alert)}
+                          className="flex items-start gap-3 p-3 rounded-2xl cursor-pointer"
+                          style={{
+                            border: `1px solid ${unread ? (alert.severity === 'critical' ? 'rgba(239,68,68,0.15)' : 'rgba(249,115,22,0.12)') : 'var(--nafa-gray-200)'}`,
+                            background: unread ? (alert.severity === 'critical' ? 'rgba(239,68,68,0.03)' : 'rgba(249,115,22,0.03)') : 'var(--nafa-white)',
+                          }}>
+                          <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${c.color}`}>
+                            <Icon size={18} strokeWidth={1.75} className={c.iconColor} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-sm font-semibold" style={{ color: 'var(--nafa-black)' }}>
+                                {ALERT_CONFIG[alert.type].label}
+                              </p>
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                {unread && <span className={`w-2 h-2 rounded-full ${c.dot}`} />}
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); void deleteAlert(alert.id); }}
+                                  className="w-6 h-6 rounded-full flex items-center justify-center"
+                                  style={{ background: 'var(--nafa-gray-100)' }}
+                                  aria-label="Supprimer">
+                                  <Trash2 size={11} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
+                                </button>
+                              </div>
+                            </div>
+                            <p className="text-xs mt-0.5 line-clamp-2" style={{ color: 'var(--nafa-gray-700)' }}>
+                              {alert.description}
+                            </p>
+                            <p className="text-xs mt-1" style={{ color: 'var(--nafa-gray-400)' }}>
+                              {formatRelativeTime(alert.createdAt)}
+                            </p>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
