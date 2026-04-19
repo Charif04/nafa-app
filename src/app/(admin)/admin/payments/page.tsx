@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   CircleDollarSign, Clock, CheckCircle2, ArrowUpRight, TrendingUp,
-  ArrowDownToLine, Check, X,
+  ArrowDownToLine, Check, X, Search,
 } from 'lucide-react';
 import { AnimatedCounter } from '@/components/shared/AnimatedCounter';
 import { Skeleton } from '@/components/shared/SkeletonShimmer';
@@ -26,6 +26,7 @@ function TransactionsTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [transactions, setTransactions] = useState<TxRow[]>([]);
   const [filter, setFilter] = useState<'all' | 'completed' | 'pending'>('all');
+  const [search, setSearch] = useState('');
   const [totalCollected, setTotalCollected] = useState(0);
   const [pendingAmount, setPendingAmount] = useState(0);
   const [completedCount, setCompletedCount] = useState(0);
@@ -79,9 +80,15 @@ function TransactionsTab() {
     setIsLoading(false);
   }
 
-  const filtered = transactions.filter((t) =>
-    filter === 'all' || t.status === filter
-  );
+  const q = search.trim().toLowerCase();
+  const filtered = transactions.filter((t) => {
+    const matchStatus = filter === 'all' || t.status === filter;
+    const matchSearch = !q
+      || t.id.toLowerCase().includes(q)
+      || t.vendor.toLowerCase().includes(q)
+      || new Date(t.date).toLocaleDateString('fr-FR').includes(q);
+    return matchStatus && matchSearch;
+  });
 
   const KPI = [
     { label: 'Total encaissé', value: totalCollected, icon: CircleDollarSign, bg: 'bg-green-50', color: 'text-green-600', fcfa: true },
@@ -119,6 +126,25 @@ function TransactionsTab() {
         </div>
       )}
 
+      {/* Search bar */}
+      <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border mb-4 bg-white"
+        style={{ borderColor: 'var(--nafa-gray-200)' }}>
+        <Search size={15} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Rechercher par ID ou boutique…"
+          className="flex-1 bg-transparent text-sm outline-none"
+          style={{ color: 'var(--nafa-black)' }}
+        />
+        {search && (
+          <button onClick={() => setSearch('')} aria-label="Effacer">
+            <X size={13} strokeWidth={2} style={{ color: 'var(--nafa-gray-400)' }} />
+          </button>
+        )}
+      </div>
+
       <div className="flex flex-wrap gap-2 mb-4">
         {(['all', 'completed', 'pending'] as const).map((f) => (
           <button key={f} onClick={() => setFilter(f)}
@@ -127,13 +153,19 @@ function TransactionsTab() {
             {f === 'all' ? 'Tous' : f === 'completed' ? 'Complétés' : 'En attente'}
           </button>
         ))}
+        {(search || filter !== 'all') && (
+          <span className="flex items-center text-xs px-3 py-2 rounded-xl font-medium"
+            style={{ background: 'rgba(255,107,44,0.08)', color: 'var(--nafa-orange)' }}>
+            {filtered.length} résultat{filtered.length !== 1 ? 's' : ''}
+          </span>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: 'var(--nafa-gray-200)' }}>
         {isLoading ? (
           <div className="p-6 space-y-3">{[1,2,3,4,5].map((i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}</div>
         ) : filtered.length === 0 ? (
-          <p className="px-6 py-10 text-sm text-center" style={{ color: 'var(--nafa-gray-400)' }}>Aucune transaction</p>
+          <p className="px-6 py-10 text-sm text-center" style={{ color: 'var(--nafa-gray-400)' }}>Aucune transaction trouvée</p>
         ) : (
           <>
             {/* Desktop table */}
@@ -218,6 +250,7 @@ function WithdrawalsTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [withdrawals, setWithdrawals] = useState<WdRow[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
+  const [search, setSearch] = useState('');
   const [processing, setProcessing] = useState<string | null>(null);
 
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/immutability
@@ -258,9 +291,16 @@ function WithdrawalsTab() {
     setProcessing(null);
   }
 
-  const filtered = withdrawals.filter((w) =>
-    filter === 'all' || w.status === filter || (filter === 'pending' && w.status === 'pending')
-  );
+  const q = search.trim().toLowerCase();
+  const filtered = withdrawals.filter((w) => {
+    const matchFilter = filter === 'all' || w.status === filter || (filter === 'pending' && w.status === 'pending');
+    const matchSearch = !q
+      || w.vendor.toLowerCase().includes(q)
+      || w.method.toLowerCase().includes(q)
+      || w.amount.toString().includes(q)
+      || new Date(w.date).toLocaleDateString('fr-FR').includes(q);
+    return matchFilter && matchSearch;
+  });
 
   const pendingCount = withdrawals.filter((w) => w.status === 'pending').length;
   const pendingTotal = withdrawals.filter((w) => w.status === 'pending').reduce((s, w) => s + w.amount, 0);
@@ -283,6 +323,25 @@ function WithdrawalsTab() {
         </div>
       )}
 
+      {/* Search bar */}
+      <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border mb-4 bg-white"
+        style={{ borderColor: 'var(--nafa-gray-200)' }}>
+        <Search size={15} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Rechercher par boutique ou méthode…"
+          className="flex-1 bg-transparent text-sm outline-none"
+          style={{ color: 'var(--nafa-black)' }}
+        />
+        {search && (
+          <button onClick={() => setSearch('')} aria-label="Effacer">
+            <X size={13} strokeWidth={2} style={{ color: 'var(--nafa-gray-400)' }} />
+          </button>
+        )}
+      </div>
+
       <div className="flex flex-wrap gap-2 mb-4">
         {(['all', 'pending', 'completed'] as const).map((f) => (
           <button key={f} onClick={() => setFilter(f)}
@@ -291,13 +350,19 @@ function WithdrawalsTab() {
             {f === 'all' ? 'Tous' : f === 'pending' ? `En attente${pendingCount > 0 ? ` (${pendingCount})` : ''}` : 'Traités'}
           </button>
         ))}
+        {(search || filter !== 'all') && (
+          <span className="flex items-center text-xs px-3 py-2 rounded-xl font-medium"
+            style={{ background: 'rgba(255,107,44,0.08)', color: 'var(--nafa-orange)' }}>
+            {filtered.length} résultat{filtered.length !== 1 ? 's' : ''}
+          </span>
+        )}
       </div>
 
       <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: 'var(--nafa-gray-200)' }}>
         {isLoading ? (
           <div className="p-6 space-y-3">{[1,2,3].map((i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}</div>
         ) : filtered.length === 0 ? (
-          <p className="px-6 py-10 text-sm text-center" style={{ color: 'var(--nafa-gray-400)' }}>Aucun retrait</p>
+          <p className="px-6 py-10 text-sm text-center" style={{ color: 'var(--nafa-gray-400)' }}>Aucun retrait trouvé</p>
         ) : (
           <>
             {/* Desktop table */}

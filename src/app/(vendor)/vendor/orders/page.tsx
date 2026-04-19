@@ -1,7 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ShoppingBag, Truck, ChevronRight, Search, X } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ShoppingBag, Truck, ChevronRight, Search, X, EyeOff, Eye, CheckSquare } from 'lucide-react';
 import Link from 'next/link';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -9,6 +9,8 @@ import { formatCurrency, formatOrderId } from '@/lib/utils';
 import { useVendorOrdersStore } from '@/stores/vendorOrdersStore';
 import { useAuthStore } from '@/stores/authStore';
 import type { OrderStatus } from '@/types';
+
+const STORAGE_KEY = 'nafa_hidden_vendor_orders';
 
 const FILTERS: { label: string; value: OrderStatus | 'all' }[] = [
   { label: 'Toutes', value: 'all' },
@@ -28,6 +30,12 @@ export default function VendorOrdersPage() {
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
   const [search, setSearch] = useState('');
 
+  // Hide / select state
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  const [showHidden, setShowHidden] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     fetchOrders();
     if (user?.uid) subscribeRealtime(user.uid);
@@ -42,8 +50,47 @@ export default function VendorOrdersPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid]);
 
+  // Load hidden IDs from localStorage (client-only)
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) setHiddenIds(new Set(JSON.parse(stored)));
+    } catch {}
+  }, []);
+
+  const persistHidden = (next: Set<string>) => {
+    setHiddenIds(next);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...next])); } catch {}
+  };
+
+  const hideSelected = () => {
+    const next = new Set([...hiddenIds, ...selected]);
+    persistHidden(next);
+    setSelected(new Set());
+    setSelectMode(false);
+  };
+
+  const unhideOrder = (id: string) => {
+    const next = new Set([...hiddenIds].filter((x) => x !== id));
+    persistHidden(next);
+  };
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const cancelSelectMode = () => { setSelectMode(false); setSelected(new Set()); };
+
   const q = search.trim().toLowerCase();
-  const filtered = orders.filter((o) => {
+
+  // Visible orders (exclude hidden unless showHidden)
+  const visibleOrders = orders.filter((o) => showHidden ? hiddenIds.has(o.id) : !hiddenIds.has(o.id));
+
+  const filtered = visibleOrders.filter((o) => {
     const matchFilter = filter === 'all' || o.orderStatus === filter;
     const matchSearch = !q
       || formatOrderId(o.id).toLowerCase().includes(q)
@@ -52,11 +99,41 @@ export default function VendorOrdersPage() {
     return matchFilter && matchSearch;
   });
 
+  const hiddenCount = hiddenIds.size;
+
   return (
     <div className="p-4 md:p-6 lg:p-8 w-full">
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--nafa-black)' }}>Commandes reçues</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--nafa-gray-700)' }}>{filtered.length} / {orders.length} commandes</p>
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--nafa-black)' }}>Commandes reçues</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--nafa-gray-700)' }}>{filtered.length} / {visibleOrders.length} commandes</p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {hiddenCount > 0 && !selectMode && (
+            <button
+              onClick={() => { setShowHidden((v) => !v); setSelected(new Set()); }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-colors"
+              style={{ borderColor: showHidden ? 'var(--nafa-orange)' : 'var(--nafa-gray-200)', color: showHidden ? 'var(--nafa-orange)' : 'var(--nafa-gray-700)', background: showHidden ? 'rgba(255,107,44,0.06)' : 'white' }}>
+              {showHidden ? <Eye size={13} strokeWidth={1.75} /> : <EyeOff size={13} strokeWidth={1.75} />}
+              {showHidden ? 'Visibles' : `Masquées (${hiddenCount})`}
+            </button>
+          )}
+          {!selectMode ? (
+            <button
+              onClick={() => setSelectMode(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border transition-colors"
+              style={{ borderColor: 'var(--nafa-gray-200)', color: 'var(--nafa-gray-700)', background: 'white' }}>
+              <CheckSquare size={13} strokeWidth={1.75} />
+              Sélectionner
+            </button>
+          ) : (
+            <button onClick={cancelSelectMode}
+              className="w-8 h-8 rounded-xl flex items-center justify-center border"
+              style={{ borderColor: 'var(--nafa-gray-200)', background: 'white' }}>
+              <X size={14} strokeWidth={2} style={{ color: 'var(--nafa-gray-700)' }} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Search bar */}
@@ -100,6 +177,17 @@ export default function VendorOrdersPage() {
         </div>
       )}
 
+      {/* Hidden mode banner */}
+      {showHidden && (
+        <div className="flex items-center gap-3 mb-4 px-4 py-3 rounded-xl"
+          style={{ background: 'rgba(255,107,44,0.06)', border: '1px solid rgba(255,107,44,0.15)' }}>
+          <EyeOff size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
+          <p className="text-sm flex-1" style={{ color: 'var(--nafa-gray-700)' }}>
+            Affichage des commandes masquées. Appuyez sur <strong>Visibles</strong> pour revenir.
+          </p>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {[1, 2, 3, 4].map((i) => (
@@ -121,28 +209,52 @@ export default function VendorOrdersPage() {
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={ShoppingBag}
-          title={q ? 'Aucun résultat' : 'Aucune commande'}
-          description={q ? `Aucune commande ne correspond à "${search}".` : "Vous n'avez pas encore reçu de commandes."}
+          title={q ? 'Aucun résultat' : showHidden ? 'Aucune commande masquée' : 'Aucune commande'}
+          description={q ? `Aucune commande ne correspond à "${search}".` : showHidden ? 'Vous n\'avez masqué aucune commande.' : "Vous n'avez pas encore reçu de commandes."}
           action={q ? { label: 'Effacer la recherche', onClick: () => setSearch('') } : undefined}
         />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {filtered.map((order, i) => (
-            <motion.div key={order.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06 }}>
-              <Link href={`/vendor/orders/${order.id}`} className="block">
-                <div className="bg-white rounded-2xl p-5 border hover:shadow-md transition-shadow"
-                  style={{ borderColor: 'var(--nafa-gray-200)' }}>
+          {filtered.map((order, i) => {
+            const isSelected = selected.has(order.id);
+            const isHidden = hiddenIds.has(order.id);
+            return (
+              <motion.div key={order.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}>
+                <div
+                  className="bg-white rounded-2xl p-5 border transition-shadow"
+                  style={{
+                    borderColor: isSelected ? 'var(--nafa-orange)' : 'var(--nafa-gray-200)',
+                    background: isSelected ? 'rgba(255,107,44,0.03)' : undefined,
+                    cursor: selectMode ? 'pointer' : undefined,
+                    boxShadow: isSelected ? '0 0 0 2px var(--nafa-orange)' : undefined,
+                  }}
+                  onClick={selectMode ? () => toggleSelect(order.id) : undefined}>
                   <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <p className="text-xs nafa-mono font-semibold" style={{ color: 'var(--nafa-orange)' }}>
-                        {formatOrderId(order.id)}
-                      </p>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }} suppressHydrationWarning>
-                        {new Date(order.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </p>
+                    <div className="flex items-center gap-2">
+                      {selectMode && (
+                        <div className="w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors"
+                          style={{ borderColor: isSelected ? 'var(--nafa-orange)' : 'var(--nafa-gray-400)', background: isSelected ? 'var(--nafa-orange)' : 'transparent' }}>
+                          {isSelected && <span style={{ color: 'white', fontSize: 10, fontWeight: 900, lineHeight: 1 }}>✓</span>}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs nafa-mono font-semibold" style={{ color: 'var(--nafa-orange)' }}>
+                          {formatOrderId(order.id)}
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--nafa-gray-400)' }} suppressHydrationWarning>
+                          {new Date(order.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      {isHidden && !selectMode && (
+                        <button onClick={(e) => { e.stopPropagation(); unhideOrder(order.id); }}
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium"
+                          style={{ background: 'rgba(255,107,44,0.08)', color: 'var(--nafa-orange)' }}>
+                          <Eye size={11} strokeWidth={1.75} />Afficher
+                        </button>
+                      )}
                       <div className="text-right">
                         <p className="text-base font-black nafa-mono" style={{ color: 'var(--nafa-black)' }}>
                           {formatCurrency(order.total, order.currency)}
@@ -151,7 +263,11 @@ export default function VendorOrdersPage() {
                           <StatusBadge status={order.orderStatus} />
                         </div>
                       </div>
-                      <ChevronRight size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)', flexShrink: 0 }} />
+                      {!selectMode && (
+                        <Link href={`/vendor/orders/${order.id}`} onClick={(e) => e.stopPropagation()}>
+                          <ChevronRight size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)', flexShrink: 0 }} />
+                        </Link>
+                      )}
                     </div>
                   </div>
 
@@ -171,11 +287,36 @@ export default function VendorOrdersPage() {
                     <span>{order.deliveryAddress.city}, {order.deliveryAddress.country}</span>
                   </div>
                 </div>
-              </Link>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       )}
+
+      {/* Floating action bar */}
+      <AnimatePresence>
+        {selectMode && selected.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl"
+            style={{ background: 'var(--nafa-black)', minWidth: 260 }}>
+            <span className="text-sm font-semibold text-white flex-1">
+              {selected.size} sélectionnée{selected.size > 1 ? 's' : ''}
+            </span>
+            <button
+              onClick={hideSelected}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white"
+              style={{ background: 'var(--nafa-orange)' }}>
+              <EyeOff size={13} strokeWidth={2} />
+              Masquer
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {selectMode && selected.size > 0 && <div className="h-24" />}
     </div>
   );
 }
