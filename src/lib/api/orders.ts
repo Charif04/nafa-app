@@ -142,7 +142,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
   const label = STATUS_LABELS[status] ?? 'Mise à jour de commande';
   const orderLabel = formatOrderId(orderId);
 
-  // 3. Notify client on every status change
+  // 3. Client — notified on every status change
   void sendNotification(
     order.client_id,
     'order_status',
@@ -152,28 +152,50 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
     `/profile/orders/${orderId}`
   );
 
-  // 4. Notify vendor when order is delivered or cancelled
-  if (status === 'delivered' || status === 'cancelled') {
+  // 4. Vendor notifications
+  // ↳ at_warehouse : commande arrivée à l'entrepôt NAFA
+  if (status === 'at_warehouse') {
     void sendNotification(
       order.vendor_id,
-      status === 'delivered' ? 'order_delivered' : 'order_cancelled',
-      status === 'delivered' ? `Commande livrée` : `Commande annulée`,
-      `Commande ${orderLabel} a été ${status === 'delivered' ? 'livrée au client' : 'annulée'}.`,
+      'order_status',
+      "Colis à l'entrepôt NAFA",
+      `Commande ${orderLabel} est bien arrivée à l'entrepôt NAFA et va être traitée.`,
+      orderId,
+      `/vendor/orders/${orderId}`
+    );
+  }
+  // ↳ delivered : commande livrée au client
+  if (status === 'delivered') {
+    void sendNotification(
+      order.vendor_id,
+      'order_delivered',
+      'Commande livrée ✓',
+      `Commande ${orderLabel} a été livrée au client avec succès.`,
+      orderId,
+      `/vendor/orders/${orderId}`
+    );
+  }
+  // ↳ cancelled
+  if (status === 'cancelled') {
+    void sendNotification(
+      order.vendor_id,
+      'order_cancelled',
+      'Commande annulée',
+      `Commande ${orderLabel} a été annulée.`,
       orderId,
       `/vendor/orders/${orderId}`
     );
   }
 
-  // 5. Notify admin for key logistics events
-  if (status === 'in_transit_warehouse' || status === 'at_warehouse' || status === 'cancelled') {
-    const { data: admins } = await db
-      .from('profiles')
-      .select('id')
-      .eq('role', 'admin');
+  // 5. Admin notifications — logistique clé
+  const adminStatuses: OrderStatus[] = ['in_transit_warehouse', 'at_warehouse', 'delivered', 'cancelled'];
+  if (adminStatuses.includes(status)) {
+    const { data: admins } = await db.from('profiles').select('id').eq('role', 'admin');
     const adminTitle =
-      status === 'in_transit_warehouse' ? `Colis en route` :
-      status === 'at_warehouse'         ? `Colis à l'entrepôt` :
-                                          `Commande annulée`;
+      status === 'in_transit_warehouse' ? 'Colis en route vers l\'entrepôt' :
+      status === 'at_warehouse'         ? 'Colis arrivé à l\'entrepôt' :
+      status === 'delivered'            ? 'Commande livrée' :
+                                          'Commande annulée';
     for (const admin of admins ?? []) {
       void sendNotification(
         admin.id,
@@ -185,6 +207,12 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus): P
       );
     }
   }
+
+  // 6. Trigger background alert check after every status change
+  try {
+    const base = typeof window !== 'undefined' ? '' : (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    void fetch(`${base}/api/check-alerts`, { method: 'POST' });
+  } catch { /* non-critical */ }
 }
 
 export async function createOrder(payload: {
@@ -252,6 +280,38 @@ export async function createOrder(payload: {
     order.id,
     `/vendor/orders/${order.id}`
   );
+
+  // Check low stock for ordered products — notify vendor if any product is faible
+  try {
+    const productIds = payload.items.map((it) => it.productId).filter(Boolean);
+    if (productIds.length > 0) {
+      const { data: products } = await db
+        .from('products')
+        .select('id, title, stock')
+        .in('id', productIds);
+      for (const p of products ?? []) {
+        if (p.stock !== null && p.stock <= 5 && p.stock > 0) {
+          void sendNotification(
+            payload.vendorId,
+            'low_stock',
+            'Stock faible',
+            `Le produit "${p.title}" n'a plus que ${p.stock} unité${p.stock > 1 ? 's' : ''} en stock.`,
+            undefined,
+            `/vendor/products`
+          );
+        } else if (p.stock === 0) {
+          void sendNotification(
+            payload.vendorId,
+            'low_stock',
+            'Produit épuisé',
+            `Le produit "${p.title}" est épuisé. Pensez à réapprovisionner.`,
+            undefined,
+            `/vendor/products`
+          );
+        }
+      }
+    }
+  } catch { /* non-critical */ }
 
   return order.id;
 }

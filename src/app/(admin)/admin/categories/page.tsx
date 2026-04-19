@@ -196,7 +196,7 @@ export default function AdminCategoriesPage() {
         )}
       </AnimatePresence>
 
-      {/* Categories table */}
+      {/* Categories list */}
       <div className="bg-white rounded-2xl border overflow-hidden" style={{ borderColor: 'var(--nafa-gray-200)' }}>
         {isLoading ? (
           <div className="py-12 flex items-center justify-center">
@@ -208,147 +208,145 @@ export default function AdminCategoriesPage() {
             <p className="text-sm" style={{ color: 'var(--nafa-gray-400)' }}>Aucune catégorie. Créez-en une !</p>
           </div>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr style={{ background: 'var(--nafa-gray-100)', borderBottom: '1px solid var(--nafa-gray-200)' }}>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide w-8" style={{ color: 'var(--nafa-gray-400)' }} />
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>Libellé</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>Slug</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>Ordre</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>Statut</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            {/* ── Desktop table ── */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr style={{ background: 'var(--nafa-gray-100)', borderBottom: '1px solid var(--nafa-gray-200)' }}>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide w-8" style={{ color: 'var(--nafa-gray-400)' }} />
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>Libellé</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>Slug</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>Ordre</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>Statut</th>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--nafa-gray-400)' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categories.map((cat, i) => (
+                    <motion.tr key={cat.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
+                      style={{ borderBottom: '1px solid var(--nafa-gray-100)' }}>
+                      <td className="px-3 py-3 text-center">
+                        <GripVertical size={14} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-300)' }} />
+                      </td>
+                      <td className="px-4 py-3">
+                        {editingId === cat.id ? (
+                          <input value={editLabel} onChange={(e) => setEditLabel(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(cat.id); if (e.key === 'Escape') setEditingId(null); }}
+                            className="w-full px-2 py-1 rounded-lg border text-sm outline-none"
+                            style={{ borderColor: 'var(--nafa-orange)', background: 'white' }} autoFocus />
+                        ) : (
+                          <span className="text-sm font-medium" style={{ color: 'var(--nafa-black)' }}>{cat.label}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {editingId === cat.id ? (
+                          <input value={editName} onChange={(e) => setEditName(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(cat.id); if (e.key === 'Escape') setEditingId(null); }}
+                            className="w-full px-2 py-1 rounded-lg border text-sm outline-none nafa-mono"
+                            style={{ borderColor: 'var(--nafa-orange)', background: 'white' }} />
+                        ) : (
+                          <span className="text-xs nafa-mono px-2 py-0.5 rounded-lg" style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>{cat.name}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => move(cat.id, 'up')} disabled={i === 0} className="w-6 h-6 rounded-lg flex items-center justify-center disabled:opacity-30" style={{ background: 'var(--nafa-gray-100)' }} aria-label="Monter">
+                            <span style={{ fontSize: '10px', lineHeight: 1 }}>▲</span>
+                          </button>
+                          <span className="text-xs nafa-mono w-6 text-center" style={{ color: 'var(--nafa-gray-400)' }}>{cat.sort_order}</span>
+                          <button onClick={() => move(cat.id, 'down')} disabled={i === categories.length - 1} className="w-6 h-6 rounded-lg flex items-center justify-center disabled:opacity-30" style={{ background: 'var(--nafa-gray-100)' }} aria-label="Descendre">
+                            <span style={{ fontSize: '10px', lineHeight: 1 }}>▼</span>
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <button onClick={() => toggleActive(cat)} className="flex items-center gap-1.5">
+                          {cat.is_active ? <ToggleRight size={20} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} /> : <ToggleLeft size={20} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />}
+                          <span className="text-xs font-medium" style={{ color: cat.is_active ? 'var(--nafa-orange)' : 'var(--nafa-gray-400)' }}>{cat.is_active ? 'Active' : 'Masquée'}</span>
+                        </button>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2 justify-end">
+                          {editingId === cat.id ? (
+                            <>
+                              <button onClick={() => saveEdit(cat.id)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(0,200,83,0.1)', color: 'var(--nafa-green)' }} aria-label="Sauvegarder"><Check size={14} strokeWidth={2} /></button>
+                              <button onClick={() => setEditingId(null)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }} aria-label="Annuler"><X size={14} strokeWidth={2} /></button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={() => startEdit(cat)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }} aria-label="Modifier"><Pencil size={13} strokeWidth={1.75} /></button>
+                              <button onClick={() => setDeletingId(cat.id)} className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--nafa-error)' }} aria-label="Supprimer"><Trash2 size={13} strokeWidth={1.75} /></button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* ── Mobile cards ── */}
+            <div className="md:hidden divide-y" style={{ borderColor: 'var(--nafa-gray-100)' }}>
               {categories.map((cat, i) => (
-                <motion.tr
-                  key={cat.id}
-                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
-                  style={{ borderBottom: '1px solid var(--nafa-gray-100)' }}
-                >
-                  <td className="px-3 py-3 text-center">
-                    <GripVertical size={14} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-300)' }} />
-                  </td>
-
-                  {/* Libellé */}
-                  <td className="px-4 py-3">
+                <motion.div key={cat.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
+                  className="p-4">
+                  {/* Row 1: libellé + toggle */}
+                  <div className="flex items-center justify-between gap-3 mb-2">
                     {editingId === cat.id ? (
-                      <input
-                        value={editLabel}
-                        onChange={(e) => setEditLabel(e.target.value)}
+                      <input value={editLabel} onChange={(e) => setEditLabel(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(cat.id); if (e.key === 'Escape') setEditingId(null); }}
-                        className="w-full px-2 py-1 rounded-lg border text-sm outline-none"
-                        style={{ borderColor: 'var(--nafa-orange)', background: 'white' }}
-                        autoFocus
-                      />
+                        className="flex-1 px-2 py-1.5 rounded-lg border text-sm outline-none"
+                        style={{ borderColor: 'var(--nafa-orange)', background: 'white' }} autoFocus />
                     ) : (
-                      <span className="text-sm font-medium" style={{ color: 'var(--nafa-black)' }}>{cat.label}</span>
+                      <span className="text-sm font-semibold flex-1" style={{ color: 'var(--nafa-black)' }}>{cat.label}</span>
                     )}
-                  </td>
-
-                  {/* Slug */}
-                  <td className="px-4 py-3">
+                    <button onClick={() => toggleActive(cat)} className="flex items-center gap-1 flex-shrink-0">
+                      {cat.is_active ? <ToggleRight size={22} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} /> : <ToggleLeft size={22} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />}
+                      <span className="text-xs font-medium" style={{ color: cat.is_active ? 'var(--nafa-orange)' : 'var(--nafa-gray-400)' }}>{cat.is_active ? 'Active' : 'Masquée'}</span>
+                    </button>
+                  </div>
+                  {/* Row 2: slug */}
+                  <div className="mb-3">
                     {editingId === cat.id ? (
-                      <input
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
+                      <input value={editName} onChange={(e) => setEditName(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(cat.id); if (e.key === 'Escape') setEditingId(null); }}
-                        className="w-full px-2 py-1 rounded-lg border text-sm outline-none nafa-mono"
-                        style={{ borderColor: 'var(--nafa-orange)', background: 'white' }}
-                      />
+                        className="w-full px-2 py-1.5 rounded-lg border text-sm outline-none nafa-mono"
+                        style={{ borderColor: 'var(--nafa-orange)', background: 'white' }} />
                     ) : (
-                      <span className="text-xs nafa-mono px-2 py-0.5 rounded-lg" style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>
-                        {cat.name}
-                      </span>
+                      <span className="text-xs nafa-mono px-2 py-0.5 rounded-lg" style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>{cat.name}</span>
                     )}
-                  </td>
-
-                  {/* Ordre */}
-                  <td className="px-4 py-3">
+                  </div>
+                  {/* Row 3: order controls + actions */}
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => move(cat.id, 'up')}
-                        disabled={i === 0}
-                        className="w-6 h-6 rounded-lg flex items-center justify-center disabled:opacity-30"
-                        style={{ background: 'var(--nafa-gray-100)' }}
-                        aria-label="Monter"
-                      >
-                        <span style={{ fontSize: '10px', lineHeight: 1 }}>▲</span>
+                      <button onClick={() => move(cat.id, 'up')} disabled={i === 0} className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-30" style={{ background: 'var(--nafa-gray-100)' }} aria-label="Monter">
+                        <span style={{ fontSize: '11px' }}>▲</span>
                       </button>
                       <span className="text-xs nafa-mono w-6 text-center" style={{ color: 'var(--nafa-gray-400)' }}>{cat.sort_order}</span>
-                      <button
-                        onClick={() => move(cat.id, 'down')}
-                        disabled={i === categories.length - 1}
-                        className="w-6 h-6 rounded-lg flex items-center justify-center disabled:opacity-30"
-                        style={{ background: 'var(--nafa-gray-100)' }}
-                        aria-label="Descendre"
-                      >
-                        <span style={{ fontSize: '10px', lineHeight: 1 }}>▼</span>
+                      <button onClick={() => move(cat.id, 'down')} disabled={i === categories.length - 1} className="w-7 h-7 rounded-lg flex items-center justify-center disabled:opacity-30" style={{ background: 'var(--nafa-gray-100)' }} aria-label="Descendre">
+                        <span style={{ fontSize: '11px' }}>▼</span>
                       </button>
                     </div>
-                  </td>
-
-                  {/* Statut */}
-                  <td className="px-4 py-3">
-                    <button onClick={() => toggleActive(cat)} className="flex items-center gap-1.5">
-                      {cat.is_active
-                        ? <ToggleRight size={20} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
-                        : <ToggleLeft size={20} strokeWidth={1.75} style={{ color: 'var(--nafa-gray-400)' }} />
-                      }
-                      <span className="text-xs font-medium" style={{ color: cat.is_active ? 'var(--nafa-orange)' : 'var(--nafa-gray-400)' }}>
-                        {cat.is_active ? 'Active' : 'Masquée'}
-                      </span>
-                    </button>
-                  </td>
-
-                  {/* Actions */}
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2 justify-end">
+                    <div className="flex items-center gap-2">
                       {editingId === cat.id ? (
                         <>
-                          <button
-                            onClick={() => saveEdit(cat.id)}
-                            className="w-7 h-7 rounded-lg flex items-center justify-center"
-                            style={{ background: 'rgba(0,200,83,0.1)', color: 'var(--nafa-green)' }}
-                            aria-label="Sauvegarder"
-                          >
-                            <Check size={14} strokeWidth={2} />
-                          </button>
-                          <button
-                            onClick={() => setEditingId(null)}
-                            className="w-7 h-7 rounded-lg flex items-center justify-center"
-                            style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}
-                            aria-label="Annuler"
-                          >
-                            <X size={14} strokeWidth={2} />
-                          </button>
+                          <button onClick={() => saveEdit(cat.id)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: 'rgba(0,200,83,0.1)', color: 'var(--nafa-green)' }}><Check size={13} strokeWidth={2} />Sauver</button>
+                          <button onClick={() => setEditingId(null)} className="px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}>Annuler</button>
                         </>
                       ) : (
                         <>
-                          <button
-                            onClick={() => startEdit(cat)}
-                            className="w-7 h-7 rounded-lg flex items-center justify-center"
-                            style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}
-                            aria-label="Modifier"
-                          >
-                            <Pencil size={13} strokeWidth={1.75} />
-                          </button>
-                          <button
-                            onClick={() => setDeletingId(cat.id)}
-                            className="w-7 h-7 rounded-lg flex items-center justify-center"
-                            style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--nafa-error)' }}
-                            aria-label="Supprimer"
-                          >
-                            <Trash2 size={13} strokeWidth={1.75} />
-                          </button>
+                          <button onClick={() => startEdit(cat)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: 'var(--nafa-gray-100)', color: 'var(--nafa-gray-700)' }}><Pencil size={12} strokeWidth={1.75} />Modifier</button>
+                          <button onClick={() => setDeletingId(cat.id)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium" style={{ background: 'rgba(239,68,68,0.08)', color: 'var(--nafa-error)' }}><Trash2 size={12} strokeWidth={1.75} />Supprimer</button>
                         </>
                       )}
                     </div>
-                  </td>
-                </motion.tr>
+                  </div>
+                </motion.div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
       </div>
 
