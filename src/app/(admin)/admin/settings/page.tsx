@@ -350,22 +350,6 @@ export default function AdminSettingsPage() {
           )}
         </motion.div>
 
-        {/* ── À propos ── */}
-        <motion.div variants={itemVariants} className="pb-2">
-          <div className="flex flex-col items-center gap-2 py-4">
-            <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--nafa-orange) 0%, var(--nafa-orange-dark, #e55a1c) 100%)' }}>
-              <span className="text-white font-black text-xl">N</span>
-            </div>
-            <p className="text-sm font-bold" style={{ color: 'var(--nafa-black)' }}>NAFA</p>
-            <p className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>Version 1.0.0</p>
-            <p className="text-xs text-center" style={{ color: 'var(--nafa-gray-400)' }}>
-              Conçu &amp; développé par{' '}
-              <span className="font-nitro" style={{ color: 'var(--nafa-orange)', fontSize: '1.05em', letterSpacing: '0.02em' }}>Kim_San</span>
-            </p>
-            <p className="text-xs" style={{ color: 'var(--nafa-gray-300)' }}>© 2025 NAFA · Tous droits réservés</p>
-          </div>
-        </motion.div>
-
         {/* ── Déconnexion ── */}
         <motion.div variants={itemVariants} className="bg-white rounded-2xl border p-6" style={{ borderColor: 'var(--nafa-gray-200)' }}>
           <div className="flex items-center gap-3 mb-4">
@@ -383,6 +367,22 @@ export default function AdminSettingsPage() {
             <LogOut size={15} strokeWidth={1.75} />
             Se déconnecter
           </motion.button>
+        </motion.div>
+
+        {/* ── À propos ── */}
+        <motion.div variants={itemVariants} className="pb-2">
+          <div className="flex flex-col items-center gap-2 py-4">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--nafa-orange) 0%, var(--nafa-orange-dark, #e55a1c) 100%)' }}>
+              <span className="text-white font-black text-xl">N</span>
+            </div>
+            <p className="text-sm font-bold" style={{ color: 'var(--nafa-black)' }}>NAFA</p>
+            <p className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>Version 1.0.0</p>
+            <p className="text-xs text-center" style={{ color: 'var(--nafa-gray-400)' }}>
+              Conçu &amp; développé par{' '}
+              <span className="font-nitro" style={{ color: 'var(--nafa-orange)', fontSize: '1.05em', letterSpacing: '0.02em' }}>Kim_San</span>
+            </p>
+            <p className="text-xs" style={{ color: 'var(--nafa-gray-300)' }}>© 2025 NAFA · Tous droits réservés</p>
+          </div>
         </motion.div>
 
       </motion.div>

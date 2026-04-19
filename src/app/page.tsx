@@ -99,16 +99,7 @@ export default function SplashPage() {
           La marketplace africaine qui vous connecte
         </motion.p>
 
-        {/* Creator signature */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.4, duration: 0.4 }}
-          className="text-[11px]"
-          style={{ color: 'var(--nafa-gray-300)' }}
-        >
-          by <span className="font-nitro" style={{ color: 'var(--nafa-orange)', fontSize: '1.15em', letterSpacing: '0.03em' }}>Kim_San</span>
-        </motion.p>
+
       </motion.div>
 
       {/* Loader dots */}

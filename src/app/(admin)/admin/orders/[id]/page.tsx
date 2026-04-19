@@ -467,7 +467,8 @@ function ShippingLabelModal({ order, onClose }: { order: Order; onClose: () => v
         </div>
 
         {/* Label preview */}
-        <div className="flex-1 overflow-y-auto p-5">
+        <div className="flex-1 overflow-auto p-5">
+          <div style={{ minWidth: 'min-content' }}>
           <div ref={printRef}>
             <div style={sty.label}>
 
@@ -572,6 +573,7 @@ function ShippingLabelModal({ order, onClose }: { order: Order; onClose: () => v
               </div>
 
             </div>
+          </div>
           </div>
         </div>
       </div>
