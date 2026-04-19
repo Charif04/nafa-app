@@ -31,8 +31,6 @@ export default function RegisterPage() {
   const [phonePrefix, setPhonePrefix] = useState('+226');
 
   const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
     email: '',
     phone: '',
     password: '',
@@ -48,10 +46,9 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
 
-    // Client-side email format check
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     if (!emailRegex.test(form.email.trim())) {
-      setError("L'adresse email semble invalide. Vérifiez le format (ex : vous@exemple.com).");
+      setError("L'adresse email semble invalide. Vérifiez le format.");
       return;
     }
 
@@ -64,8 +61,8 @@ export default function RegisterPage() {
         options: {
           data: {
             role: 'client',
-            first_name: form.firstName.trim(),
-            last_name: form.lastName.trim(),
+            first_name: '',
+            last_name: '',
             phone: `${phonePrefix}${form.phone.trim()}`,
             country: form.country || 'Burkina Faso',
           },
@@ -117,28 +114,18 @@ export default function RegisterPage() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <FormField label="Prénom" required>
-                <input type="text" required value={form.firstName} onChange={(e) => updateForm('firstName', e.target.value)}
-                  placeholder="Amadou" className={inputClass} autoComplete="given-name"
-                  onFocus={onFocusInput} onBlur={onBlurInput} />
-              </FormField>
-              <FormField label="Nom" required>
-                <input type="text" required value={form.lastName} onChange={(e) => updateForm('lastName', e.target.value)}
-                  placeholder="Diallo" className={inputClass} autoComplete="family-name"
-                  onFocus={onFocusInput} onBlur={onBlurInput} />
-              </FormField>
-            </div>
 
+            {/* Email */}
             <FormField label="Email" required>
               <div className="relative">
                 <Mail size={14} strokeWidth={1.75} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--nafa-gray-400)' }} />
                 <input type="email" required value={form.email} onChange={(e) => updateForm('email', e.target.value)}
-                  placeholder="vous@exemple.com" className={cn(inputClass, 'pl-9')} autoComplete="email"
+                  placeholder="votre@email.com" className={cn(inputClass, 'pl-9')} autoComplete="email"
                   onFocus={onFocusInput} onBlur={onBlurInput} />
               </div>
             </FormField>
 
+            {/* Téléphone */}
             <FormField label="Téléphone" required>
               <div className="flex gap-2">
                 <select
@@ -157,12 +144,13 @@ export default function RegisterPage() {
                 <div className="relative flex-1">
                   <Phone size={14} strokeWidth={1.75} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--nafa-gray-400)' }} />
                   <input type="tel" required value={form.phone} onChange={(e) => updateForm('phone', e.target.value)}
-                    placeholder="70 00 00 00" className={cn(inputClass, 'pl-9')} autoComplete="tel"
+                    placeholder="XX XX XX XX" className={cn(inputClass, 'pl-9')} autoComplete="tel"
                     onFocus={onFocusInput} onBlur={onBlurInput} />
                 </div>
               </div>
             </FormField>
 
+            {/* Pays + Ville */}
             <div className="grid grid-cols-2 gap-3">
               <FormField label="Pays" required>
                 <div className="relative">
@@ -178,11 +166,12 @@ export default function RegisterPage() {
               </FormField>
               <FormField label="Ville" required>
                 <input type="text" required value={form.city} onChange={(e) => updateForm('city', e.target.value)}
-                  placeholder="Ouagadougou" className={inputClass}
+                  placeholder="" className={inputClass}
                   onFocus={onFocusInput} onBlur={onBlurInput} />
               </FormField>
             </div>
 
+            {/* Mot de passe */}
             <FormField label="Mot de passe" required>
               <div className="relative">
                 <Lock size={14} strokeWidth={1.75} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--nafa-gray-400)' }} />
