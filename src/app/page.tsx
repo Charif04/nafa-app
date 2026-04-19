@@ -27,7 +27,7 @@ export default function SplashPage() {
           ? '/vendor/dashboard'
           : '/home';
 
-        timer = setTimeout(() => router.replace(dest), 600);
+        timer = setTimeout(() => router.replace(dest), 2400);
       } else {
         // Not logged in — show the full splash animation then go to login
         timer = setTimeout(() => router.replace('/login'), 2400);
