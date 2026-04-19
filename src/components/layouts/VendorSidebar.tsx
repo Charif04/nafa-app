@@ -3,6 +3,7 @@ import {
   LayoutDashboard, Package, ShoppingBag, DollarSign,
   Wallet, Settings, LogOut, ChevronRight, Bell, BellDot
 } from 'lucide-react';
+
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -26,6 +27,7 @@ const BOTTOM_NAV = [
   { href: '/vendor/dashboard', icon: LayoutDashboard, label: 'Accueil' },
   { href: '/vendor/products', icon: Package, label: 'Produits' },
   { href: '/vendor/orders', icon: ShoppingBag, label: 'Commandes' },
+  { href: '/vendor/revenue', icon: DollarSign, label: 'Revenus' },
   { href: '/vendor/wallet', icon: Wallet, label: 'Portefeuille' },
   { href: '/vendor/settings', icon: Settings, label: 'Paramètres' },
 ];
