@@ -101,14 +101,14 @@ export function VendorSidebar() {
         style={{ background: 'var(--nafa-dark)', height: 'calc(env(safe-area-inset-top, 0px) + 52px)' }}
       >
         <span className="text-white font-semibold text-sm truncate flex-1">{shopName}</span>
-        {unreadCount > 0 && (
-          <Link href="/vendor/notifications" className="relative ml-2">
-            <Bell size={18} strokeWidth={1.75} className="text-white/80" />
-            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full text-white text-[10px] font-bold flex items-center justify-center" style={{ background: 'var(--nafa-orange)' }}>
+        <Link href="/vendor/notifications" className="relative ml-2 p-1">
+          <Bell size={18} strokeWidth={1.75} className="text-white/80" />
+          {unreadCount > 0 && (
+            <span className="absolute top-0 right-0 w-4 h-4 rounded-full text-white text-[10px] font-bold flex items-center justify-center" style={{ background: 'var(--nafa-orange)' }}>
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
-          </Link>
-        )}
+          )}
+        </Link>
       </div>
 
       {/* ── Mobile: bottom navigation bar ── */}
