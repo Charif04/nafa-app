@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+/* ── Nitro Break — creator signature font ──────────────────────────────────
+   Place the font file at: public/fonts/NitroBreak.woff2
+   Download: https://www.dafont.com/nitro-break.font (free for personal use)
+   ─────────────────────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'Nitro Break';
+  src: url('/fonts/NitroBreak.woff2') format('woff2'),
+       url('/fonts/NitroBreak.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-nitro {
+  font-family: 'Nitro Break', system-ui, sans-serif;
+}
+
 /* NAFA Design System — CSS Variables */
 :root {
   /* Brand Colors */

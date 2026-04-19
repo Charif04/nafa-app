@@ -1,5 +1,4 @@
 'use client';
-import { motion } from 'framer-motion';
 import {
   LayoutDashboard, Package, ShoppingBag, DollarSign,
   Wallet, Settings, LogOut, ChevronRight, Bell, BellDot
@@ -128,18 +127,27 @@ export function VendorSidebar() {
             <Link
               key={href}
               href={href}
-              className="flex-1 flex flex-col items-center gap-1 pt-3 pb-2 transition-colors relative"
-              style={{ color: isActive ? 'var(--nafa-orange-light)' : 'rgba(255,255,255,0.45)' }}
+              className="flex-1 flex flex-col items-center gap-1 pt-3 pb-2 relative"
+              style={{
+                color: isActive ? 'var(--nafa-orange-light)' : 'rgba(255,255,255,0.45)',
+                transition: 'color 0.18s ease',
+              }}
               aria-current={isActive ? 'page' : undefined}
             >
-              {isActive && (
-                <motion.div
-                  layoutId="vendor-bottom-indicator"
-                  className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full"
-                  style={{ background: 'var(--nafa-orange)' }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                />
-              )}
+              {/* Always rendered — CSS transition avoids layoutId flicker */}
+              <div
+                className="absolute top-0 rounded-full"
+                style={{
+                  left: '50%',
+                  width: 24,
+                  height: 3,
+                  background: 'var(--nafa-orange)',
+                  borderRadius: 99,
+                  transform: `translateX(-50%) scaleX(${isActive ? 1 : 0})`,
+                  opacity: isActive ? 1 : 0,
+                  transition: 'transform 0.2s ease, opacity 0.2s ease',
+                }}
+              />
               <Icon size={20} strokeWidth={isActive ? 2 : 1.75} />
               <span className="text-[10px] font-medium leading-none">{label}</span>
             </Link>

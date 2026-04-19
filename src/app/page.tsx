@@ -107,7 +107,7 @@ export default function SplashPage() {
           className="text-[11px]"
           style={{ color: 'var(--nafa-gray-300)' }}
         >
-          by <span style={{ color: 'var(--nafa-orange)', fontWeight: 600 }}>Charif</span>
+          by <span className="font-nitro" style={{ color: 'var(--nafa-orange)', fontSize: '1.15em', letterSpacing: '0.03em' }}>Kim_San</span>
         </motion.p>
       </motion.div>
 

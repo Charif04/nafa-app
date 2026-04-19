@@ -443,7 +443,7 @@ export default function SettingsPage() {
                 <p className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>Version 1.0.0</p>
                 <p className="text-xs text-center" style={{ color: 'var(--nafa-gray-400)' }}>
                   Conçu &amp; développé par{' '}
-                  <span className="font-semibold" style={{ color: 'var(--nafa-orange)' }}>Charif</span>
+                  <span className="font-nitro" style={{ color: 'var(--nafa-orange)', fontSize: '1.05em', letterSpacing: '0.02em' }}>Kim_San</span>
                 </p>
                 <p className="text-xs" style={{ color: 'var(--nafa-gray-300)' }}>© 2025 NAFA · Tous droits réservés</p>
               </div>

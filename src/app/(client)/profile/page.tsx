@@ -18,14 +18,15 @@ import { AvatarUpload } from '@/components/shared/AvatarUpload';
 export default function ProfilePage() {
   const router = useRouter();
   const [showVendorModal, setShowVendorModal] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const user = useAuthStore((s) => s.user);
   const wishlistCount = useWishlistStore((s) => s.items.length);
 
   const handleLogout = async () => {
-    const confirmed = window.confirm('Voulez-vous vraiment vous déconnecter ?');
-    if (!confirmed) return;
+    setIsLoggingOut(true);
     await supabase.auth.signOut();
-    router.replace('/login');
+    router.replace('/');
   };
 
   const containerVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.04 } } };
@@ -120,7 +121,7 @@ export default function ProfilePage() {
 
             {/* Déconnexion */}
             <motion.div variants={itemVariants} className="rounded-2xl overflow-hidden" style={{ background: 'var(--nafa-white)' }}>
-              <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3.5 w-full text-left">
+              <button onClick={() => setShowLogoutConfirm(true)} className="flex items-center gap-3 px-4 py-3.5 w-full text-left">
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-red-50">
                   <LogOut size={16} strokeWidth={1.75} className="text-red-500" />
                 </div>
@@ -135,6 +136,47 @@ export default function ProfilePage() {
 
       <AnimatePresence>
         {showVendorModal && <BecomeVendorModal onClose={() => setShowVendorModal(false)} />}
+      </AnimatePresence>
+
+      {/* Logout confirmation modal */}
+      <AnimatePresence>
+        {showLogoutConfirm && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-6"
+            style={{ background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 16 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 16 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              className="bg-white rounded-2xl p-6 w-full max-w-xs shadow-2xl"
+            >
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 bg-red-50">
+                <LogOut size={24} strokeWidth={1.75} className="text-red-500" />
+              </div>
+              <h3 className="text-base font-bold text-center mb-1" style={{ color: 'var(--nafa-black)' }}>
+                Se déconnecter ?
+              </h3>
+              <p className="text-sm text-center mb-6" style={{ color: 'var(--nafa-gray-400)' }}>
+                Vous serez redirigé vers la page de connexion.
+              </p>
+              <div className="flex gap-3">
+                <button onClick={() => setShowLogoutConfirm(false)} disabled={isLoggingOut}
+                  className="flex-1 py-3 rounded-xl text-sm font-semibold border"
+                  style={{ borderColor: 'var(--nafa-gray-200)', color: 'var(--nafa-gray-700)' }}>
+                  Annuler
+                </button>
+                <button onClick={handleLogout} disabled={isLoggingOut}
+                  className="flex-1 py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
+                  style={{ background: '#ef4444', opacity: isLoggingOut ? 0.7 : 1 }}>
+                  {isLoggingOut
+                    ? <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    : 'Déconnecter'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </>
   );
