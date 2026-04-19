@@ -349,8 +349,8 @@ export default function VendorStorefrontPage() {
   return (
     <div className="min-h-dvh" style={{ background: 'var(--nafa-gray-100)' }}>
 
-      {/* ── Desktop sticky header ── */}
-      <header className="hidden md:flex nafa-client-header z-30 items-center gap-3 px-6 lg:px-10 py-3"
+      {/* ── Sticky header — both mobile and desktop ── */}
+      <header className="nafa-client-header z-30 flex items-center gap-3 px-4 md:px-6 lg:px-10 py-3"
         style={{ background: 'var(--nafa-white)', borderBottom: '1px solid var(--nafa-gray-200)' }}>
         <button
           onClick={() => router.back()}
@@ -360,54 +360,23 @@ export default function VendorStorefrontPage() {
         >
           <ChevronLeft size={18} strokeWidth={1.75} style={{ color: 'var(--nafa-black)' }} />
         </button>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold" style={{ color: 'var(--nafa-black)' }}>{vendor.shopName}</span>
-          {vendor.isVerified && <BadgeCheck size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />}
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-sm font-bold truncate" style={{ color: 'var(--nafa-black)' }}>{vendor.shopName}</span>
+          {vendor.isVerified && <BadgeCheck size={15} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)', flexShrink: 0 }} />}
         </div>
       </header>
 
-      {/* ── Cover banner (mobile only) — stats overlay like desktop ── */}
-      <div
-        className="relative md:hidden"
-        style={{ background: 'linear-gradient(135deg, var(--nafa-orange) 0%, #7c2d12 100%)', height: 160 }}
-      >
-        {/* Decorative blobs */}
+      {/* ── Decorative cover (mobile only) ── */}
+      <div className="md:hidden relative overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, var(--nafa-orange) 0%, #7c2d12 100%)', height: 110 }}>
         <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full" style={{ background: 'rgba(255,255,255,0.07)' }} />
-        <div className="absolute right-16 -bottom-8 w-32 h-32 rounded-full" style={{ background: 'rgba(0,0,0,0.08)' }} />
-        {/* Back button — safe area aware */}
-        <button
-          onClick={() => router.back()}
-          className="absolute left-4 flex items-center justify-center w-9 h-9 rounded-full"
-          style={{ top: 'calc(env(safe-area-inset-top, 0px) + 12px)', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)' }}
-          aria-label="Retour"
-        >
-          <ChevronLeft size={18} strokeWidth={2} className="text-white" />
-        </button>
-        {/* Shop name + stats bottom-left like desktop */}
-        <div className="absolute bottom-5 left-5 right-5">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-[10px] font-bold tracking-widest uppercase text-white/60">Boutique</span>
-            {vendor.isVerified && (
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: 'rgba(255,255,255,0.2)' }}>
-                Vérifié ✓
-              </span>
-            )}
-          </div>
-          <h2 className="text-lg font-black text-white leading-tight mb-1.5 truncate">{vendor.shopName}</h2>
-          <div className="flex items-center gap-2.5">
-            <StatPill value={products.length} label="produits" />
-            <span className="text-white/30 text-xs">|</span>
-            <StatPill value={vendor.totalSales.toLocaleString('fr-FR')} label="ventes" />
-            <span className="text-white/30 text-xs">|</span>
-            <StatPill value={followerCount.toLocaleString('fr-FR')} label="abonnés" />
-          </div>
-        </div>
+        <div className="absolute right-16 bottom-0 w-28 h-28 rounded-full" style={{ background: 'rgba(0,0,0,0.08)' }} />
       </div>
 
       {/* ─────────────────── MOBILE LAYOUT ─────────────────── */}
       <div className="md:hidden">
         {/* Profile card — overlaps cover */}
-        <div className="relative -mt-12 mx-4 pb-4">
+        <div className="relative -mt-8 mx-4 pb-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -415,11 +384,11 @@ export default function VendorStorefrontPage() {
             className="rounded-3xl overflow-hidden"
             style={{ background: 'var(--nafa-white)', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
           >
-            {/* Avatar row */}
+            {/* Avatar + name */}
             <div className="flex items-end gap-3 px-5 pt-5 pb-3">
               <div
                 className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 border-4 border-white"
-                style={{ boxShadow: '0 4px 16px rgba(255,107,44,0.3)', marginTop: -32 }}
+                style={{ boxShadow: '0 4px 16px rgba(255,107,44,0.25)', marginTop: -28 }}
               >
                 {vendor.avatarUrl
                   ? <img src={vendor.avatarUrl} alt={vendor.shopName} className="w-full h-full object-cover" />
@@ -430,22 +399,37 @@ export default function VendorStorefrontPage() {
               <div className="flex-1 min-w-0 pb-1">
                 <div className="flex items-center gap-1.5">
                   <h2 className="text-base font-bold truncate" style={{ color: 'var(--nafa-black)' }}>{vendor.shopName}</h2>
-                  {vendor.isVerified && <BadgeCheck size={16} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)', flexShrink: 0 }} />}
+                  {vendor.isVerified && <BadgeCheck size={15} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)', flexShrink: 0 }} />}
                 </div>
                 <RatingStars rating={vendor.rating} size={12} showValue reviewCount={vendor.reviewCount} />
               </div>
             </div>
 
+            {/* Stats pills — products + followers only */}
+            <div className="flex items-center gap-3 px-5 pb-3">
+              <div className="flex items-center gap-1.5">
+                <Package size={13} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
+                <span className="text-sm font-black" style={{ color: 'var(--nafa-black)' }}>{products.length}</span>
+                <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>produits</span>
+              </div>
+              <span className="text-xs" style={{ color: 'var(--nafa-gray-200)' }}>|</span>
+              <div className="flex items-center gap-1.5">
+                <Users size={13} strokeWidth={1.75} style={{ color: 'var(--nafa-orange)' }} />
+                <span className="text-sm font-black" style={{ color: 'var(--nafa-black)' }}>{followerCount.toLocaleString('fr-FR')}</span>
+                <span className="text-xs" style={{ color: 'var(--nafa-gray-400)' }}>abonnés</span>
+              </div>
+            </div>
+
             {/* Description */}
             {vendor.shopDescription && (
-              <p className="px-5 pb-4 text-xs leading-relaxed" style={{ color: 'var(--nafa-gray-700)' }}>
+              <p className="px-5 pb-3 text-xs leading-relaxed" style={{ color: 'var(--nafa-gray-700)', borderTop: '1px solid var(--nafa-gray-100)', paddingTop: 10 }}>
                 {vendor.shopDescription}
               </p>
             )}
 
             {/* Follow button */}
             {currentUser?.uid && (
-              <div className="px-5 pb-5">
+              <div className="px-5 pb-5" style={{ borderTop: vendor.shopDescription ? 'none' : '1px solid var(--nafa-gray-100)', paddingTop: vendor.shopDescription ? 0 : 12 }}>
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={handleFollowToggle}
